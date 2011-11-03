@@ -1,0 +1,28 @@
+0.2-1 (10/13/2011)
+-----
+A few internal modifications.
+
+Function get.countries.table added.
+	
+0.2-0 (05/06/2011)
+-----
+Official UN WPP 2010 data added to the package and the default for argument wpp.year set to 2010.
+
+Argument 'gender' renamed to 'sex'.
+
+Feature of auto-simulation implemented in run.e0.mcmc.
+
+Argument gender in run.e0.mcmc changed to c('Male', 'Female').
+
+Feature of 'auto-simulation' added to run.e0.mcmc and continue.e0.mcmc.
+
+
+0.1-1 (03/11/2011)
+-----
+Function e0.map.gvis added.
+
+Method get.mcmc.meta put into NAMESPACE.
+
+0.1-0 (01/19/2011)
+-----
+Initial CRAN version.
