@@ -63,7 +63,9 @@ store.e0.mcmc <- local({
             		get.country.object(country, meta=mcmc$meta, index=TRUE)$code, mode=open)
             }
         }
-		store.bayesLife.object(mcmc, output.dir)
+        resmc <- as.list(mcmc)
+		class(resmc) <- 'bayesLife.mcmc'
+		store.bayesLife.object(resmc, output.dir)
 	}
         
 	store <- function(mcmc, append=FALSE, flush.buffer=FALSE, countries=NULL, verbose=FALSE) {

@@ -132,6 +132,31 @@ e0.DLcurve.plot.all <- function (mcmc.list = NULL, sim.dir = NULL,
         cat("\nDL plots stored into", output.dir, "\n")
 }
 
+.get.dlcurves <- function(x, mcmc.list, country.code, burnin, nr.curves) {
+	dlc <- c()
+    nr.curves.from.mc <- if (!is.null(nr.curves)) ceiling(max(nr.curves, 2000)/length(mcmc.list))
+    						else NULL
+    postfix <- paste('_c', country.code, sep='')
+    dl.par.names <- c(paste('Triangle.c_1', postfix,sep=''),
+						paste('Triangle.c_2', postfix,sep=''), 
+						paste('Triangle.c_3', postfix,sep=''), 
+						paste('Triangle.c_4', postfix,sep=''), 
+						paste('k.c', postfix,sep=''),
+						paste('z.c', postfix,sep=''))
+    for (mcmc in mcmc.list) {
+    	th.burnin <- bayesTFR:::get.thinned.burnin(mcmc,burnin)
+    	thincurves.mc <- bayesTFR:::get.thinning.index(nr.curves.from.mc, 
+            all.points=mcmc$length - th.burnin)
+        traces <- load.e0.parameter.traces.cs(mcmc, country.code, 
+        						burnin=th.burnin, 
+								thinning.index=thincurves.mc$index)
+		dl.pars <- traces[,dl.par.names, drop=FALSE]
+        dlc <- rbind(dlc, t(apply(dl.pars, 1, g.dl6, l=x, 
+            p1 = mcmc$meta$dl.p1, p2 = mcmc$meta$dl.p2)))
+    }
+	return (dlc)
+}
+
 e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim = c(20,90), 
     nr.curves = NULL, ylim = NULL, xlab = "e(0)", ylab = "5-year gains", 
     main = NULL, ...
@@ -147,27 +172,7 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
     meta <- mcmc.list[[1]]$meta
     country <- get.country.object(country, meta)
     x <- seq(e0.lim[1], e0.lim[2], length=1000)
-    dlc <- c()
-    nr.curves.from.mc <- if (!is.null(nr.curves)) ceiling(min(nr.curves, 2000)/length(mcmc.list))
-    						else NULL
-    postfix <- paste('_c', country$code, sep='')
-    dl.par.names <- c(paste('Triangle.c_1', postfix,sep=''),
-						paste('Triangle.c_2', postfix,sep=''), 
-						paste('Triangle.c_3', postfix,sep=''), 
-						paste('Triangle.c_4', postfix,sep=''), 
-						paste('k.c', postfix,sep=''),
-						paste('z.c', postfix,sep=''))
-    for (mcmc in mcmc.list) {
-    	th.burnin <- bayesTFR:::get.thinned.burnin(mcmc,burnin)
-    	thincurves.mc <- bayesTFR:::get.thinning.index(nr.curves.from.mc, 
-            all.points=mcmc$length - th.burnin)
-        traces <- load.e0.parameter.traces.cs(mcmc, country$code, 
-        						burnin=th.burnin, 
-								thinning.index=thincurves.mc$index)
-		dl.pars <- traces[,dl.par.names, drop=FALSE]
-        dlc <- rbind(dlc, t(apply(dl.pars, 1, g.dl6, l=x, 
-            p1 = mcmc$meta$dl.p1, p2 = mcmc$meta$dl.p2)))
-    }
+    dlc <- .get.dlcurves(x, mcmc.list, country$code, burnin, nr.curves)
     miny <- min(dlc)
     maxy <- max(dlc)
     thincurves <- bayesTFR:::get.thinning.index(nr.curves, dim(dlc)[1])

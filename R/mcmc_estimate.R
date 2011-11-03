@@ -53,7 +53,7 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
 		###########################################
 		#psi <- rgamma.ltrunc(shape=psi.shape, rate=0.5*ratesum, low=0.01)
 		#mcmc$omega <- 1/sqrt(psi)
-		update.omega(mcenv, dlf)
+		omega.update(mcenv, dlf)
 		
 		# Update lambdas using MH-algorithm
 		###########################################
@@ -71,7 +71,9 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
             store.e0.mcmc(mcenv, append=TRUE, flush.buffer=flush.buffer, verbose=verbose)
          }
 	}
-	return(as.list(mcenv))
+	resmc <- as.list(mcenv)
+	class(resmc) <- class(mcmc)
+	return(resmc)
 }
 
 e0.mcmc.sampling.extra <- function(mcmc, mcmc.list, countries, posterior.sample,
@@ -98,6 +100,9 @@ e0.mcmc.sampling.extra <- function(mcmc, mcmc.list, countries, posterior.sample,
     	hyperparameters[[par]] <- hyperparameters[[par]][sampled.index,]
     }
 	mcmc.orig <- mcmc
+	mcenv <- new.env() # Create an environment for the mcmc stuff in order to avoid 
+						# copying of the mcmc list 
+	for (item in names(mcmc)) mcenv[[item]] <- mcmc[[item]]
 	updated.var.names <- c('Triangle.c', 'k.c', 'z.c')
 
 	for(iter in 1:niter) {
@@ -106,16 +111,16 @@ e0.mcmc.sampling.extra <- function(mcmc, mcmc.list, countries, posterior.sample,
 		# set hyperparameters for this iteration
         for (par in hyperparameter.names) {
         	if(is.null(dim(hyperparameters[[par]]))) {
-        		mcmc[[par]] <- hyperparameters[[par]][iter]
+        		mcenv[[par]] <- hyperparameters[[par]][iter]
         	} else {
-        		mcmc[[par]] <- hyperparameters[[par]][iter,]
+        		mcenv[[par]] <- hyperparameters[[par]][iter,]
         	}
         }
 						
 		# Update Triangle.c, k.c and z.c using slice sampling
 		###########################################
 		for(country in countries) {
-			mcmc <- Triangle.k.z.c.update(mcmc, country)
+			Triangle.k.z.c.update(mcenv, country)
 		}
 
 		################################################################### 
@@ -123,7 +128,7 @@ e0.mcmc.sampling.extra <- function(mcmc, mcmc.list, countries, posterior.sample,
         ##################################################################
          #update the original mcmc with the new values
          for(var in updated.var.names) {
-         	mcmc.orig[[var]] <- mcmc[[var]]
+         	mcmc.orig[[var]] <- mcenv[[var]]
          }
 		 flush.buffer <- FALSE
          append <- TRUE
@@ -180,11 +185,13 @@ Triangle.k.z.c.update <- function(mcmc, country) {
 										sd=1/sqrt(mcmc$lambda.k),
 										low=0, up=10, par.idx=5, mcmc=mcmc, 
 										country=country, lex=lex, idx=idx)
-	mcmc$z.c[country] <- slice.sampling(mcmc$z.c[country],
+	if(mcmc$meta$vary.z.over.countries)
+		mcmc$z.c[country] <- slice.sampling(mcmc$z.c[country],
 										logdensity.Triangle.k.z.c, z.c.width, mean=mcmc$z, 
 										sd=1/sqrt(mcmc$lambda.z),
 										low=0, up=1.15, par.idx=6, mcmc=mcmc, 
 										country=country, lex=lex, idx=idx)
+	else mcmc$z.c[country] <- mcmc$z
 	return()
 }
 
@@ -230,15 +237,15 @@ proposal.lambda <- function(nu, tau.sq, Triangle, Triangle.c, C) {
 	return(rgamma(1, (nu+C)/2, rate=tau.sq+0.5*sum((Triangle.c-Triangle)^2)))
 }
 
-update.omega <- function(mcmc, dlf) {
+omega.update <- function(mcmc, dlf) {
 	omega.width <- 1		
 	#print('Slice sampling for omega')
-	mcmc$omega <- slice.sampling(mcmc$omega, log.density.omega, omega.width, 
+	mcmc$omega <- slice.sampling(mcmc$omega, logdensity.omega, omega.width, 
 								mcmc=mcmc, dlf=dlf, low=0, up=10)
 	return()
 }
 
-log.density.omega <- function(x, mcmc, dlf, low, up) {
+logdensity.omega <- function(x, mcmc, dlf, low, up) {
 	log.d.cDens <- 0
 	for(country in 1:mcmc$meta$nr.countries) 
 		log.d.cDens <- log.d.cDens + sum(log(pmax(dnorm(mcmc$meta$d.ct[,country], dlf[,country], 

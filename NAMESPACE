@@ -4,8 +4,8 @@ import(
     bayesTFR
 )
 
-exportPattern("^[[:alpha:]]+")
-useDynLib(bayesLifeC)
+#exportPattern("^[[:alpha:]]+")
+useDynLib(bayesLife)
 
 # export functions
 export(

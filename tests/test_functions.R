@@ -95,6 +95,19 @@ test.estimate.mcmc <- function() {
 	unlink(sim.dir, recursive=TRUE)
 }
 
+test.estimate.mcmc.with.same.z <- function() {
+	sim.dir <- tempfile()
+    # run MCMC
+    test.name <- 'estimating MCMC without varying z over countries '
+	start.test(test.name)
+    m <- run.e0.mcmc(nr.chains=1, iter=10, thin=1, output.dir=sim.dir, vary.z.over.countries=FALSE)
+    stopifnot(m$mcmc.list[[1]]$finished.iter == 10)
+	stopifnot(get.total.iterations(m$mcmc.list, 0) == 10)
+	stopifnot(all(m$mcmc.list[[1]]$z.c == m$mcmc.list[[1]]$z.c[1]))
+	test.ok(test.name)
+	unlink(sim.dir, recursive=TRUE)
+}
+
 test.existing.simulation <- function() {
 	test.name <- 'retrieving MCMC results'
 	start.test(test.name)
