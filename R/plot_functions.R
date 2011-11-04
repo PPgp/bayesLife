@@ -132,7 +132,7 @@ e0.DLcurve.plot.all <- function (mcmc.list = NULL, sim.dir = NULL,
         cat("\nDL plots stored into", output.dir, "\n")
 }
 
-.get.dlcurves <- function(x, mcmc.list, country.code, burnin, nr.curves) {
+.get.dlcurves <- function(x, mcmc.list, country.code, country.index, burnin, nr.curves) {
 	dlc <- c()
     nr.curves.from.mc <- if (!is.null(nr.curves)) ceiling(max(nr.curves, 2000)/length(mcmc.list))
     						else NULL
@@ -151,8 +151,12 @@ e0.DLcurve.plot.all <- function (mcmc.list = NULL, sim.dir = NULL,
         						burnin=th.burnin, 
 								thinning.index=thincurves.mc$index)
 		dl.pars <- traces[,dl.par.names, drop=FALSE]
-        dlc <- rbind(dlc, t(apply(dl.pars, 1, g.dl6, l=x, 
-            p1 = mcmc$meta$dl.p1, p2 = mcmc$meta$dl.p2)))
+		omegas <- load.e0.parameter.traces(mcmc, par.names='omega', burnin=th.burnin, 
+								thinning.index=thincurves.mc$index)
+		errors <- rnorm(length(mcmc$meta$loessSD[,country.index]), 
+						mean=0, sd=omegas*mcmc$meta$loessSD[,country.index])
+		dl <- t(apply(dl.pars, 1, g.dl6, l=x, p1 = mcmc$meta$dl.p1, p2 = mcmc$meta$dl.p2))
+        dlc <- rbind(dlc, dl+errors)
     }
 	return (dlc)
 }
@@ -172,7 +176,7 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
     meta <- mcmc.list[[1]]$meta
     country <- get.country.object(country, meta)
     x <- seq(e0.lim[1], e0.lim[2], length=1000)
-    dlc <- .get.dlcurves(x, mcmc.list, country$code, burnin, nr.curves)
+    dlc <- .get.dlcurves(x, mcmc.list, country$code, country$index, burnin, nr.curves)
     miny <- min(dlc)
     maxy <- max(dlc)
     thincurves <- bayesTFR:::get.thinning.index(nr.curves, dim(dlc)[1])

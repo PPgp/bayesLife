@@ -34,7 +34,7 @@ GoF.dl <- function(sim.dir, pi=c(80,90,95)) {
 		country.code <- meta$regions$country_code[icountry]
     	observed <- diff(meta$e0.matrix[1:T.total, icountry])
 		x <- meta$e0.matrix[1:(T.total - 1), icountry]
-		dlc <- .get.dlcurves(x, pred$mcmc.set$mcmc.list, country.code, burnin=0, nr.curves=2000)
+		dlc <- .get.dlcurves(x, pred$mcmc.set$mcmc.list, country.code, icountry, burnin=0, nr.curves=2000)
 		for (i in 1:length(pi)) {
         	dlpi <- apply(dlc, 2, quantile, c(al.low[i], al.high[i]))
         	country.GoF[i,icountry] <- sum(observed >= dlpi[1,] & observed <= dlpi[2,])
