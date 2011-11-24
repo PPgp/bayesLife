@@ -34,7 +34,8 @@ GoF.dl <- function(sim.dir, pi=c(80,90,95)) {
 		country.code <- meta$regions$country_code[icountry]
     	observed <- diff(meta$e0.matrix[1:T.total, icountry])
 		x <- meta$e0.matrix[1:(T.total - 1), icountry]
-		dlc <- .get.dlcurves(x, pred$mcmc.set$mcmc.list, country.code, icountry, burnin=0, nr.curves=2000)
+		dlc <- .get.dlcurves(x, pred$mcmc.set$mcmc.list, country.code, icountry, burnin=0, 
+							nr.curves=2000, predictive.distr=TRUE)
 		for (i in 1:length(pi)) {
         	dlpi <- apply(dlc, 2, quantile, c(al.low[i], al.high[i]))
         	country.GoF[i,icountry] <- sum(observed >= dlpi[1,] & observed <= dlpi[2,])
@@ -45,7 +46,11 @@ GoF.dl <- function(sim.dir, pi=c(80,90,95)) {
         }
 	}
 	total.GoF <- total.GoF/counter.total
+	pi.names <- paste(pi, '%', sep='')
+	names(total.GoF) <- pi.names
 	time.GoF <- time.GoF/nr.countries
+	dimnames(time.GoF) <- list(pi.names, rownames(meta$e0.matrix)[2:T.total])
 	country.GoF <- country.GoF/(T.total-1)
+	dimnames(country.GoF) <- list(pi.names, meta$regions$country_code[1:nr.countries])
 	return(list(total=total.GoF, time=time.GoF, country=country.GoF))
 }

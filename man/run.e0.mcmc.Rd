@@ -25,7 +25,7 @@ run.e0.mcmc(sex = c("Male", "Female"), nr.chains = 3, iter = 100000,
     lambda.k.ini = NULL, lambda.z.ini = NULL, omega.ini = NULL, 
     Triangle.ini.low = c(10, 30, 0.1, 10), 
     Triangle.ini.up = c(30, 50, 10, 30), k.ini.low = 1, k.ini.up = 5, 
-    z.ini.low = 1e-04, z.ini.up = 1.1, 
+    z.ini.low = 1e-04, z.ini.up = 1.1, vary.z.over.countries = TRUE,
     lambda.ini.low = c(1e-04, 1e-04, 1e-04, 1e-04), 
     lambda.ini.up = c(0.1, 0.1, 0.1, 0.1), 
     lambda.k.ini.low = 0.1, lambda.k.ini.up = 1, 
@@ -80,6 +80,7 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{k.ini.low, k.ini.up}{Single value giving the lower and upper bounds for initial values of \eqn{k}. It is only used if \code{k.ini} is \code{NULL}.}
   \item{z.ini.low, z.ini.up}{Single value giving the lower and upper bounds for initial values of \eqn{z}. It is only used if \code{z.ini} is   
   	\code{NULL}.}
+ \item{vary.z.over.countries}{Logical indicating if the z parameter should be varies over countries or stay constant. This feature is not implemented yet.}
  \item{lambda.ini.low, lambda.ini.up}{A vector of length four. They are the lower and upper bounds for initial values of \eqn{\lambda_1}{lambda_1}, \dots, \eqn{\lambda_4}{lambda_4}. An \eqn{i}-th item is only used if \code{lambda.ini[[i]]} is \code{NULL}.}
   \item{lambda.k.ini.low, lambda.k.ini.up}{Single value giving the lower and upper bounds for initial values of \eqn{\lambda_k}{lambda_k}. It is only used if \code{lambda.k.ini} is \code{NULL}.}
   \item{lambda.z.ini.low, lambda.z.ini.up}{Single value giving the lower and upper bounds for initial values of \eqn{\lambda_z}{lambda_z}. It is only used if \code{lambda.z.ini} is \code{NULL}.}

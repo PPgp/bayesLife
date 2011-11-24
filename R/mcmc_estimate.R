@@ -36,7 +36,11 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
 		# k is truncated normal in [0,10]
 		mcenv$k <- rnorm.trunc(mean=Tr.mean[5], sd=Tr.sd[5], low=0, high=10)
 		# z is truncated normal in [0,1.15]
-		mcenv$z <- rnorm.trunc(mean=Tr.mean[6], sd=Tr.sd[6], low=0, high=1.15)
+		if(meta$vary.z.over.countries)
+			mcenv$z <- rnorm.trunc(mean=Tr.mean[6], sd=Tr.sd[6], low=0, high=1.15)
+		else {
+			mcenv$z <- z.gibbs(mcenv)
+		}
 		
 		#ratesum <- 0		
 		# Update Triangle.c, k.c and z.c using slice sampling
@@ -267,3 +271,13 @@ logdensity.Triangle.k.z.c <- function(x, mean, sd, low, up, par.idx, mcmc, count
 	return(res$logdens)	
 }
 
+z.gibbs <- function(mcmc) {
+	z <- 0
+	res <- .C("do_z_gibbs", mcmc$meta$nr.countries, mcmc$meta$T.end.c, as.numeric(as.matrix(mcmc$meta$e0.matrix)), 
+						as.numeric(as.matrix(mcmc$meta$loessSD)), 
+						as.numeric(as.matrix(mcmc$Triangle.c)), mcmc$k.c, mcmc$meta$dl.p1, mcmc$meta$dl.p2, mcmc$omega, 
+						0, 1.15, z=z)
+	#print(res$z)
+	#stop('')
+	return(res$z)
+}

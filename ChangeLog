@@ -1,3 +1,15 @@
+1.3-0 (11/17/2011)
+-----
+Performance improved in two ways:
+1. MCMCs are converted to environments (instead of being lists), so that they are not copied every time.
+2. A few functions implemented in C.
+
+Function GoF.dl for computing goodness of fit added.
+
+An argument 'predictive.distr' added to the e0.DLcurve.plot to plot predictive distribution of the DL function.
+
+A bug in the e0.DLcurve.plot function fixed that made the quantile curves noisy.
+
 0.2-1 (10/13/2011)
 -----
 A few internal modifications.

@@ -132,7 +132,7 @@ e0.DLcurve.plot.all <- function (mcmc.list = NULL, sim.dir = NULL,
         cat("\nDL plots stored into", output.dir, "\n")
 }
 
-.get.dlcurves <- function(x, mcmc.list, country.code, country.index, burnin, nr.curves) {
+.get.dlcurves <- function(x, mcmc.list, country.code, country.index, burnin, nr.curves, predictive.distr=FALSE) {
 	dlc <- c()
     nr.curves.from.mc <- if (!is.null(nr.curves)) ceiling(max(nr.curves, 2000)/length(mcmc.list))
     						else NULL
@@ -143,6 +143,8 @@ e0.DLcurve.plot.all <- function (mcmc.list = NULL, sim.dir = NULL,
 						paste('Triangle.c_4', postfix,sep=''), 
 						paste('k.c', postfix,sep=''),
 						paste('z.c', postfix,sep=''))
+	T <- length(mcmc.list[[1]]$meta$loessSD[,country.index])
+	loessSD <- sapply(x, loess.lookup)
     for (mcmc in mcmc.list) {
     	th.burnin <- bayesTFR:::get.thinned.burnin(mcmc,burnin)
     	thincurves.mc <- bayesTFR:::get.thinning.index(nr.curves.from.mc, 
@@ -153,16 +155,20 @@ e0.DLcurve.plot.all <- function (mcmc.list = NULL, sim.dir = NULL,
 		dl.pars <- traces[,dl.par.names, drop=FALSE]
 		omegas <- load.e0.parameter.traces(mcmc, par.names='omega', burnin=th.burnin, 
 								thinning.index=thincurves.mc$index)
-		errors <- rnorm(length(mcmc$meta$loessSD[,country.index]), 
-						mean=0, sd=omegas*mcmc$meta$loessSD[,country.index])
 		dl <- t(apply(dl.pars, 1, g.dl6, l=x, p1 = mcmc$meta$dl.p1, p2 = mcmc$meta$dl.p2))
-        dlc <- rbind(dlc, dl+errors)
+		if(predictive.distr) {
+			errors <- matrix(NA, nrow=dim(dl)[1], ncol=dim(dl)[2])
+			n <- ncol(errors)
+			for(i in 1:nrow(errors))
+				errors[i,] <- rnorm(n, mean=0, sd=omegas[i]*loessSD)
+        	dlc <- rbind(dlc, dl+errors)
+        } else dlc <- rbind(dlc, dl)
     }
 	return (dlc)
 }
 
-e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim = c(20,90), 
-    nr.curves = NULL, ylim = NULL, xlab = "e(0)", ylab = "5-year gains", 
+e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim = NULL, 
+    nr.curves = 20, predictive.distr=FALSE, ylim = NULL, xlab = "e(0)", ylab = "5-year gains", 
     main = NULL, ...
     ) 
 {	
@@ -175,16 +181,27 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
     mcmc.list <- get.mcmc.list(mcmc.list)
     meta <- mcmc.list[[1]]$meta
     country <- get.country.object(country, meta)
+    T.total <- nrow(meta$e0.matrix)
+    incr <- diff(meta$e0.matrix[1:T.total, country$index])
+    obs.data <- meta$e0.matrix[1:(T.total - 1), country$index]
+    if (is.null(e0.lim)) e0.lim <- c(min(40, obs.data), max(90, obs.data))
     x <- seq(e0.lim[1], e0.lim[2], length=1000)
-    dlc <- .get.dlcurves(x, mcmc.list, country$code, country$index, burnin, nr.curves)
-    miny <- min(dlc)
-    maxy <- max(dlc)
+    dlc <- .get.dlcurves(x, mcmc.list, country$code, country$index, burnin, nr.curves, 
+    						predictive.distr=predictive.distr)
     thincurves <- bayesTFR:::get.thinning.index(nr.curves, dim(dlc)[1])
     ltype <- "l"
     if (thincurves$nr.points == 0) {
         ltype <- "n"
         thincurves$index <- 1
     }
+    dl50 <- apply(dlc, 2, quantile, 0.5)
+    dlpi <- array(0, c(length(pi), 2, ncol(dlc)))
+    for (i in 1:length(pi)) {
+        al <- (1 - pi[i]/100)/2
+        dlpi[i,,] <- apply(dlc, 2, quantile, c(al, 1 - al))
+    }
+    miny <- min(dlc[thincurves$index, ], dlpi, incr)
+    maxy <- max(dlc[thincurves$index, ], dlpi, incr)
     if (is.null(main)) main <- country$name
     if (is.null(ylim)) ylim <- c(miny, maxy)
     plot(dlc[thincurves$index[1], ] ~ x, col = "grey", 
@@ -196,21 +213,14 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
             lines(dlc[thincurves$index[i], ] ~ x, col = "grey")
         }
     }
-    dl50 <- apply(dlc, 2, quantile, 0.5)
     lines(dl50 ~ x, col = "red", lwd = 2)
     lty <- 2:(length(pi) + 1)
     for (i in 1:length(pi)) {
-        al <- (1 - pi[i]/100)/2
-        dlpi <- apply(dlc, 2, quantile, c(al, 1 - al))
-        lines(dlpi[1, ] ~ x, col = "red", lty = lty[i], 
-            lwd = 2)
-        lines(dlpi[2, ] ~ x, col = "red", lty = lty[i], 
-            lwd = 2)
+        lines(dlpi[i,1, ] ~ x, col = "red", lty = lty[i], lwd = 2)
+        lines(dlpi[i,2, ] ~ x, col = "red", lty = lty[i], lwd = 2)
     }
-    T.total <- nrow(meta$e0.matrix)
-    incr <- diff(meta$e0.matrix[1:T.total, country$index])
-    points(incr ~ meta$e0.matrix[1:(T.total - 
-        1), country$index], pch = 19)
+
+    points(incr ~ obs.data, pch = 19)
     legend("topright", legend = c("median", paste("PI", pi)), 
         lty = c(1, lty), bty = "n", col = "red")
 }

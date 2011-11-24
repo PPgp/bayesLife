@@ -28,7 +28,7 @@ void doDL(double *x, double *le, double *p1, double *p2, int *dim_le,
     z = x[5];
     
     m1 = d1 + 0.5*d2;
-    m2 = d1 + d2 + d3 + 0.5*d4;
+    m2 = d1 + d2 + d3 - 0.5*d4;
     k2 = z - k1;
 
     for (i=0; i< (*dim_le); i++){
@@ -36,17 +36,44 @@ void doDL(double *x, double *le, double *p1, double *p2, int *dim_le,
     }
 }
 
-void dnormtrunc(double *x, double *mu, double *sigma, 
-		double low, double high, int dim_out, double *out){
-	int i;
-	for (i=0; i< dim_out; i++) {
-		if(x[i] < low || x[i] > high) out[i] = 0;
-		else 
-  		out[i] = dnorm(x[i],mu[i],sigma[i], 0)/(pnorm(high,mu[i],sigma[i],1,0)-pnorm(low,mu[i],sigma[i],1,0));
-  	}
-	return;
+void get_z_gibbs_pars(int *ncountries, int *ntime, double *e0matrix, double *loess, 
+						double *Triangle_c, double *k_c, double *p1, double *p2,
+						double *d) {
+	int i, j, nrow, ncol;
+	double A, B, y, x, m1, m2, lp1, lp2, b, c, h, oneplusexpy, oneplusexpx, tmp, a1;
+	ncol = *ncountries;
+	a1 = 0;
+	b = 0;
+	/*c = 0;*/
+	lp1 = log(pow(*p1,2.0));
+	lp2 = log(pow(*p2,2.0));
+	for (j=0; j<ncol; j++) {
+		nrow = ntime[j];
+		m2 = Triangle_c[j*4] + Triangle_c[1 + j*4] + Triangle_c[2 + j*4] - 0.5*Triangle_c[3 + j*4];
+		m1 = Triangle_c[j*4] + 0.5*Triangle_c[1 + j*4];
+		for (i=0; i<(nrow-1); i++) {
+			h = 1.0/pow(loess[i + j*(nrow-1)], 2.0);
+			y = -lp2*(e0matrix[i + j*nrow]-m2)/Triangle_c[3 + j*4];
+			oneplusexpy = 1+exp(y);
+			B = -1.0/oneplusexpy;
+			x = -lp1*(e0matrix[i + j*nrow]-m1)/Triangle_c[1  + j*4];
+			oneplusexpx = 1+exp(x);
+			tmp = k_c[j]*(exp(y)-exp(x))/(oneplusexpy*oneplusexpx);
+			A = e0matrix[i + 1 + j*nrow] - e0matrix[i + j*nrow] - tmp;
+			a1 += h * pow(B, 2.0);
+			b += h * A * B;
+			/*c += h * pow(A,2.0);*/
+			/*if(j==5)
+				Rprintf("\ni=%i: Triangles= %f %f %f %f, e0=%f %f, loess=%f, k=%f", i, 
+							Triangle_c[0 + j*4], Triangle_c[1 + j*4], Triangle_c[2 + j*4], Triangle_c[3 + j*4],
+							e0matrix[i + j*nrow], e0matrix[i + 1 + j*nrow], 
+							loess[i + j*(nrow-1)], k_c[j]);*/
+		}
+	}
+	b = 2*b;
+	d[0] = -b/(2*a1);
+	d[1] = a1;
 }
-
 
 double rnormtrunc(double mu, double sigma, double low, double high){
 	double temp;
@@ -67,6 +94,31 @@ double rnormtrunc(double mu, double sigma, double low, double high){
   	PutRNGstate();
   	return(temp);
 }
+
+
+void do_z_gibbs(int *ncountries, int *ntime, double *e0matrix, double *loess, 
+						double *Triangle_c, double *k_c, double *p1, double *p2,
+						double *omega, double *low, double *high, double *z) {
+	double d[2], rn;
+	get_z_gibbs_pars(ncountries, ntime, e0matrix, loess, Triangle_c, k_c, p1, p2, d);
+	/*Rprintf("\nd = %f, a = %f; sd=%f", d[0], d[1], *omega/pow(2*d[1], 1/2.0));*/
+	rn = rnormtrunc(d[0], *omega/pow(2*d[1], 1/2.0), *low, *high);
+	/*Rprintf("\nz = %f\n", rn);*/
+	z[0] = rn;
+}
+
+void dnormtrunc(double *x, double *mu, double *sigma, 
+		double low, double high, int dim_out, double *out){
+	int i;
+	for (i=0; i< dim_out; i++) {
+		if(x[i] < low || x[i] > high) out[i] = 0;
+		else 
+  		out[i] = dnorm(x[i],mu[i],sigma[i], 0)/(pnorm(high,mu[i],sigma[i],1,0)-pnorm(low,mu[i],sigma[i],1,0));
+  	}
+	return;
+}
+
+
 
 
 void dologdensityTrianglekz(double *x, double *mu, double *sigma, 

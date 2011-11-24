@@ -29,6 +29,7 @@ export(
 	has.e0.prediction,
 	get.e0.convergence.all,
 	get.e0.convergence,
+	GoF.dl,
 	e0.parameter.names.extended,
 	e0.parameter.names.cs.extended,
 	e0.parameter.names,

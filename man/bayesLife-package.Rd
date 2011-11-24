@@ -13,8 +13,8 @@ using a Bayesian hierarchical model and the United Nations demographic time seri
 \tabular{ll}{
 Package: \tab bayesLife\cr
 Type: \tab Package\cr
-Version: \tab 0.2-1\cr
-Date: \tab 2011-10-13\cr
+Version: \tab 0.3-0\cr
+Date: \tab 2011-11-17\cr
 Depends: \tab R (>= 2.9.0), bayesTFR\cr
 License: \tab GPL (>= 2)\cr
 URL: \tab \url{http://bayespop.csss.washington.edu}\cr
@@ -37,6 +37,8 @@ A number of functions analyzing results are included in the package:
 \item \link{summary.bayesLife.mcmc.set}: Summary function for the MCMC results.
 \item \link{summary.bayesLife.prediction}: Summary function for the prediction results.
 }
+For MCMC diagnostics, function \link{e0.coda.mcmc.list} creates an object of type \dQuote{mcmc.list} that can be used with the \pkg{coda} package.  Furthermore, function \link{e0.diagnose} analyzes the MCMCs using the Raftery diagnostics implemented in the \pkg{coda} package and gives information about parameters that did not converge. Function \link{GoF.dl} computes a goodness of fit of the double logistic function.
+
 
 Existing simulation results can be accessed using the \link{get.e0.mcmc} function.  An existing prediction can be accessed via \link{get.e0.prediction}.
 }
@@ -61,7 +63,8 @@ J. L. Chunn, A. E. Raftery, P. Gerland (2010): Bayesian Probabilistic Projection
   \code{\link[bayesTFR:bayesTFR-package]{bayesTFR}}
 }
 \examples{
-m <- run.e0.mcmc(nr.chains=3, iter=50, seed=1, thin=2, verbose=TRUE)
+m <- run.e0.mcmc(nr.chains=3, iter=50, seed=1, thin=2, 
+                 verbose=TRUE, replace.output=TRUE)
 pred <- e0.predict(m, burnin=30, verbose=TRUE)
 summary(pred, country='Canada')
 }

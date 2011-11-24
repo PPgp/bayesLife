@@ -10,7 +10,7 @@ The functions plot the posterior distribution of the double logistic function us
 }
 \usage{
 e0.DLcurve.plot(mcmc.list, country, burnin = NULL, pi = 80, 
-    e0.lim = c(20, 90), nr.curves = NULL, ylim = NULL, 
+    e0.lim = NULL, nr.curves = 20, predictive.distr=FALSE, ylim = NULL, 
     xlab = "e(0)", ylab = "5-year gains", main = NULL, \dots)
     
 e0.DLcurve.plot.all(mcmc.list=NULL, sim.dir=NULL, 
@@ -22,11 +22,11 @@ e0.DLcurve.plot.all(mcmc.list=NULL, sim.dir=NULL,
   \item{country}{Name or numerical code of a country.}
   \item{burnin}{Number of iterations to be discarded from the beginning of parameter traces.}
   \item{pi}{Probability interval. It can be a single number or an array.}
-  \item{e0.lim}{Tuple of the minimum and maximum life expectancy to be shown in the plot.}
+  \item{e0.lim}{It can be a tuple of the minimum and maximum life expectancy to be shown in the plot. If \code{NULL}, it takes the minimum of observed data and 40, and the maximum of observed data and 90.}
   \item{nr.curves}{Number of curves to be plotted. If \code{NULL}, all curves are plotted.}
+  \item{predictive.distr}{Logical. If \code{TRUE}, an error term is added to each trajectory.}
   \item{ylim, xlab, ylab, main}{Graphical parameters passed to the \code{plot} function.}
-  \item{\dots}{Additional graphical parameters. In addition, for \code{e0.DLcurve.plot.all}, 
-  	\code{\dots} contains arguments \code{pi}, \code{e0.lim} and \code{nr.curves}.}
+  \item{\dots}{Additional graphical parameters. In addition, any arguments from \code{e0.DLcurve.plot} except \code{country} can be passed to \code{e0.DLcurve.plot.all}.}
   \item{sim.dir}{Directory with the simulation results. Only relevant, if \code{mcmc.list} is \code{NULL}.}
   \item{output.dir}{Directory into which resulting graphs are stored.}
   \item{output.type}{Type of the resulting files. It can be \dQuote{png}, \dQuote{pdf}, \dQuote{jpeg}, \dQuote{bmp}, \dQuote{tiff}, or \dQuote{postscript}.}

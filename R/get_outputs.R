@@ -381,6 +381,6 @@ e0.coda.mcmc.list <- function(mcmc.list=NULL, country=NULL, chain.ids=NULL,
 get.countries.index.bayesLife.mcmc.meta  <- function(meta, ...) return (1:meta$nr.countries)
 
 get.countries.table.bayesLife.mcmc.set <- function(object, ...) 
-	return(bayesTFR:::get.countries.table.bayesTFR.mcmc(object,...))
+	return(bayesTFR:::get.countries.table.bayesTFR.mcmc.set(object,...))
 get.countries.table.bayesLife.prediction <- function(object, ...) 
 	return(bayesTFR:::get.countries.table.bayesTFR.prediction(object,...))
