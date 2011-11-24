@@ -101,7 +101,7 @@ void do_z_gibbs(int *ncountries, int *ntime, double *e0matrix, double *loess,
 						double *omega, double *low, double *high, double *z) {
 	double d[2], rn;
 	get_z_gibbs_pars(ncountries, ntime, e0matrix, loess, Triangle_c, k_c, p1, p2, d);
-	Rprintf("\nd = %f, a = %f; sd=%f", d[0], d[1], *omega/pow(2*d[1], 1/2.0));
+	/*Rprintf("\nd = %f, a = %f; sd=%f", d[0], d[1], *omega/pow(2*d[1], 1/2.0));*/
 	rn = rnormtrunc(d[0], *omega/pow(2*d[1], 1/2.0), *low, *high);
 	/*Rprintf("\nz = %f\n", rn);*/
 	z[0] = rn;
