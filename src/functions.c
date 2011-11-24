@@ -28,7 +28,7 @@ void doDL(double *x, double *le, double *p1, double *p2, int *dim_le,
     z = x[5];
     
     m1 = d1 + 0.5*d2;
-    m2 = d1 + d2 + d3 - 0.5*d4;
+    m2 = d1 + d2 + d3 + 0.5*d4;
     k2 = z - k1;
 
     for (i=0; i< (*dim_le); i++){
@@ -49,7 +49,7 @@ void get_z_gibbs_pars(int *ncountries, int *ntime, double *e0matrix, double *loe
 	lp2 = log(pow(*p2,2.0));
 	for (j=0; j<ncol; j++) {
 		nrow = ntime[j];
-		m2 = Triangle_c[j*4] + Triangle_c[1 + j*4] + Triangle_c[2 + j*4] - 0.5*Triangle_c[3 + j*4];
+		m2 = Triangle_c[j*4] + Triangle_c[1 + j*4] + Triangle_c[2 + j*4] + 0.5*Triangle_c[3 + j*4];
 		m1 = Triangle_c[j*4] + 0.5*Triangle_c[1 + j*4];
 		for (i=0; i<(nrow-1); i++) {
 			h = 1.0/pow(loess[i + j*(nrow-1)], 2.0);
@@ -101,7 +101,7 @@ void do_z_gibbs(int *ncountries, int *ntime, double *e0matrix, double *loess,
 						double *omega, double *low, double *high, double *z) {
 	double d[2], rn;
 	get_z_gibbs_pars(ncountries, ntime, e0matrix, loess, Triangle_c, k_c, p1, p2, d);
-	/*Rprintf("\nd = %f, a = %f; sd=%f", d[0], d[1], *omega/pow(2*d[1], 1/2.0));*/
+	Rprintf("\nd = %f, a = %f; sd=%f", d[0], d[1], *omega/pow(2*d[1], 1/2.0));
 	rn = rnormtrunc(d[0], *omega/pow(2*d[1], 1/2.0), *low, *high);
 	/*Rprintf("\nz = %f\n", rn);*/
 	z[0] = rn;

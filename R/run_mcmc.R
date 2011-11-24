@@ -371,8 +371,10 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter=100,
 										sd=mcmc.meta$Triangle.c.ini.norm[[2]][i])
 	mcmc[['k.c']] <- pmin(pmax(rnorm(nr_countries, mcmc.meta$k.c.ini.norm[1], 
 							sd=mcmc.meta$k.c.ini.norm[2]), 0), 10)
-	mcmc[['z.c']] <- pmin(pmax(rnorm(nr_countries, mcmc.meta$z.c.ini.norm[1], 
+	if(mcmc.meta$vary.z.over.countries)
+		mcmc[['z.c']] <- pmin(pmax(rnorm(nr_countries, mcmc.meta$z.c.ini.norm[1], 
 							sd=mcmc.meta$z.c.ini.norm[2]), 0), 1.15)
+	else mcmc[['z.c']] <- rep(mcmc[['z']], nr_countries)
     return(mcmc) 
 }
 
@@ -447,8 +449,10 @@ e0.mcmc.ini.extra <- function(mcmc, countries, index.replace=NULL) {
 										sd=mcmc$meta$Triangle.c.ini.norm[[2]][i])
 		mcmc$k.c <- c(mcmc$k.c, pmin(pmax(rnorm(nextra, mcmc$meta$k.c.ini.norm[1], 
 							sd=mcmc$meta$k.c.ini.norm[2]), 0), 10))
-		mcmc$z.c <- c(mcmc$z.c, pmin(pmax(rnorm(nextra, mcmc$meta$z.c.ini.norm[1], 
+		if(mcmc.meta$vary.z.over.countries)
+			mcmc$z.c <- c(mcmc$z.c, pmin(pmax(rnorm(nextra, mcmc$meta$z.c.ini.norm[1], 
 							sd=mcmc$meta$z.c.ini.norm[2]), 0), 1.15))
+		else mcmc$z.c <- c(mcmc$z.c, rep(mcmc$z, nextra))
 	}
 	return(mcmc)
 }
