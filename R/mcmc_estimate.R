@@ -39,7 +39,7 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
 		if(meta$vary.z.over.countries)
 			mcenv$z <- rnorm.trunc(mean=Tr.mean[6], sd=Tr.sd[6], low=0, high=1.15)
 		else {
-			mcenv$z <- z.gibbs(mcenv)
+			mcenv$z <- z.gibbs(mcenv, iter)
 		}
 		
 		#ratesum <- 0		
@@ -221,13 +221,15 @@ lambdas.update <- function(mcmc) {
 		mcmc$lambda.k <- prop	
 	}
 	# update lambda.z
-	prop <- proposal.lambda(mcmc$meta$nu, tau.sq[6], mcmc$z, mcmc$z.c, mcmc$meta$nr.countries)
-	lpx0 <- logdensity.lambda(mcmc$lambda.z, mcmc, 1.15, mcmc$z, mcmc$z.c, tau.sq[6])
-	lpx1 <- logdensity.lambda(prop, mcmc, 1.15, mcmc$z, mcmc$z.c, tau.sq[6])
-	prob_accept <- min(exp(lpx1 - lpx0), 1)
-	if (runif(1) < prob_accept){
-		mcmc$lambda.z <- prop	
-	}
+	if(mcmc$meta$vary.z.over.countries) {
+		prop <- proposal.lambda(mcmc$meta$nu, tau.sq[6], mcmc$z, mcmc$z.c, mcmc$meta$nr.countries)
+		lpx0 <- logdensity.lambda(mcmc$lambda.z, mcmc, 1.15, mcmc$z, mcmc$z.c, tau.sq[6])
+		lpx1 <- logdensity.lambda(prop, mcmc, 1.15, mcmc$z, mcmc$z.c, tau.sq[6])
+		prob_accept <- min(exp(lpx1 - lpx0), 1)
+		if (runif(1) < prob_accept){
+			mcmc$lambda.z <- prop	
+		}
+	} else mcmc$lambda.z <- 1
 	return()
 }
 
@@ -271,13 +273,97 @@ logdensity.Triangle.k.z.c <- function(x, mean, sd, low, up, par.idx, mcmc, count
 	return(res$logdens)	
 }
 
-z.gibbs <- function(mcmc) {
+z.gibbs.use <- function(mcmc, it) {
+	library(msm)
 	z <- 0
-	res <- .C("do_z_gibbs", mcmc$meta$nr.countries, mcmc$meta$T.end.c, as.numeric(as.matrix(mcmc$meta$e0.matrix)), 
-						as.numeric(as.matrix(mcmc$meta$loessSD)), 
-						as.numeric(as.matrix(mcmc$Triangle.c)), mcmc$k.c, mcmc$meta$dl.p1, mcmc$meta$dl.p2, mcmc$omega, 
-						0, 1.15, z=z)
+	sd.d <- d <- 0
+	res <- .C("do_z_gibbs", it, mcmc$meta$nr.countries, mcmc$meta$T.end.c, 
+					as.numeric(as.matrix(mcmc$meta$e0.matrix)), 
+					as.numeric(as.matrix(mcmc$meta$loessSD)), 
+					as.numeric(as.matrix(mcmc$Triangle.c)), mcmc$k.c, mcmc$meta$dl.p1, 
+					mcmc$meta$dl.p2, mcmc$omega, mcmc$meta$alpha[6], mcmc$meta$delta[6],
+						0, 1.15, zmean=d, sd_d=sd.d, z=z)
 	#print(res$z)
+	z <- rtnorm(1, res$zmean, res$sd_d, 0, 1.15)
+	#print(c(res$zmean, res$sd_d, z))
 	#stop('')
-	return(res$z)
+	#return(res$z)
+	return(z)
+}
+
+z.gibbs <- function(mcmc, it) {
+	library(msm)
+	z <- 0
+	sd.d <- d <- 0
+	test.mc <- get.e0.mcmc('/Users/hana/bayespop/R/LE/wpp2010Fauto')
+	mcmc <- test.mc$mcmc.list[[2]]
+	#ncountries <- 1
+	ncountries <- test.mc$meta$nr.countries
+	zmeans <- zs <- zcs <- c()
+	s <- summary(test.mc, par.names='omega', par.names.cs=NULL, burnin=20000)
+	delta <- k <- c()
+	
+	for (country in 1:test.mc$meta$nr.countries) {
+		country.obj <- get.country.object(country, test.mc$meta, index=TRUE)
+		sc <- summary(test.mc, country=country.obj$code, par.names=NULL, 
+						par.names.cs=c('Triangle.c', 'k.c', 'z.c'), burnin=20000)
+		delta <- cbind(delta, sc$quantiles[1:4, '50%'])
+		k <- c(k, sc$quantiles[5, '50%'])
+	
+#		res <- .C("do_z_gibbs", as.integer(country.obj$code), as.integer(ncountries), 
+#					as.integer(mcmc$meta$T.end.c[country]), 
+#					as.numeric(as.matrix(mcmc$meta$e0.matrix[,country])), 
+#						as.numeric(as.matrix(mcmc$meta$loessSD[,country])), 
+#						as.numeric(as.matrix(sc$quantiles[1:4, '50%'])), sc$quantiles[5, '50%'],
+#						mcmc$meta$dl.p1, mcmc$meta$dl.p2, s$quantiles['50%'], mcmc$meta$alpha[6],
+#						mcmc$meta$delta[6],
+#						0, 1.15, zmean=d, sd_d=sd.d)
+#		zmeans <- c(zmeans, res$zmean)
+#		zs <- c(zs, z)
+#		zcs <- c(zcs, sc$quantiles[6, '50%'])
+#		cat("\n")
+#		print(c(country.obj$name, res$zmean, res$sd_d, z, mcmc$z.c[country]))
+	}
+	res <- .C("do_z_gibbs", #as.integer(country.obj$code),
+					it, 
+					as.integer(ncountries), 
+					as.integer(mcmc$meta$T.end.c), 
+					as.numeric(as.matrix(mcmc$meta$e0.matrix)), 
+						as.numeric(as.matrix(mcmc$meta$loessSD)), 
+						as.numeric(as.matrix(delta)), k,
+						mcmc$meta$dl.p1, mcmc$meta$dl.p2, s$quantiles['50%'], mcmc$meta$alpha[6],
+						mcmc$meta$delta[6],
+						0, 1.15, zmean=d, sd_d=sd.d, z=z)
+		z <- rtnorm(1, res$zmean, res$sd_d, 0, 1.15)
+
+		cat("\n")
+		print(c(res$zmean, res$sd_d, z))
+	
+	#data <- cbind(test.mc$meta$regions$country_code, zmeans, zs, zcs)
+#	for (country in 1:test.mc$meta$nr.countries) {
+#		country.obj <- get.country.object(country, test.mc$meta, index=TRUE)
+#		res <- .C("do_z_gibbs", as.integer(country.obj$code), as.integer(ncountries), as.integer(mcmc$meta$T.end.c[country]), 
+#					as.numeric(as.matrix(mcmc$meta$e0.matrix[,country])), 
+#						as.numeric(as.matrix(mcmc$meta$loessSD[,country])), 
+#						as.numeric(as.matrix(mcmc$Triangle.c[,country])), mcmc$k.c[country],
+#						mcmc$meta$dl.p1, mcmc$meta$dl.p2, mcmc$omega, 
+#						0, 1.15, zmean=d, sd_d=sd.d)
+#		z <- rtnorm(1, res$zmean, res$sd_d, 0, 1.15)
+#		zmeans <- c(zmeans, res$zmean)
+#		zs <- c(zs, z)
+#		cat("\n")
+#		print(c(country.obj$name, res$zmean, res$sd_d, z, mcmc$z.c[country]))
+#	}
+#	data <- cbind(test.mc$meta$regions$country_code, zmeans, zs, mcmc$z.c)
+	#colnames(data) <- c('country', 'd', 'z', 'z_c')
+	#write.table(data, 'z_c_comparison_median.txt', row.names=FALSE, col.names=TRUE)	
+#	res <- .C("do_z_gibbs", it, mcmc$meta$nr.countries, mcmc$meta$T.end.c, as.numeric(as.matrix(mcmc$meta$e0.matrix)), 
+#						as.numeric(as.matrix(mcmc$meta$loessSD)), 
+#						as.numeric(as.matrix(mcmc$Triangle.c)), mcmc$k.c, mcmc$meta$dl.p1, mcmc$meta$dl.p2, mcmc$omega, 
+#						0, 1.15, zmean=d, sd_d=sd.d)
+	#print(res$z)
+	#z <- rtnorm(1, res$zmean, res$sd_d, 0, 1.15)
+	#print(c(res$zmean, res$sd_d, z))
+	stop('')
+	return(z)
 }

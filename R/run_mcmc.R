@@ -122,7 +122,8 @@ run.e0.mcmc <- function(sex=c("Male", "Female"), nr.chains=3, iter=100000, outpu
                                      verbose=verbose, ...)
 	} else { # run chains sequentially
 		chain.set <- list()
-		for (chain in 1:nr.chains) {
+		#for (chain in 1:nr.chains) {
+		for (chain in 1:1) {
 			chain.set[[chain]] <- mcmc.run.chain.e0(chain, bayesLife.mcmc.meta, thin=thin, 
                                                 iter=iter, starting.values=starting.values, verbose=verbose)
 		}
