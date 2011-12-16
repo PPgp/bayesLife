@@ -1,4 +1,5 @@
-run.e0.mcmc <- function(sex=c("Male", "Female"), nr.chains=3, iter=100000, output.dir=file.path(getwd(), 'bayesLife.output'), 
+run.e0.mcmc <- function(sex=c("Male", "Female"), nr.chains=3, iter=100000, 
+							output.dir=file.path(getwd(), 'bayesLife.output'), 
                          thin=10, replace.output=FALSE,
                          start.year=1950, present.year=2010, wpp.year=2010,
                          my.e0.file = NULL, buffer.size=100,
@@ -16,9 +17,13 @@ run.e0.mcmc <- function(sex=c("Male", "Female"), nr.chains=3, iter=100000, outpu
 						 lambda.k.ini.low = 0.1, lambda.k.ini.up = 1, 
 						 lambda.z.ini.low=1, lambda.z.ini.up=40,
 						 omega.ini.low = 0.1, omega.ini.up=5, 
+						 Triangle.prior.low=c(0, 0, 0, 0), Triangle.prior.up=c(100, 100, 100, 100),
+						 k.prior.low=0, k.prior.up=10, z.prior.low=0, z.prior.up=1.15,
 						 Triangle.c.ini.norm = list(round(Triangle.ini.low + (Triangle.ini.up - Triangle.ini.low)/2),c(2,2,2,2)), 
 						 k.c.ini.norm=c(round(k.ini.low + (k.ini.up - k.ini.low)/2),2), 
 						 z.c.ini.norm=c(round(z.ini.low + (z.ini.up - z.ini.low)/2, 2), 0.2),
+						 Triangle.c.prior.low=c(0, 0, 0, 0), Triangle.c.prior.up=c(100, 100, 100, 100),
+						 k.c.prior.low=0, k.c.prior.up=10, z.c.prior.low=0, z.c.prior.up=1.15,
 						 Triangle.c.width = c(4, 6, 3, 4), k.c.width=1, z.c.width=0.2,
 						 #Triangle.c.width = c(5, 5, 5, 5), k.c.width=0.5, z.c.width=0.06,
 						 nu=4, dl.p1=9, dl.p2=9,
@@ -84,6 +89,9 @@ run.e0.mcmc <- function(sex=c("Male", "Female"), nr.chains=3, iter=100000, outpu
                                         Triangle.ini.low=Triangle.ini.low, Triangle.ini.up=Triangle.ini.up, 
                                         k.ini.low=k.ini.low, k.ini.up=k.ini.up, 
                                         z.ini.low=z.ini.low, z.ini.up=z.ini.up, 
+                                        Triangle.prior.low=Triangle.prior.low, Triangle.prior.up=Triangle.prior.up, 
+                                        k.prior.low=k.prior.low, k.prior.up=k.prior.up, 
+                                        z.prior.low=z.prior.low, z.prior.up=z.prior.up, 
                                         vary.z.over.countries=vary.z.over.countries,
                                         lambda.ini.low=lambda.ini.low, lambda.ini.up=lambda.ini.up,
                                         lambda.k.ini.low=lambda.k.ini.low, lambda.k.ini.up=lambda.k.ini.up, 
@@ -91,6 +99,9 @@ run.e0.mcmc <- function(sex=c("Male", "Female"), nr.chains=3, iter=100000, outpu
                                         omega.ini.low=omega.ini.low, omega.ini.up=omega.ini.up, 
                                         Triangle.c.ini.norm=Triangle.c.ini.norm,
                                         k.c.ini.norm=k.c.ini.norm, z.c.ini.norm=z.c.ini.norm,
+                                        Triangle.c.prior.low=Triangle.c.prior.low, Triangle.c.prior.up=Triangle.c.prior.up, 
+                                        k.c.prior.low=k.c.prior.low, k.c.prior.up=k.c.prior.up, 
+                                        z.c.prior.low=z.c.prior.low, z.c.prior.up=z.c.prior.up, 
                                         Triangle.c.width=Triangle.c.width, k.c.width=k.c.width, z.c.width=z.c.width,
                                         nu=nu, dl.p1=dl.p1, dl.p2=dl.p2, buffer.size=buffer.size, 
                                         auto.conf=auto.conf, verbose=verbose)
@@ -368,13 +379,14 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter=100,
         				meta = mcmc.meta), class='bayesLife.mcmc')
     mcmc[['Triangle.c']] <- matrix(0, ncol=nr_countries, nrow=4)
     for (i in 1:4)		
-		mcmc[['Triangle.c']][i,] <- rnorm(nr_countries, mean=mcmc.meta$Triangle.c.ini.norm[[1]][i], 
-										sd=mcmc.meta$Triangle.c.ini.norm[[2]][i])
+		mcmc[['Triangle.c']][i,] <- pmin(pmax(rnorm(nr_countries, mean=mcmc.meta$Triangle.c.ini.norm[[1]][i], 
+										sd=mcmc.meta$Triangle.c.ini.norm[[2]][i]), 
+										mcmc.meta$Triangle.c.prior.low[i]), mcmc.meta$Triangle.c.prior.up[i])
 	mcmc[['k.c']] <- pmin(pmax(rnorm(nr_countries, mcmc.meta$k.c.ini.norm[1], 
-							sd=mcmc.meta$k.c.ini.norm[2]), 0), 10)
+							sd=mcmc.meta$k.c.ini.norm[2]), mcmc.meta$k.c.prior.low), mcmc.meta$k.c.prior.up)
 	if(mcmc.meta$vary.z.over.countries)
 		mcmc[['z.c']] <- pmin(pmax(rnorm(nr_countries, mcmc.meta$z.c.ini.norm[1], 
-							sd=mcmc.meta$z.c.ini.norm[2]), 0), 1.15)
+							sd=mcmc.meta$z.c.ini.norm[2]), mcmc.meta$z.c.prior.low), mcmc.meta$z.c.prior.up)
 	else mcmc[['z.c']] <- rep(mcmc[['z']], nr_countries)
     return(mcmc) 
 }
@@ -433,12 +445,13 @@ e0.mcmc.ini.extra <- function(mcmc, countries, index.replace=NULL) {
 	nreplace <- length(index.replace)
 	if(nreplace > 0) {
     	for (i in 1:4)		
-			mcmc$Triangle.c[i,index.replace] <- rnorm(nreplace, mean=mcmc$meta$Triangle.c.ini.norm[[1]][i], 
-										sd=mcmc$meta$Triangle.c.ini.norm[[2]][i])
+			mcmc$Triangle.c[i,index.replace] <- pmin(pmax(rnorm(nreplace, mean=mcmc$meta$Triangle.c.ini.norm[[1]][i], 
+										sd=mcmc$meta$Triangle.c.ini.norm[[2]][i]),
+										mcmc$meta$Triangle.c.prior.low[i]), mcmc$meta$Triangle.c.prior.up[i])
 		mcmc$k.c[index.replace] <- pmin(pmax(rnorm(nreplace, mcmc$meta$k.c.ini.norm[1], 
-							sd=mcmc$meta$k.c.ini.norm[2]), 0), 10)
+							sd=mcmc$meta$k.c.ini.norm[2]), mcmc$meta$k.c.prior.low), mcmc$meta$k.c.prior.up)
 		mcmc$z.c[index.replace] <- pmin(pmax(rnorm(nreplace, mcmc$meta$z.c.ini.norm[1], 
-							sd=mcmc$meta$z.c.ini.norm[2]), 0), 1.15)
+							sd=mcmc$meta$z.c.ini.norm[2]), mcmc$meta$z.c.prior.low), mcmc$meta$z.c.prior.up)
 	}
 	
 	if(nr.countries.extra > nreplace) {
@@ -446,13 +459,14 @@ e0.mcmc.ini.extra <- function(mcmc, countries, index.replace=NULL) {
 		eidx <- (ncol(mcmc$Triangle.c)+1):(ncol(mcmc$Triangle.c)+nextra)
 		mcmc$Triangle.c <- cbind(mcmc$Triangle.c, matrix(0, ncol=nextra, nrow=4))
 		for (i in 1:4)		
-			mcmc$Triangle.c[i,eidx] <- rnorm(nextra, mean=mcmc$meta$Triangle.c.ini.norm[[1]][i], 
-										sd=mcmc$meta$Triangle.c.ini.norm[[2]][i])
+			mcmc$Triangle.c[i,eidx] <- pmin(pmax(rnorm(nextra, mean=mcmc$meta$Triangle.c.ini.norm[[1]][i], 
+										sd=mcmc$meta$Triangle.c.ini.norm[[2]][i]),
+										mcmc$meta$Triangle.c.prior.low[i]), mcmc$meta$Triangle.c.prior.up[i])
 		mcmc$k.c <- c(mcmc$k.c, pmin(pmax(rnorm(nextra, mcmc$meta$k.c.ini.norm[1], 
-							sd=mcmc$meta$k.c.ini.norm[2]), 0), 10))
+							sd=mcmc$meta$k.c.ini.norm[2]), mcmc$meta$k.c.prior.low), mcmc$meta$k.c.prior.up))
 		if(mcmc.meta$vary.z.over.countries)
 			mcmc$z.c <- c(mcmc$z.c, pmin(pmax(rnorm(nextra, mcmc$meta$z.c.ini.norm[1], 
-							sd=mcmc$meta$z.c.ini.norm[2]), 0), 1.15))
+							sd=mcmc$meta$z.c.ini.norm[2]), mcmc$meta$z.c.prior.low), mcmc$meta$z.c.prior.up))
 		else mcmc$z.c <- c(mcmc$z.c, rep(mcmc$z, nextra))
 	}
 	return(mcmc)

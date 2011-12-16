@@ -31,11 +31,15 @@ run.e0.mcmc(sex = c("Male", "Female"), nr.chains = 3, iter = 100000,
     lambda.k.ini.low = 0.1, lambda.k.ini.up = 1, 
     lambda.z.ini.low = 1, lambda.z.ini.up = 40, 
     omega.ini.low = 0.1, omega.ini.up = 5, 
+    Triangle.prior.low=c(0, 0, 0, 0), Triangle.prior.up=c(100, 100, 100, 100),
+    k.prior.low=0, k.prior.up=10, z.prior.low=0, z.prior.up=1.15,
     Triangle.c.ini.norm = list(round(
     	Triangle.ini.low + (Triangle.ini.up - Triangle.ini.low)/2), 
                                c(2, 2, 2, 2)), 
     k.c.ini.norm = c(round(k.ini.low + (k.ini.up - k.ini.low)/2), 2), 
     z.c.ini.norm = c(round(z.ini.low + (z.ini.up - z.ini.low)/2, 2), 0.2), 
+    Triangle.c.prior.low=c(0, 0, 0, 0), Triangle.c.prior.up=c(100, 100, 100, 100),
+	k.c.prior.low=0, k.c.prior.up=10, z.c.prior.low=0, z.c.prior.up=1.15,
     Triangle.c.width = c(4, 6, 3, 4), k.c.width = 1, z.c.width = 0.2, 
     nu = 4, dl.p1 = 9, dl.p2 = 9, seed = NULL, 
     parallel = FALSE, nr.nodes = nr.chains, 
@@ -85,9 +89,17 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{lambda.k.ini.low, lambda.k.ini.up}{Single value giving the lower and upper bounds for initial values of \eqn{\lambda_k}{lambda_k}. It is only used if \code{lambda.k.ini} is \code{NULL}.}
   \item{lambda.z.ini.low, lambda.z.ini.up}{Single value giving the lower and upper bounds for initial values of \eqn{\lambda_z}{lambda_z}. It is only used if \code{lambda.z.ini} is \code{NULL}.}
   \item{omega.ini.low, omega.ini.up}{Single value giving the lower and upper bounds for initial values of \eqn{\omega}{omega}. It is only used if \code{omega.ini} is \code{NULL}.}
-  \item{Triangle.c.ini.norm}{A list with two elements, each of them being a vector of size four. The first and second element in the list corresponds to the means and standard deviation, respectively, for the initial values of the country-specific parameters \eqn{\Delta_1^c}{Triangle_1_c}, \dots, \eqn{\Delta_4^c}{Triangle_4_c} which are drawn from a normal distribution.}
-  \item{k.c.ini.norm}{A vector of length two. The first and second element corresponds to the means and standard deviation, respectively, for the initial values of the country-specific parameters \eqn{k^c} which are drawn from a normal distribution truncted at zero.}
-  \item{z.c.ini.norm}{A vector of length two. The first and second element corresponds to the means and standard deviation, respectively, for the initial values of the country-specific parameters \eqn{z^c} which are drawn from a normal distribution truncted at zero.}
+  \item{Triangle.prior.low, Triangle.prior.up}{A vector of length four. They are the lower and upper bounds for the prior (truncated normal) distribution of \eqn{\Delta_1}{Triangle_1}, \dots, \eqn{\Delta_4}{Triangle_4}.}
+    \item{k.prior.low, k.prior.up}{Single value giving the lower and upper bounds for the prior (truncated normal) distribution  of \eqn{k}. }
+    \item{z.prior.low, z.prior.up}{Single value giving the lower and upper bounds for the prior (truncated normal) distribution  of \eqn{z}.}
+  \item{z.ini.low, z.ini.up}{Single value giving the lower and upper bounds for initial values of \eqn{z}. It is only used if \code{z.ini} is   
+  	\code{NULL}.}
+  \item{Triangle.c.ini.norm}{A list with two elements, each of them being a vector of size four. The first and second element in the list corresponds to the means and standard deviation, respectively, for the initial values of the country-specific parameters \eqn{\Delta_1^c}{Triangle_1_c}, \dots, \eqn{\Delta_4^c}{Triangle_4_c} which are drawn from a truncated normal distribution with bounds defined by \code{Triangle.c.prior.low} and \code{Triangle.c.prior.up}.}
+  \item{k.c.ini.norm}{A vector of length two. The first and second element corresponds to the means and standard deviation, respectively, for the initial values of the country-specific parameters \eqn{k^c} which are drawn from a normal distribution truncated between \code{k.c.prior.low} and \code{k.c.prior.up}.}
+  \item{z.c.ini.norm}{A vector of length two. The first and second element corresponds to the means and standard deviation, respectively, for the initial values of the country-specific parameters \eqn{z^c} which are drawn from a normal distribution truncated between \code{z.c.prior.low} and \code{z.c.prior.up}.}
+    \item{Triangle.c.prior.low, Triangle.c.prior.up}{A vector of length four. They are the lower and upper bounds for the prior (truncated normal) distribution of country-specific \eqn{\Delta_1^c}{Triangle_1_c}, \dots, \eqn{\Delta_4^c}{Triangle_4_c}.}
+    \item{k.c.prior.low, k.c.prior.up}{Single value giving the lower and upper bounds for the prior (truncated normal) distribution  of country-specific \eqn{k^c}. }
+    \item{z.c.prior.low, z.c.prior.up}{Single value giving the lower and upper bounds for the prior (truncated normal) distribution  of country-specific \eqn{z^c}.}
   \item{Triangle.c.width}{Width for slice sampling used when updating the country-specific parameters \eqn{\Delta_i^c}{Triangle_i_c} with \eqn{i=1,\dots,4}.}
   \item{k.c.width}{Width for slice sampling used when updating the country-specific parameters \eqn{k^c}.}
   \item{z.c.width}{Width for slice sampling used when updating the country-specific parameters \eqn{z^c}.}

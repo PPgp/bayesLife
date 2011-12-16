@@ -31,13 +31,14 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
 		Tr.mean <- (meta$a/delta.sq + sum.Trkz.c*lambdas)*Tr.var
 		for (i in 1:4) {
 			# Triangle is truncated normal in [0,100]
-			mcenv$Triangle[i] <- rnorm.trunc(mean=Tr.mean[i], sd=Tr.sd[i], low=0, high=100)
+			mcenv$Triangle[i] <- rnorm.trunc(mean=Tr.mean[i], sd=Tr.sd[i], 
+									low=meta$Triangle.prior.low[i], high=meta$Triangle.prior.up[i])
 		}
 		# k is truncated normal in [0,10]
-		mcenv$k <- rnorm.trunc(mean=Tr.mean[5], sd=Tr.sd[5], low=0, high=10)
+		mcenv$k <- rnorm.trunc(mean=Tr.mean[5], sd=Tr.sd[5], low=meta$k.prior.low, high=meta$k.prior.up)
 		# z is truncated normal in [0,1.15]
 		if(meta$vary.z.over.countries)
-			mcenv$z <- rnorm.trunc(mean=Tr.mean[6], sd=Tr.sd[6], low=0, high=1.15)
+			mcenv$z <- rnorm.trunc(mean=Tr.mean[6], sd=Tr.sd[6], low=meta$z.prior.low, high=meta$z.prior.up)
 		else {
 			mcenv$z <- z.gibbs(mcenv, iter)
 		}
@@ -180,20 +181,23 @@ Triangle.k.z.c.update <- function(mcmc, country) {
 		mcmc$Triangle.c[i, country] <- slice.sampling(mcmc$Triangle.c[i, country],
 										logdensity.Triangle.k.z.c, Triangle.c.width[i], 
 										mean=mcmc$Triangle[i], 
-										sd=sigmas[i], low=0, up=100, par.idx=i, 
+										sd=sigmas[i], low=mcmc$meta$Triangle.c.prior.low[i], 
+										up=mcmc$meta$Triangle.c.prior.up[i], par.idx=i, 
 										mcmc=mcmc, 
 										country=country, lex=lex, idx=idx)
 	}
 	mcmc$k.c[country] <- slice.sampling(mcmc$k.c[country],
 										logdensity.Triangle.k.z.c, k.c.width, mean=mcmc$k, 
 										sd=1/sqrt(mcmc$lambda.k),
-										low=0, up=10, par.idx=5, mcmc=mcmc, 
+										low=mcmc$meta$k.c.prior.low, up=mcmc$meta$k.c.prior.up, 
+										par.idx=5, mcmc=mcmc, 
 										country=country, lex=lex, idx=idx)
 	if(mcmc$meta$vary.z.over.countries)
 		mcmc$z.c[country] <- slice.sampling(mcmc$z.c[country],
 										logdensity.Triangle.k.z.c, z.c.width, mean=mcmc$z, 
 										sd=1/sqrt(mcmc$lambda.z),
-										low=0, up=1.15, par.idx=6, mcmc=mcmc, 
+										low=mcmc$meta$z.c.prior.low, up=mcmc$meta$z.c.prior.up, 
+										par.idx=6, mcmc=mcmc, 
 										country=country, lex=lex, idx=idx)
 	else mcmc$z.c[country] <- mcmc$z
 	return()
@@ -205,8 +209,10 @@ lambdas.update <- function(mcmc) {
 	for(i in 1:4) {
 		prop <- proposal.lambda(mcmc$meta$nu, tau.sq[i], mcmc$Triangle[i], mcmc$Triangle.c[i,], 
 								mcmc$meta$nr.countries)
-		lpx0 <- logdensity.lambda(mcmc$lambda[i], mcmc, 100, mcmc$Triangle[i], mcmc$Triangle.c[i,], tau.sq[i])
-		lpx1 <- logdensity.lambda(prop, mcmc, 100, mcmc$Triangle[i], mcmc$Triangle.c[i,], tau.sq[i])
+		lpx0 <- logdensity.lambda(mcmc$lambda[i], mcmc, mcmc$meta$Triangle.prior.low[i], 
+						mcmc$meta$Triangle.prior.up[i], mcmc$Triangle[i], mcmc$Triangle.c[i,], tau.sq[i])
+		lpx1 <- logdensity.lambda(prop, mcmc, mcmc$meta$Triangle.prior.low[i], 
+						mcmc$meta$Triangle.prior.up[i], mcmc$Triangle[i], mcmc$Triangle.c[i,], tau.sq[i])
 		prob_accept <- min(exp(lpx1 - lpx0), 1)
 		if (runif(1) < prob_accept){
 			mcmc$lambda[i] <- prop	
@@ -214,8 +220,9 @@ lambdas.update <- function(mcmc) {
 	}
 	# update lambda.k 
 	prop <- proposal.lambda(mcmc$meta$nu, tau.sq[5], mcmc$k, mcmc$k.c, mcmc$meta$nr.countries)
-	lpx0 <- logdensity.lambda(mcmc$lambda.k, mcmc, 10, mcmc$k, mcmc$k.c, tau.sq[5])
-	lpx1 <- logdensity.lambda(prop, mcmc, 10, mcmc$k, mcmc$k.c, tau.sq[5])
+	lpx0 <- logdensity.lambda(mcmc$lambda.k, mcmc, mcmc$meta$k.prior.low, mcmc$meta$k.prior.up, 
+					mcmc$k, mcmc$k.c, tau.sq[5])
+	lpx1 <- logdensity.lambda(prop, mcmc, mcmc$meta$k.prior.low, mcmc$meta$k.prior.up, mcmc$k, mcmc$k.c, tau.sq[5])
 	prob_accept <- min(exp(lpx1 - lpx0), 1)
 	if (runif(1) < prob_accept){
 		mcmc$lambda.k <- prop	
@@ -223,8 +230,8 @@ lambdas.update <- function(mcmc) {
 	# update lambda.z
 	if(mcmc$meta$vary.z.over.countries) {
 		prop <- proposal.lambda(mcmc$meta$nu, tau.sq[6], mcmc$z, mcmc$z.c, mcmc$meta$nr.countries)
-		lpx0 <- logdensity.lambda(mcmc$lambda.z, mcmc, 1.15, mcmc$z, mcmc$z.c, tau.sq[6])
-		lpx1 <- logdensity.lambda(prop, mcmc, 1.15, mcmc$z, mcmc$z.c, tau.sq[6])
+		lpx0 <- logdensity.lambda(mcmc$lambda.z, mcmc, mcmc$meta$z.prior.low, mcmc$meta$z.prior.up, mcmc$z, mcmc$z.c, tau.sq[6])
+		lpx1 <- logdensity.lambda(prop, mcmc, mcmc$meta$z.prior.low, mcmc$meta$z.prior.up, mcmc$z, mcmc$z.c, tau.sq[6])
 		prob_accept <- min(exp(lpx1 - lpx0), 1)
 		if (runif(1) < prob_accept){
 			mcmc$lambda.z <- prop	
@@ -233,10 +240,10 @@ lambdas.update <- function(mcmc) {
 	return()
 }
 
-logdensity.lambda <- function(lambda, mcmc, high, Triangle, Triangle.c, tau.sq, ...) {
+logdensity.lambda <- function(lambda, mcmc, low, high, Triangle, Triangle.c, tau.sq, ...) {
 	nu <- mcmc$meta$nu
 	return(log(dgamma(lambda, nu/2, rate=tau.sq)) + 
-				sum(log(dnorm.trunc(Triangle.c, mean=Triangle, sd=1/sqrt(lambda), 0, high))))
+				sum(log(dnorm.trunc(Triangle.c, mean=Triangle, sd=1/sqrt(lambda), low, high))))
 }
 
 proposal.lambda <- function(nu, tau.sq, Triangle, Triangle.c, C) {
