@@ -1,5 +1,7 @@
 \name{bayesLife-internal}
 \alias{bdem.parameter.traces}
+\alias{e0.DLisDecrement}
+\alias{e0.get.dlcurves}
 \alias{get.countries.index.bayesLife.mcmc.meta}
 \alias{get.data.matrix.bayesLife.mcmc.meta}
 \alias{get.data.imputed.bayesLife.prediction}

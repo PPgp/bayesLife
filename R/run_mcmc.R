@@ -133,8 +133,7 @@ run.e0.mcmc <- function(sex=c("Male", "Female"), nr.chains=3, iter=100000,
                                      verbose=verbose, ...)
 	} else { # run chains sequentially
 		chain.set <- list()
-		#for (chain in 1:nr.chains) {
-		for (chain in 1:1) {
+		for (chain in 1:nr.chains) {
 			chain.set[[chain]] <- mcmc.run.chain.e0(chain, bayesLife.mcmc.meta, thin=thin, 
                                                 iter=iter, starting.values=starting.values, verbose=verbose)
 		}
@@ -464,7 +463,7 @@ e0.mcmc.ini.extra <- function(mcmc, countries, index.replace=NULL) {
 										mcmc$meta$Triangle.c.prior.low[i]), mcmc$meta$Triangle.c.prior.up[i])
 		mcmc$k.c <- c(mcmc$k.c, pmin(pmax(rnorm(nextra, mcmc$meta$k.c.ini.norm[1], 
 							sd=mcmc$meta$k.c.ini.norm[2]), mcmc$meta$k.c.prior.low), mcmc$meta$k.c.prior.up))
-		if(mcmc.meta$vary.z.over.countries)
+		if(mcmc$meta$vary.z.over.countries)
 			mcmc$z.c <- c(mcmc$z.c, pmin(pmax(rnorm(nextra, mcmc$meta$z.c.ini.norm[1], 
 							sd=mcmc$meta$z.c.ini.norm[2]), mcmc$meta$z.c.prior.low), mcmc$meta$z.c.prior.up))
 		else mcmc$z.c <- c(mcmc$z.c, rep(mcmc$z, nextra))

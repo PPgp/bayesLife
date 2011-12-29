@@ -132,7 +132,7 @@ e0.DLcurve.plot.all <- function (mcmc.list = NULL, sim.dir = NULL,
         cat("\nDL plots stored into", output.dir, "\n")
 }
 
-.get.dlcurves <- function(x, mcmc.list, country.code, country.index, burnin, nr.curves, predictive.distr=FALSE) {
+e0.get.dlcurves <- function(x, mcmc.list, country.code, country.index, burnin, nr.curves, predictive.distr=FALSE) {
 	dlc <- c()
     nr.curves.from.mc <- if (!is.null(nr.curves)) ceiling(max(nr.curves, 2000)/length(mcmc.list))
     						else NULL
@@ -186,7 +186,7 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
     obs.data <- meta$e0.matrix[1:(T.total - 1), country$index]
     if (is.null(e0.lim)) e0.lim <- c(min(40, obs.data), max(90, obs.data))
     x <- seq(e0.lim[1], e0.lim[2], length=1000)
-    dlc <- .get.dlcurves(x, mcmc.list, country$code, country$index, burnin, nr.curves, 
+    dlc <- e0.get.dlcurves(x, mcmc.list, country$code, country$index, burnin, nr.curves, 
     						predictive.distr=predictive.distr)
     thincurves <- bayesTFR:::get.thinning.index(nr.curves, dim(dlc)[1])
     ltype <- "l"

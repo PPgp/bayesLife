@@ -1,5 +1,5 @@
-\name{GoF.dl}
-\alias{GoF.dl}
+\name{e0.GoF.dl}
+\alias{e0.GoF.dl}
 \title{
 Goodness of Fit of the Double Logistic Function
 }
@@ -7,12 +7,14 @@ Goodness of Fit of the Double Logistic Function
 The function computes the ratio of observed data fitted within the given probability intervals of the predictive posterior distribution of the double logistic function. 
 }
 \usage{
-    GoF.dl(sim.dir, pi = c(80, 90, 95))
+    e0.GoF.dl(sim.dir, pi = c(80, 90, 95), burnin=20000, verbose=TRUE)
 }
 
 \arguments{
-  \item{sim.dir}{Directory with the MCMC simulation results.}
+  \item{sim.dir}{Directory with the MCMC simulation results. If a prediction and its corresponding thinned mcmcs are available in the simulation directory, those are taken for assessing the goodness of fit.}
   \item{pi}{Probability interval. It can be a single number or an array.}
+    \item{burnin}{Burnin. Only relevant if \code{sim.dir} does not contained thinned chains.}
+  \item{verbose}{Logical switching log messages on and off.}
 }
 %\details{
 %%  ~~ If necessary, more details than the description above ~~
@@ -41,7 +43,7 @@ To see the fit visually per country, use \code{\link{e0.DLcurve.plot}(\dots, pre
 sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
 e0 <- get.e0.mcmc(sim.dir)
 # Note that this simulation is a toy example and thus has not converged.
-GoF.dl(sim.dir)
+e0.GoF.dl(sim.dir)
 e0.DLcurve.plot(e0, country=608, predictive.distr=TRUE, pi=c(80, 90, 95))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
