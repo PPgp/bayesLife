@@ -12,9 +12,9 @@ Using the posterior parameter samples simulated by \code{\link{run.e0.mcmc}} the
 e0.predict(mcmc.set = NULL, end.year = 2100, 
     sim.dir = file.path(getwd(), "bayesLife.output"), 
     replace.output = FALSE, nr.traj = NULL, thin = NULL, 
-    burnin = 2e+04, save.as.ascii = 1000, 
-    output.dir = NULL, low.memory = TRUE, 
-    seed = NULL, verbose = TRUE)
+    burnin = 2e+04, use.diagnostics = FALSE,
+    save.as.ascii = 1000, output.dir = NULL, 
+    low.memory = TRUE, seed = NULL, verbose = TRUE)
 }
 
 \arguments{
@@ -26,6 +26,7 @@ e0.predict(mcmc.set = NULL, end.year = 2100,
   \item{nr.traj}{Number of trajectories to be generated. If \code{NULL}, the argument \code{thin} is taken to determine the number of trajectories. If both are \code{NULL}, the number of trajectories corresponds to the minimum of the size of the parameter sample and 2000.}
   \item{thin}{Thinning interval used for determining the number of trajectories. Only relevant, if \code{nr.traj} is \code{NULL}.}
   \item{burnin}{Number of iterations to be discarded from the beginning of the parameter traces.}
+  \item{use.diagnostics}{Logical determining if an existing convergence diagnostics should be used for choosing the values of \code{thin} and \code{burnin}. In such a case, arguments \code{nr.traj}, \code{thin} and \code{burnin} are ignored. The \sQuote{best} values are chosen from results of running the \code{\link{e0.diagnose}} function. Only diagnostics can be used that suggest a convergence of the underlying MCMCs. If there are more than one such objects, the one is chosen whose recommendation for the number of trajectories is larger and closest to 2000.}
   \item{save.as.ascii}{Either a number determining how many trajectories should be converted into an ASCII file, or \dQuote{all} in which case all trajectories are converted. It should be set to 0, if no conversion is desired.}
   \item{output.dir}{Directory into which the resulting prediction object and the trajectories are stored. If it is \code{NULL}, it is set to either \code{sim.dir}, or to \code{output.dir} of \code{mcmc.set$meta} if \code{mcmc.set} is given.}
   \item{low.memory}{Logical indicating if the prediction should run in a low-memory mode. If it is \code{FALSE}, the whole traces of all parameters, including the burnin, are loaded into memory. Otherwise, burnins are discarded and parameters are loaded as they are needed and are not kept in the memory.}

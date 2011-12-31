@@ -121,16 +121,15 @@ e0.predict.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
 								nr.traj = NULL, thin=NULL, burnin=0, countries = NULL,
 							    save.as.ascii=1000, output.dir = NULL, write.summary.files=TRUE, 
-							    is.mcmc.set.thinned=FALSE, force.creating.thinned.mcmc=FALSE,
+							    force.creating.thinned.mcmc=FALSE,
 							    verbose=verbose){
 	# if 'countries' is given, it is an index
 	nr_project <- ceiling((end.year - mcmc.set$meta$present.year)/5)
 	cat('\nPrediction from', mcmc.set$meta$present.year, 
 			'(excl.) until', end.year, '(i.e.', nr_project, 'projections)\n\n')
 			
-	burn <- if(is.mcmc.set.thinned) 0 else burnin
-	total.iter <- get.total.iterations(mcmc.set$mcmc.list, burn)
-	stored.iter <- get.stored.mcmc.length(mcmc.set$mcmc.list, burn)
+	total.iter <- get.total.iterations(mcmc.set$mcmc.list, burnin)
+	stored.iter <- get.stored.mcmc.length(mcmc.set$mcmc.list, burnin)
 	mcthin <- max(sapply(mcmc.set$mcmc.list, function(x) x$thin))
 	if(!is.null(nr.traj) && !is.null(thin)) {
 		warning('Both nr.traj and thin are given. Argument thin will be ignored.')
@@ -160,13 +159,9 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
 			dir.create(outdir, recursive=TRUE)
 	} else write.to.disk <- FALSE
 	
-	if(is.mcmc.set.thinned) { 
-		thinned.mcmc <- mcmc.set
-		has.thinned.mcmc <- TRUE
-	} else {
-		thinned.mcmc <- get.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin)
-		has.thinned.mcmc <- !is.null(thinned.mcmc) && thinned.mcmc$meta$parent.iter == total.iter
-	}
+	thinned.mcmc <- get.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin)
+	has.thinned.mcmc <- !is.null(thinned.mcmc) && thinned.mcmc$meta$parent.iter == total.iter
+
 	load.mcmc.set <- if(has.thinned.mcmc && !force.creating.thinned.mcmc) thinned.mcmc
 					 else create.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin, 
 					 					output.dir=output.dir, verbose=verbose)

@@ -1,6 +1,6 @@
 library(bayesLife)
 source('test_functions.R')
-test.estimate.mcmc.with.same.z()
+#test.estimate.mcmc.with.same.z()
 test.get.wpp.data()
 test.estimate.mcmc()
 #test.estimate.mcmc.with.same.z()
@@ -11,4 +11,4 @@ test.plot.density()
 test.get.parameter.traces()
 test.plot.map()
 
-#test.run.mcmc.simulation.auto()
+test.run.mcmc.simulation.auto()

@@ -37,7 +37,7 @@ A number of functions analyzing results are included in the package:
 \item \link{summary.bayesLife.mcmc.set}: Summary function for the MCMC results.
 \item \link{summary.bayesLife.prediction}: Summary function for the prediction results.
 }
-For MCMC diagnostics, function \link{e0.coda.mcmc.list} creates an object of type \dQuote{mcmc.list} that can be used with the \pkg{coda} package.  Furthermore, function \link{e0.diagnose} analyzes the MCMCs using the Raftery diagnostics implemented in the \pkg{coda} package and gives information about parameters that did not converge. Function \link{GoF.dl} computes a goodness of fit of the double logistic function.
+For MCMC diagnostics, function \link{e0.coda.mcmc.list} creates an object of type \dQuote{mcmc.list} that can be used with the \pkg{coda} package.  Furthermore, function \link{e0.diagnose} analyzes the MCMCs using the Raftery diagnostics implemented in the \pkg{coda} package and gives information about parameters that did not converge. Function \link{e0.GoF.dl} computes a goodness of fit of the double logistic function.
 
 
 Existing simulation results can be accessed using the \link{get.e0.mcmc} function.  An existing prediction can be accessed via \link{get.e0.prediction}.
