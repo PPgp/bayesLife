@@ -10,7 +10,8 @@ e0.proj.le.SDPropToLoess<-function(x,l.start,kap,n.proj=11, p1=9, p2=9){
 }
 
 e0.predict <- function(mcmc.set=NULL, end.year=2100, sim.dir=file.path(getwd(), 'bayesLife.output'),
-                       replace.output=FALSE, nr.traj = NULL, thin=NULL, burnin=20000, save.as.ascii=1000,
+                       replace.output=FALSE, nr.traj = NULL, thin=NULL, burnin=20000, 
+                       use.diagnostics=FALSE, save.as.ascii=1000,
                        output.dir = NULL, low.memory=TRUE, seed=NULL, verbose=TRUE){
 	if(!is.null(mcmc.set)) {
 		if (class(mcmc.set) != 'bayesLife.mcmc.set') {
@@ -20,6 +21,31 @@ e0.predict <- function(mcmc.set=NULL, end.year=2100, sim.dir=file.path(getwd(), 
 		mcmc.set <- get.e0.mcmc(sim.dir, low.memory=low.memory, verbose=verbose)
 	}
 	if(!is.null(seed)) set.seed(seed)
+		# Get argument settings from existing convergence diagnostics
+	if(use.diagnostics) {
+		diag.list <- get.e0.convergence.all(mcmc.set$meta$output.dir)
+		ldiag <- length(diag.list)
+		if (ldiag == 0) stop('There is no diagnostics available. Use manual settings of "nr.traj" or "thin".')
+		use.nr.traj <- use.burnin <- rep(NA, ldiag)
+		for(idiag in 1:ldiag) {
+			if (bayesTFR:::has.mcmc.converged(diag.list[[idiag]])) {
+				use.nr.traj[idiag] <- diag.list[[idiag]]$use.nr.traj
+				use.burnin[idiag] <- diag.list[[idiag]]$burnin
+			}
+		}
+		if(all(is.na(use.nr.traj)))
+			stop('There is no diagnostics indicating convergence of the MCMCs. Use manual settings of "nr.traj" or "thin".')
+		# Try to select those that suggest nr.traj >= 2000 (take the minimum of those)
+		traj.is.notna <- !is.na(use.nr.traj)
+		larger2T <- traj.is.notna & use.nr.traj>=2000
+		nr.traj.idx <- if(sum(larger2T)>0) which.min(use.nr.traj[larger2T])
+						else which.max(use.nr.traj[traj.is.notna])
+		nr.traj <- use.nr.traj[nr.traj.idx]
+		burnin <- use.burnin[nr.traj.idx]
+		if(verbose)
+			cat('\nUsing convergence settings: nr.traj=', nr.traj, ', burnin=', burnin, '\n')
+	}
+
 	invisible(make.e0.prediction(mcmc.set, end.year=end.year,  
 					replace.output=replace.output,  
 					nr.traj=nr.traj, thin=thin, burnin=burnin, save.as.ascii=save.as.ascii,
@@ -55,6 +81,7 @@ e0.predict.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 	new.pred <- make.e0.prediction(mcmc.set, end.year=pred$end.year, replace.output=FALSE,
 									nr.traj=pred$nr.traj, burnin=pred$burnin,
 									countries=countries.idx, save.as.ascii=0, output.dir=prediction.dir,
+									force.creating.thinned.mcmc=TRUE,
 									write.summary.files=FALSE, verbose=verbose)
 									
 	# merge the two predictions
@@ -94,20 +121,27 @@ e0.predict.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
 								nr.traj = NULL, thin=NULL, burnin=0, countries = NULL,
 							    save.as.ascii=1000, output.dir = NULL, write.summary.files=TRUE, 
+							    is.mcmc.set.thinned=FALSE, force.creating.thinned.mcmc=FALSE,
 							    verbose=verbose){
 	# if 'countries' is given, it is an index
 	nr_project <- ceiling((end.year - mcmc.set$meta$present.year)/5)
 	cat('\nPrediction from', mcmc.set$meta$present.year, 
 			'(excl.) until', end.year, '(i.e.', nr_project, 'projections)\n\n')
 			
-	total.iter <- get.total.iterations(mcmc.set$mcmc.list, burnin)
-	stored.iter <- get.stored.mcmc.length(mcmc.set$mcmc.list, burnin)
+	burn <- if(is.mcmc.set.thinned) 0 else burnin
+	total.iter <- get.total.iterations(mcmc.set$mcmc.list, burn)
+	stored.iter <- get.stored.mcmc.length(mcmc.set$mcmc.list, burn)
 	mcthin <- max(sapply(mcmc.set$mcmc.list, function(x) x$thin))
 	if(!is.null(nr.traj) && !is.null(thin)) {
 		warning('Both nr.traj and thin are given. Argument thin will be ignored.')
 		thin <- NULL
 	}
 	if(is.null(nr.traj)) nr.traj <- min(stored.iter, 2000)
+	else {
+		if (nr.traj > stored.iter) 
+			warning('nr.traj is larger than the available MCMC sample. Only ', stored.iter, ' trajectories will be generated.')
+		nr.traj <- min(nr.traj, stored.iter)	
+	}
 	if(is.null(thin)) thin <- floor(stored.iter/nr.traj * mcthin)
 	if(stored.iter <= 0 || thin == 0)
 		stop('The number of simulations is 0. Burnin might be larger than the number of simulated values, or # trajectories is too big.')
@@ -121,13 +155,19 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
 			stop('Prediction in ', outdir,
 				' already exists.\nSet replace.output=TRUE if you want to overwrite existing projections.')
 		unlink(outdir, recursive=TRUE)
-	} 
-	if(!file.exists(outdir)) 
-		dir.create(outdir, recursive=TRUE)
+		write.to.disk <- TRUE
+		if(!file.exists(outdir)) 
+			dir.create(outdir, recursive=TRUE)
+	} else write.to.disk <- FALSE
 	
-	thinned.mcmc <- get.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin)
-	has.thinned.mcmc <- !is.null(thinned.mcmc) && thinned.mcmc$meta$parent.iter == total.iter
-	load.mcmc.set <- if(has.thinned.mcmc) thinned.mcmc
+	if(is.mcmc.set.thinned) { 
+		thinned.mcmc <- mcmc.set
+		has.thinned.mcmc <- TRUE
+	} else {
+		thinned.mcmc <- get.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin)
+		has.thinned.mcmc <- !is.null(thinned.mcmc) && thinned.mcmc$meta$parent.iter == total.iter
+	}
+	load.mcmc.set <- if(has.thinned.mcmc && !force.creating.thinned.mcmc) thinned.mcmc
 					 else create.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin, 
 					 					output.dir=output.dir, verbose=verbose)
 	nr_simu <- load.mcmc.set$mcmc.list[[1]]$finished.iter	
@@ -204,17 +244,18 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
 				burnin=burnin,
 				end.year=end.year),
 				class='bayesLife.prediction')
-				
-	prediction.file <- file.path(outdir, 'prediction.rda')
-	save(bayesLife.prediction, file=prediction.file)
+		
+	if(write.to.disk) {		
+		prediction.file <- file.path(outdir, 'prediction.rda')
+		save(bayesLife.prediction, file=prediction.file)
 	
-	bayesTFR:::do.convert.trajectories(pred=bayesLife.prediction, n=save.as.ascii, output.dir=outdir, 
+		bayesTFR:::do.convert.trajectories(pred=bayesLife.prediction, n=save.as.ascii, output.dir=outdir, 
 										verbose=verbose)
-	#write.summary.files <- FALSE # TODO: remove this after the function is fixed
-	if(write.summary.files)
-		bayesTFR:::do.write.projection.summary(pred=bayesLife.prediction, output.dir=outdir)
+		if(write.summary.files)
+			bayesTFR:::do.write.projection.summary(pred=bayesLife.prediction, output.dir=outdir)
 	
-	cat('\nPrediction stored into', outdir, '\n')
+		cat('\nPrediction stored into', outdir, '\n')
+	}
 	invisible(bayesLife.prediction)
 }
 
