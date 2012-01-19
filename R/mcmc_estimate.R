@@ -182,15 +182,20 @@ Triangle.k.z.c.update <- function(mcmc, country) {
 	z.c.width <- mcmc$meta$z.c.width
 	idx <- 1:(mcmc$meta$T.end.c[country]-1)
 	lex <- mcmc$meta$e0.matrix[2:mcmc$meta$T.end.c[country], country]
-	for (i in 1:4) {
-		mcmc$Triangle.c[i, country] <- slice.sampling(mcmc$Triangle.c[i, country],
+	Triangle.prop <- rep(0,4)
+	while(TRUE) {
+		for (i in 1:4) {
+			Triangle.prop[i] <- slice.sampling(mcmc$Triangle.c[i, country],
 										logdensity.Triangle.k.z.c, Triangle.c.width[i], 
 										mean=mcmc$Triangle[i], 
 										sd=sigmas[i], low=mcmc$meta$Triangle.c.prior.low[i], 
 										up=mcmc$meta$Triangle.c.prior.up[i], par.idx=i, 
 										mcmc=mcmc, 
 										country=country, lex=lex, idx=idx)
+		}
+		if(sum(Triangle.prop) <= 110) break
 	}
+	mcmc$Triangle.c[, country] <- Triangle.prop
 	mcmc$k.c[country] <- slice.sampling(mcmc$k.c[country],
 										logdensity.Triangle.k.z.c, k.c.width, mean=mcmc$k, 
 										sd=1/sqrt(mcmc$lambda.k),
