@@ -79,6 +79,8 @@ get.e0.prediction <- function(mcmc=NULL, sim.dir=NULL, mcmc.dir=NULL) {
 	}
 	load(file=pred.file)
 	bayesLife.prediction$output.directory <- output.dir
+	if(!is.null(bayesLife.prediction$joint.male)) 
+		bayesLife.prediction$joint.male$output.directory <- file.path(output.dir, 'joint_male')
 	
 	pred <- bayesLife.prediction
 	# re-route mcmcs if necessary

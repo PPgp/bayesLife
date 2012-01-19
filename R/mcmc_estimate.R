@@ -16,6 +16,7 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
 	mcenv <- new.env() # Create an environment for the mcmc stuff in order to avoid 
 						# copying of the mcmc list 
     for (item in names(mcmc)) mcenv[[item]] <- mcmc[[item]]
+    Triangle.prop <- rep(0,4)
     
 	for(iter in start.iter:niter) {
 		if(verbose || (iter %% 10 == 0))
@@ -29,11 +30,15 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
 		Tr.var <- 1./(1./delta.sq + C*lambdas)
 		Tr.sd <- sqrt(Tr.var)
 		Tr.mean <- (meta$a/delta.sq + sum.Trkz.c*lambdas)*Tr.var
-		for (i in 1:4) {
-			# Triangle is truncated normal in [0,100]
-			mcenv$Triangle[i] <- rnorm.trunc(mean=Tr.mean[i], sd=Tr.sd[i], 
+		while(TRUE) {
+			for (i in 1:4) {
+				# Triangle is truncated normal in [0,100]
+				Triangle.prop[i] <- rnorm.trunc(mean=Tr.mean[i], sd=Tr.sd[i], 
 									low=meta$Triangle.prior.low[i], high=meta$Triangle.prior.up[i])
+			}
+			if(sum(Triangle.prop) < 110) break # discard samples for which the sum(Triangle) > 110.
 		}
+		mcenv$Triangle <- Triangle.prop
 		# k is truncated normal in [0,10]
 		mcenv$k <- rnorm.trunc(mean=Tr.mean[5], sd=Tr.sd[5], low=meta$k.prior.low, high=meta$k.prior.up)
 		# z is truncated normal in [0,1.15]

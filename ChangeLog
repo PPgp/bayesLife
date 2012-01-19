@@ -2,6 +2,8 @@
 -----
 The GoF.dl function renamed to e0.GoF.dl and its implementation was consolidated with tfr.GoF.dl in bayesTFR.
 
+Arguments added to run.e0.mcmc for setting the lower and upper bounds of truncated normal prior distributions.
+
 1.3-0 (11/17/2011)
 -----
 Performance improved in two ways:

@@ -38,8 +38,7 @@ e0.predict <- function(mcmc.set=NULL, end.year=2100, sim.dir=file.path(getwd(), 
 		# Try to select those that suggest nr.traj >= 2000 (take the minimum of those)
 		traj.is.notna <- !is.na(use.nr.traj)
 		larger2T <- traj.is.notna & use.nr.traj>=2000
-		nr.traj.idx <- if(sum(larger2T)>0) which.min(use.nr.traj[larger2T])
-						else which.max(use.nr.traj[traj.is.notna])
+		nr.traj.idx <- if(sum(larger2T)>0) (1:ldiag)[larger2T][which.min(use.nr.traj[larger2T])] else (1:ldiag)[traj.is.notna][which.max(use.nr.traj[traj.is.notna])]
 		nr.traj <- use.nr.traj[nr.traj.idx]
 		burnin <- use.burnin[nr.traj.idx]
 		if(verbose)
@@ -185,6 +184,7 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
 	var.par.names.cs <- c('Triangle.c', 'k.c', 'z.c')
 	
 	for (country in prediction.countries){
+	#for (country in c(23)){
 	#########################################
 		country.obj <- get.country.object(country, mcmc.set$meta, index=TRUE)
 		if (verbose) {			
@@ -209,11 +209,16 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
 
 		this.nr_project <- nr_project + nmissing
 		this.T_end <- mcmc.set$meta$T.end.c[country]
-		trajectories <- matrix(NA, this.nr_project+1, nr_simu)
-    	for(j in 1:nr_simu){
-           trajectories[,j]<-e0.proj.le.SDPropToLoess(cs.par.values[j,], 
+		sum.delta <- apply(cs.par.values[,1:4], 1, sum)
+		use.traj <- which(sum.delta <= 110)
+		#trajectories <- matrix(NA, this.nr_project+1, nr_simu)
+		trajectories <- matrix(NA, this.nr_project+1, length(use.traj))
+    	#for(j in 1:nr_simu){
+    	for(j in 1:length(use.traj)){
+    		k <- use.traj[j]
+           trajectories[,j]<-e0.proj.le.SDPropToLoess(cs.par.values[k,], 
            							mcmc.set$meta$e0.matrix[mcmc.set$meta$T.end.c[country], country], 
-           							kap=var.par.values[j,'omega'],n.proj=this.nr_project,
+           							kap=var.par.values[k,'omega'],n.proj=this.nr_project,
            							p1=mcmc.set$meta$dl.p1, p2=mcmc.set$meta$dl.p2)
     	}
     	if (nmissing > 0) {
@@ -222,6 +227,7 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
     		trajectories <- trajectories[(nmissing+1):nrow(trajectories),]
     		trajectories[1,] <- quantile(trajectories[1,], 0.5, na.rm = TRUE)
     	}
+    	#stop('')
 		save(trajectories, file = file.path(outdir, paste('traj_country', country.obj$code, '.rda', sep='')))
  		PIs_cqp[country,,] = apply(trajectories, 1, quantile, quantiles.to.keep, na.rm = TRUE)
  		mean_sd[country,1,] <- apply(trajectories, 1, mean, na.rm = TRUE)
@@ -310,4 +316,129 @@ e0.median.shift <- function(sim.dir, country, reset=FALSE, shift=0, from=NULL, t
 e0.median.set <- function(sim.dir, country, values, years=NULL) {
 	invisible(bayesTFR:::.bdem.median.set(type='e0', sim.dir=sim.dir, country=country, 
 				values=values, years=years))
+}
+
+joint.male.estimate <- function(mcmc.set, countries.index=1:get.nr.countries.est(mcmc.set$meta), 
+								estDof.eq1 = TRUE, start.eq1 = list(dof = 2), 
+								age.threshold.eq2 = 80, estDof.eq2 = TRUE, start.eq2 = list(dof = 2), 
+								verbose=FALSE) {
+	# Estimate coefficients for joint prediction of female and male e0
+	require(hett)
+
+	e0f.data <- get.data.matrix(mcmc.set$meta)[,countries.index]
+	e0m.data <- get.wpp.e0.data.for.countries(mcmc.set$meta, sex='M',
+					verbose=verbose)$e0.matrix[,countries.index]
+	T <- dim(e0f.data)[1] - 1 
+	if(verbose) {
+		cat('\nEstimating coefficients for joint female and male prediction.')
+		cat('\nUsing', length(countries.index), 'countries and', T+1, 'time periods.\n\n')
+	}
+	G <- e0f.data - e0m.data # observed gap
+
+	e0.1953 <- rep(e0f.data['1953',], each=T)
+
+	data.eq1 <- data.frame(
+					G=as.numeric(G[2:nrow(G),]), # dependent variable
+					# covariates
+					e0.1953=e0.1953, 
+					Gprev=as.numeric(G[1:T,]),
+					e0=as.numeric(e0f.data[1:T,]),
+					e0d75=pmax(0, e0f.data[1:T,]-75) 
+				)
+	fit.eq1 <- tlm(G~., data=data.eq1, estDof = estDof.eq1, start=start.eq1)
+	if(verbose)
+		print(summary(fit.eq1))
+	errscale.eq1<-as.numeric(exp(fit.eq1$scale.fit$coefficients[1]))
+	errsd.eq1<-sqrt(errscale.eq1)
+
+	data.eq2 <- data.eq1[data.eq1$e0 >= age.threshold.eq2,]
+	if(verbose) 
+		cat('\n\nUsing', nrow(data.eq2), 'data points for equation 2.\n\n')
+	fit.eq2 <- tlm(G~-1+Gprev, data=data.eq2, start = start.eq2, estDof = estDof.eq2)
+	if(verbose)
+		print(summary(fit.eq2))
+	errscale.eq2<-as.numeric(exp(fit.eq2$scale.fit$coefficients[1]))
+	errsd.eq2<-sqrt(errscale.eq2)
+	return(list(eq1.coefficients=fit.eq1$loc.fit$coefficients, 
+				eq1.sigma=errsd.eq1, eq1.dof = fit.eq1$dof, eq1.fit=fit.eq1,
+				eq2.coefficients=fit.eq2$loc.fit$coefficients,
+				eq2.sigma=errsd.eq2, eq2.dof = fit.eq2$dof, eq2.fit=fit.eq2
+				))
+}
+
+joint.male.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18), verbose=TRUE, ...
+			) {
+	# Predicting male e0 from female predictions. estimates is the result of 
+	# the joint.male.estimate function. If it is NULL, the estimation is performed 
+	# using the ... arguments
+	
+	if(is.null(estimates)) estimates <- joint.male.estimate(e0.pred$mcmc.set, verbose=verbose, ...
+		)
+	meta <- e0.pred$mcmc.set$meta
+	e0f.data <- get.e0.reconstructed(e0.pred$e0.matrix.reconstructed, meta)
+	Tc <- meta$T.end.c
+
+	e0m.data <- get.wpp.e0.data.for.countries(meta, sex='M', verbose=verbose)$e0.matrix
+	maxe0 <- max(e0f.data)
+
+	bayesLife.prediction <- e0.pred
+
+	prediction.file <- file.path(e0.pred$output.directory, 'prediction.rda')
+	joint.male <- e0.pred
+	joint.male$output.directory <- file.path(e0.pred$output.directory, 'joint_male')
+	joint.male$e0.matrix.reconstructed <- e0m.data
+	joint.male$fit <- estimates
+	if(file.exists(joint.male$output.directory)) unlink(joint.male$output.directory, recursive=TRUE)
+	dir.create(joint.male$output.directory, recursive=TRUE)
+	bayesLife.prediction$joint.male <- joint.male
+
+	quantiles <- array(NA, dim(e0.pred$quantiles))
+	dimnames(quantiles) <- dimnames(e0.pred$quantiles)
+	traj.mean.sd <- array(NA, dim(e0.pred$traj.mean.sd))
+	dimnames(traj.mean.sd) <- dimnames(e0.pred$traj.mean.sd)
+
+	quantiles.to.keep <- as.numeric(dimnames(e0.pred$quantiles)[[2]])
+	for (icountry in 1:get.nr.countries(meta)) {
+		country <- get.country.object(icountry, meta, index=TRUE)
+		if(verbose)
+			cat('\ne0 male projection for country', icountry, country$name, 
+ 						'(code', country$code, ')')
+		trajectoriesF <- bayesTFR:::get.trajectories(e0.pred, country$code)$trajectories
+		Mtraj <- matrix(NA, nrow=nrow(trajectoriesF), ncol=ncol(trajectoriesF))
+		G1 <- e0f.data[Tc[icountry],icountry] - e0m.data[Tc[icountry],icountry]
+		for (itraj in 1:dim(trajectoriesF)[2]) {
+			Mtraj[1,itraj] <- e0m.data[Tc[icountry],icountry]
+			Gprev <- G1
+			for(time in 2:dim(trajectoriesF)[1]) {
+				if(trajectoriesF[time-1,itraj] <= maxe0) { # 1st part of Equation 3.1
+					Gtdeterm <- (estimates$eq1.coefficients[1] + # intercept
+					   			 estimates$eq1.coefficients['Gprev']*Gprev +
+					   			 estimates$eq1.coefficients['e0.1953']*e0f.data['1953',icountry] +
+					   			 estimates$eq1.coefficients['e0']*trajectoriesF[time-1,itraj] +
+					   			 estimates$eq1.coefficients['e0d75']*max(0, trajectoriesF[time-1,itraj]-75)					   			)
+					Gt <- Gtdeterm + estimates$eq1.sigma*rt(1,estimates$eq1.dof)
+					while(Gt < gap.lim[1] || Gt > gap.lim[2]) 
+						Gt <- Gtdeterm + estimates$eq1.sigma*rt(1,estimates$eq1.dof)
+				} else {  # 2nd part of Equation 3.1
+					Gtdeterm <- estimates$eq2.coefficients['Gprev']*Gprev
+					Gt <- Gtdeterm + estimates$eq2.sigma*rt(1,estimates$eq2.dof)
+					while(Gt < gap.lim[1] || Gt > gap.lim[2]) 
+						Gt <- Gtdeterm + estimates$eq2.sigma*rt(1,estimates$eq2.dof)
+				}
+				Mtraj[time,itraj] <- trajectoriesF[time,itraj] - Gt
+				Gprev <- Gt
+			}
+		}
+		quantiles[icountry,,] = apply(Mtraj, 1, quantile, quantiles.to.keep, na.rm = TRUE)
+ 		traj.mean.sd[icountry,1,] <- apply(Mtraj, 1, mean, na.rm = TRUE)
+ 		traj.mean.sd[icountry,2,] = apply(Mtraj, 1, sd, na.rm = TRUE)
+ 		trajectories <- Mtraj
+		save(trajectories, file = file.path(joint.male$output.directory, 
+								paste('traj_country', country$code, '.rda', sep='')))
+		bayesLife.prediction$joint.male$quantiles <- quantiles
+		bayesLife.prediction$joint.male$traj.mean.sd <- traj.mean.sd
+		save(bayesLife.prediction, file=prediction.file)
+	}
+	cat('\nPrediction stored into', joint.male$output.directory, '\n')
+	invisible(bayesLife.prediction)
 }

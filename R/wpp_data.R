@@ -53,3 +53,34 @@ set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, verbose=FALS
 						  is_processed = extra.wpp$is_processed)
 	return(extra.wpp)
 }
+
+get.wpp.e0.data.for.countries <- function(meta, sex='M', verbose=FALSE) {
+	sex <- toupper(sex)
+	if(sex != 'M' && sex != 'F')
+		stop('Allowed values for argument "sex" are "M" and "F".')
+	########################################
+	# set data and match with areas
+	########################################
+	data <- read.UNe0(sex=sex, wpp.year=meta$wpp.year, present.year=meta$present.year, verbose=verbose)$data
+	# get region and area data
+	locations <- bayesTFR:::read.UNlocations(data, wpp.year=meta$wpp.year, package='bayesLife', verbose=verbose)
+	loc_data <- locations$loc_data
+	include <- c()
+	for (i in 1:length(meta$regions$country_code)) { # put countries into the same order as in meta
+		loc_index <- which(data$country_code == meta$regions$country_code[i])
+		if(length(loc_index) <= 0) 
+			stop('Country ', data$country_code[i], ' not found.')
+		include <- c(include, loc_index)
+	}
+	data_incl <- data[include,]	
+	LEXmatrix.regions <- bayesTFR:::get.observed.time.matrix.and.regions(
+							data_incl, loc_data, 
+							start.year=meta$start.year, 
+							present.year=meta$present.year)
+	if (verbose) 
+		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')											
+	return(list(e0.matrix=LEXmatrix.regions$obs_matrix, 
+				e0.matrix.all=LEXmatrix.regions$obs_matrix_all, 
+				regions=LEXmatrix.regions$regions, 
+				nr.countries.estimation=nrow(data_incl)))
+}
