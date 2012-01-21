@@ -219,7 +219,7 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
     		#k <- use.traj[j]
            trajectories[,j]<-e0.proj.le.SDPropToLoess(cs.par.values[j,], 
            							mcmc.set$meta$e0.matrix[mcmc.set$meta$T.end.c[country], country], 
-           							kap=var.par.values[k,'omega'],n.proj=this.nr_project,
+           							kap=var.par.values[j,'omega'],n.proj=this.nr_project,
            							p1=mcmc.set$meta$dl.p1, p2=mcmc.set$meta$dl.p2)
     	}
     	if (nmissing > 0) {
