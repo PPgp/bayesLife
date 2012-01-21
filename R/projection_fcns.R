@@ -159,7 +159,8 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
 	} else write.to.disk <- FALSE
 	
 	thinned.mcmc <- get.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin)
-	has.thinned.mcmc <- !is.null(thinned.mcmc) && thinned.mcmc$meta$parent.iter == total.iter
+	has.thinned.mcmc <- (!is.null(thinned.mcmc) && thinned.mcmc$meta$parent.iter == total.iter 
+							&& mcmc.set$meta$nr.countries == thinned.mcmc$meta$nr.countries)
 
 	load.mcmc.set <- if(has.thinned.mcmc && !force.creating.thinned.mcmc) thinned.mcmc
 					 else create.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin, 
@@ -209,14 +210,14 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
 
 		this.nr_project <- nr_project + nmissing
 		this.T_end <- mcmc.set$meta$T.end.c[country]
-		sum.delta <- apply(cs.par.values[,1:4], 1, sum)
-		use.traj <- which(sum.delta <= 110)
-		#trajectories <- matrix(NA, this.nr_project+1, nr_simu)
-		trajectories <- matrix(NA, this.nr_project+1, length(use.traj))
-    	#for(j in 1:nr_simu){
-    	for(j in 1:length(use.traj)){
-    		k <- use.traj[j]
-           trajectories[,j]<-e0.proj.le.SDPropToLoess(cs.par.values[k,], 
+		#sum.delta <- apply(cs.par.values[,1:4], 1, sum)
+		#use.traj <- which(sum.delta <= 110)
+		trajectories <- matrix(NA, this.nr_project+1, nr_simu)
+		#trajectories <- matrix(NA, this.nr_project+1, length(use.traj))
+    	for(j in 1:nr_simu){
+    	#for(j in 1:length(use.traj)){
+    		#k <- use.traj[j]
+           trajectories[,j]<-e0.proj.le.SDPropToLoess(cs.par.values[j,], 
            							mcmc.set$meta$e0.matrix[mcmc.set$meta$T.end.c[country], country], 
            							kap=var.par.values[k,'omega'],n.proj=this.nr_project,
            							p1=mcmc.set$meta$dl.p1, p2=mcmc.set$meta$dl.p2)

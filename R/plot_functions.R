@@ -95,10 +95,10 @@ e0.gap.plot <- function(e0.pred, country, e0.pred2=NULL, pi=c(80, 95), nr.traj=0
 
 e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), 
 								  joint.male = FALSE,
-								  nr.traj=NULL,
+								  nr.traj=NULL, typical.trajectory=FALSE,
 								  xlim=NULL, ylim=NULL, type='b', 
 								  xlab='Year', ylab='Life expectancy', main=NULL, 
-								  lwd=c(2,2,2,2,1), ...
+								  lwd=c(2,2,2,2,1), show.legend=TRUE, ...
 								  ) {
 	# lwd is a vector of 5 line widths for: 
 	#	1. observed data, 2. imputed missing data, 3. median, 4. quantiles, 5. trajectories
@@ -131,7 +131,7 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95),
 	if (lpart2 > 0) 
 		y1.part2 <- e0.matrix.reconstructed[
 			(T_end_c[country$index]+1):nrow(e0.matrix.reconstructed),country$index]
-	trajectories <- bayesTFR:::get.trajectories(e0.pred, country$code, nr.traj)
+	trajectories <- bayesTFR:::get.trajectories(e0.pred, country$code, nr.traj, typical.trajectory=typical.trajectory)
 	e0.median <- bayesTFR:::get.median.from.prediction(e0.pred, country$index, country$code)
 	cqp <- list()
 	ylim.loc <- c(min(trajectories$trajectories, y1.part1, y1.part2, e0.median, na.rm=TRUE), 
@@ -186,7 +186,8 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95),
 		pch <- c(pch, 2)
 		lwds <- c(lwds, lwd[2])
 	}
-	legend('topleft', legend=legend, lty=c(1,lty), bty='n', col=col, pch=pch, lwd=lwds)
+	if(show.legend)
+		legend('topleft', legend=legend, lty=c(1,lty), bty='n', col=col, pch=pch, lwd=lwds)
 	#abline(h=1, lty=3)
 	#abline(h=1.5, lty=3)
 	#abline(h=2.1, lty=3)
