@@ -2,13 +2,13 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
 	if (!is.null(mcmc$rng.state)) .Random.seed <- mcmc$rng.state
 	niter <- mcmc$iter
 	meta <- mcmc$meta
-	lex.mtx <- meta$e0.matrix
-	T <- nrow(lex.mtx) - 1
+	#lex.mtx <- meta$e0.matrix
+	T <- nrow(meta$e0.matrix) - 1
 	C <- meta$nr.countries
 	mcmc$thin <- thin
 	
 	delta.sq <- mcmc$meta$delta^2
-	dlf <- matrix(NA, nrow=T, ncol=C)
+	#dlf <- matrix(NA, nrow=T, ncol=C)
 	psi.shape <- (sum(meta$T.end.c-1)-1)/2.
 	
 	if (start.iter > niter) return(mcmc)
@@ -18,6 +18,24 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
     for (item in names(mcmc)) mcenv[[item]] <- mcmc[[item]]
     Triangle.prop <- rep(0,4)
     
+    dlf <- lex.mtx <- dct <- loess.sd <- list()
+    T.suppl.end <- if(!is.null(meta$suppl.data$e0.matrix)) nrow(meta$suppl.data$e0.matrix) else 0
+    for(country in 1:C) {
+    	lex.mtx[[country]] <- meta$e0.matrix[1:meta$T.end.c[country],country]
+    	dct[[country]] <- meta$d.ct[1:(meta$T.end.c[country]-1),country]
+    	loess.sd[[country]] <- meta$loessSD[1:(meta$T.end.c[country]-1),country]
+    }
+    if(T.suppl.end > 0) {
+    	for(country in 1:ncol(meta$suppl.data$e0.matrix)) {
+    		idx <- meta$suppl.data$index.to.all.countries[country]
+    		lex.mtx[[idx]] <- c(meta$suppl.data$e0.matrix[meta$suppl.data$T.start.c[country]:T.suppl.end,country],
+    								lex.mtx[[idx]])
+    		dct[[idx]] <- c(meta$suppl.data$d.ct[meta$suppl.data$T.start.c[country]:T.suppl.end,country],
+    							dct[[idx]])
+    		loess.sd[[idx]] <- c(meta$suppl.data$loessSD[meta$suppl.data$T.start.c[country]:T.suppl.end,country],
+    								loess.sd[[idx]])
+    	}
+    }
 	for(iter in start.iter:niter) {
 		if(verbose || (iter %% 10 == 0))
 			cat('\nIteration:', iter, '--', date())
@@ -52,18 +70,18 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
 		# Update Triangle.c, k.c and z.c using slice sampling
 		###########################################
 		for(country in 1:C) {
-			Triangle.k.z.c.update(mcenv, country)
-			idx <- 1:(meta$T.end.c[country]-1)
-			dlf[idx,country] <- g.dl6(c(mcenv$Triangle.c[,country], 
+			Triangle.k.z.c.update(mcenv, country, lex.mtx=lex.mtx[[country]], dct=dct, loess.sd=loess.sd)
+			#idx <- 1:(meta$T.end.c[country]-1)
+			dlf[[country]] <- g.dl6(c(mcenv$Triangle.c[,country], 
 								mcenv$k.c[country], mcenv$z.c[country]), 
-								lex.mtx[idx+1, country], meta$dl.p1, meta$dl.p2)
+								lex.mtx[[country]][2:length(lex.mtx[[country]])], meta$dl.p1, meta$dl.p2)
 			#ratesum <- ratesum + ((meta$d.ct[idx,country]-dlf[idx,country])^2)/(meta$loessSD[idx,country]^2)
 		}
 		# Update omega using Gibbs sampler
 		###########################################
 		#psi <- rgamma.ltrunc(shape=psi.shape, rate=0.5*ratesum, low=0.01)
 		#mcmc$omega <- 1/sqrt(psi)
-		omega.update(mcenv, dlf)
+		omega.update(mcenv, dlf, dct=dct, loess.sd=loess.sd)
 		
 		# Update lambdas using MH-algorithm
 		###########################################
@@ -174,14 +192,14 @@ slice.sampling <- function(x0, fun, width,  ..., low, up) {
 	}
 }
 
-Triangle.k.z.c.update <- function(mcmc, country) {
+Triangle.k.z.c.update <- function(mcmc, country, lex.mtx, dct, loess.sd) {
 	# Update Triangle pars using slice sampling
 	sigmas <- 1/sqrt(mcmc$lambda)
 	Triangle.c.width <- mcmc$meta$Triangle.c.width
 	k.c.width <- mcmc$meta$k.c.width
 	z.c.width <- mcmc$meta$z.c.width
 	idx <- 1:(mcmc$meta$T.end.c[country]-1)
-	lex <- mcmc$meta$e0.matrix[2:mcmc$meta$T.end.c[country], country]
+	lex <- lex.mtx[2:length(lex.mtx)]
 	Triangle.prop <- rep(0,4)
 	while(TRUE) {
 		for (i in 1:4) {
@@ -191,7 +209,8 @@ Triangle.k.z.c.update <- function(mcmc, country) {
 										sd=sigmas[i], low=mcmc$meta$Triangle.c.prior.low[i], 
 										up=mcmc$meta$Triangle.c.prior.up[i], par.idx=i, 
 										mcmc=mcmc, 
-										country=country, lex=lex, idx=idx)
+										country=country, lex=lex, idx=idx,
+										dct=dct, loess.sd=loess.sd)
 		}
 		if(sum(Triangle.prop) <= 110) break
 	}
@@ -201,14 +220,16 @@ Triangle.k.z.c.update <- function(mcmc, country) {
 										sd=1/sqrt(mcmc$lambda.k),
 										low=mcmc$meta$k.c.prior.low, up=mcmc$meta$k.c.prior.up, 
 										par.idx=5, mcmc=mcmc, 
-										country=country, lex=lex, idx=idx)
+										country=country, lex=lex, idx=idx,
+										dct=dct, loess.sd=loess.sd)
 	if(mcmc$meta$vary.z.over.countries)
 		mcmc$z.c[country] <- slice.sampling(mcmc$z.c[country],
 										logdensity.Triangle.k.z.c, z.c.width, mean=mcmc$z, 
 										sd=1/sqrt(mcmc$lambda.z),
 										low=mcmc$meta$z.c.prior.low, up=mcmc$meta$z.c.prior.up, 
 										par.idx=6, mcmc=mcmc, 
-										country=country, lex=lex, idx=idx)
+										country=country, lex=lex, idx=idx,
+										dct=dct, loess.sd=loess.sd)
 	else mcmc$z.c[country] <- mcmc$z
 	return()
 }
@@ -260,31 +281,31 @@ proposal.lambda <- function(nu, tau.sq, Triangle, Triangle.c, C) {
 	return(rgamma(1, (nu+C)/2, rate=tau.sq+0.5*sum((Triangle.c-Triangle)^2)))
 }
 
-omega.update <- function(mcmc, dlf) {
+omega.update <- function(mcmc, dlf, dct, loess.sd) {
 	omega.width <- 1		
 	#print('Slice sampling for omega')
 	mcmc$omega <- slice.sampling(mcmc$omega, logdensity.omega, omega.width, 
-								mcmc=mcmc, dlf=dlf, low=0, up=10)
+								mcmc=mcmc, dlf=dlf, dct=dct, loess.sd=loess.sd, low=0, up=10)
 	return()
 }
 
-logdensity.omega <- function(x, mcmc, dlf, low, up) {
+logdensity.omega <- function(x, mcmc, dlf, dct, loess.sd, low, up) {
 	log.d.cDens <- 0
 	for(country in 1:mcmc$meta$nr.countries) 
-		log.d.cDens <- log.d.cDens + sum(log(pmax(dnorm(mcmc$meta$d.ct[,country], dlf[,country], 
-										sd=x*mcmc$meta$loessSD[,country]),1e-100)))
+		log.d.cDens <- log.d.cDens + sum(log(pmax(dnorm(dct[[country]], dlf[[country]], 
+										sd=x*loess.sd[[country]]),1e-100)))
 	return(log(dunif(x, low, up)) + log.d.cDens)
 }
 
 
-logdensity.Triangle.k.z.c <- function(x, mean, sd, low, up, par.idx, mcmc, country, lex, idx) {
+logdensity.Triangle.k.z.c <- function(x, mean, sd, low, up, par.idx, mcmc, country, lex, idx, dct, loess.sd) {
 	dlx <- c(Triangle_1=mcmc$Triangle.c[1,country], Triangle_2=mcmc$Triangle.c[2,country],
 			Triangle_3=mcmc$Triangle.c[3,country], Triangle_4=mcmc$Triangle.c[4,country],
 			k=mcmc$k.c[country], z=mcmc$z.c[country])
 	logdens <- 0.0
 	res <- .C("dologdensityTrianglekz", x, mean, sd, low, up, par.idx, dlx, 
 				mcmc$meta$dl.p1, mcmc$meta$dl.p2,
-				lex, idx, length(idx), mcmc$meta$d.ct[idx,country], mcmc$omega*mcmc$meta$loessSD[idx,country], 
+				lex, idx, length(dct[[country]]), dct[[country]], mcmc$omega*loess.sd[[country]], 
 				logdens=logdens)
 
 	return(res$logdens)	

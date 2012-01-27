@@ -134,8 +134,14 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95),
 	trajectories <- bayesTFR:::get.trajectories(e0.pred, country$code, nr.traj, typical.trajectory=typical.trajectory)
 	e0.median <- bayesTFR:::get.median.from.prediction(e0.pred, country$index, country$code)
 	cqp <- list()
-	ylim.loc <- c(min(trajectories$trajectories, y1.part1, y1.part2, e0.median, na.rm=TRUE), 
-				  max(trajectories$trajectories, y1.part1, y1.part2, e0.median, na.rm=TRUE))
+	ylim.loc <- c(min(if (!is.null(trajectories$trajectories))
+							trajectories$trajectories[,trajectories$index]
+					  else NULL, 
+					  y1.part1, y1.part2, e0.median, na.rm=TRUE), 
+				  max(if (!is.null(trajectories$trajectories))
+							trajectories$trajectories[,trajectories$index]
+					  else NULL, 
+					  y1.part1, y1.part2, e0.median, na.rm=TRUE))
 	for (i in 1:length(pi)) {
 		cqp[[i]] <- bayesTFR:::get.traj.quantiles(e0.pred, country$index, 
 					country$code, trajectories=trajectories$trajectories, 
@@ -272,8 +278,17 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
     meta <- mcmc.list[[1]]$meta
     country <- get.country.object(country, meta)
     T.total <- nrow(meta$e0.matrix)
-    incr <- diff(meta$e0.matrix[1:T.total, country$index])
+    incr <- meta$d.ct[, country$index]
     obs.data <- meta$e0.matrix[1:(T.total - 1), country$index]
+    if(!is.null(meta$suppl.data$e0.matrix)) {
+    	supp.c.idx <- which(is.element(meta$suppl.data$index.to.all.countries, country$index))
+    	if(length(supp.c.idx) > 0) {
+    		obs.data <- c( 
+    			meta$suppl.data$e0.matrix[meta$suppl.data$T.start.c[supp.c.idx]:nrow(meta$suppl.data$e0.matrix), 
+    										supp.c.idx], obs.data)
+    		incr <- c(meta$suppl.data$d.ct[meta$suppl.data$T.start.c[supp.c.idx]:nrow(meta$suppl.data$d.ct), 
+    										supp.c.idx], incr)    		}
+    }
     if (is.null(e0.lim)) e0.lim <- c(min(40, obs.data), max(90, obs.data))
     x <- seq(e0.lim[1], e0.lim[2], length=1000)
     dlc <- e0.get.dlcurves(x, mcmc.list, country$code, country$index, burnin, nr.curves, 
@@ -294,6 +309,7 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
     maxy <- max(dlc[thincurves$index, ], dlpi, incr)
     if (is.null(main)) main <- country$name
     if (is.null(ylim)) ylim <- c(miny, maxy)
+
     plot(dlc[thincurves$index[1], ] ~ x, col = "grey", 
         type = ltype, xlim = c(min(x), max(x)), 
         ylim = ylim, ylab = ylab, xlab = xlab, main = main, ...

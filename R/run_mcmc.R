@@ -323,15 +323,14 @@ init.nodes.e0 <- function() {
 
 .do.part.e0.mcmc.meta.ini <- function(data) {
 	nr_countries <- ncol(data$e0.matrix)
-    T_end_c <- rep(NA, nr_countries)
+    T_end_c <- T_start_c <- rep(NA, nr_countries)
 	for (country in 1:nr_countries) {
     	T_end_c[country] <- sum(!is.na(data$e0.matrix[,country]))
     	if(T_end_c[country] < 2) stop('Problem with ', data$regions$country_name[country], 
     						". At least two data points must be observed.")
     }
 	T <- nrow(data$e0.matrix)
-	d.ct <- matrix(NA, nrow=T-1, ncol=nr_countries)
-	loessSD <- matrix(NA, nrow=T-1, ncol=nr_countries)
+	d.ct <- loessSD <- matrix(NA, nrow=T-1, ncol=nr_countries)
 	for(i in 2:T) {
 		nisna1 <- !is.na(data$e0.matrix[i,])
 		nisna2 <- nisna1 & !is.na(data$e0.matrix[i-1,])
@@ -340,8 +339,36 @@ init.nodes.e0 <- function() {
 		if (sum(nisna1) > 0)
 			loessSD[i-1,nisna1]<-sapply(data$e0.matrix[i,nisna1],loess.lookup)
 	}
-	return(list(nr.countries=nr_countries, 
-						T.end.c = T_end_c, d.ct=d.ct, loessSD=loessSD))
+	D.supp.ct <- loessSD.suppl <- NULL
+	nr_countries.suppl <- 0
+	suppl <- data$suppl.data
+	if(!is.null(suppl$e0.matrix)) {
+		nr_countries.suppl <- ncol(suppl$e0.matrix)
+		for (country in 1:nr_countries.suppl) 
+    		T_start_c[country] <- sum(is.na(suppl$e0.matrix[,country])) + 1
+		# add first time point of the observed data to get the last increment of the supplemental data
+		data.suppl <- rbind(suppl$e0.matrix, data$e0.matrix[1,suppl$index.to.all.countries])
+		T <- nrow(data.suppl)
+		d.suppl.ct <- loessSD.suppl <- matrix(NA, nrow=T-1, ncol=nr_countries.suppl)
+		for(i in 2:T) {		
+			nisna1 <- !is.na(data.suppl[i,])
+			nisna2 <- nisna1 & !is.na(data.suppl[i-1,])
+			if (sum(nisna2) > 0)
+				d.suppl.ct[i-1,nisna2] <- data.suppl[i,nisna2] - data.suppl[i-1,nisna2]
+			if (sum(nisna1) > 0)
+				loessSD.suppl[i-1,nisna1]<-sapply(data.suppl[i,nisna1],loess.lookup)
+		}
+		suppl$nr.countries <- nr_countries.suppl
+		suppl$T.start.c <- T_start_c
+		suppl$d.ct <- d.suppl.ct
+		suppl$loessSD <- loessSD.suppl
+	}
+	data$nr.countries <- nr_countries
+	data$T.end.c <- T_end_c
+	data$d.ct <- d.ct
+	data$loessSD <- loessSD
+	data$suppl.data <- suppl
+	return(data)
 }
 
 e0.mcmc.meta.ini <- function(sex="M", nr.chains=1, start.year=1950, present.year=2010, 
@@ -356,7 +383,7 @@ e0.mcmc.meta.ini <- function(sex="M", nr.chains=1, start.year=1950, present.year
     data <- get.wpp.e0.data (sex, start.year=start.year, present.year=present.year, 
 						wpp.year=wpp.year, my.e0.file = my.e0.file, verbose=verbose)
 	part.ini <- .do.part.e0.mcmc.meta.ini(data)
-	return(structure(c(mcmc.input, data, part.ini), class='bayesLife.mcmc.meta'))
+	return(structure(c(mcmc.input, part.ini), class='bayesLife.mcmc.meta'))
 }
 
 e0.mcmc.ini <- function(chain.id, mcmc.meta, iter=100,
@@ -398,7 +425,7 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries=NULL, my.e0.file = NULL,
 									  my.e0.file = my.e0.file, verbose=verbose)
 	if(is.null(e0.with.regions)) return(list(meta=meta, index=c()))
 	part.ini <- .do.part.e0.mcmc.meta.ini(e0.with.regions)
-	Emeta <- c(e0.with.regions, part.ini)
+	Emeta <- part.ini
 						 		
 	# join the new meta with the existing one
 	is.old <- e0.with.regions$is_processed
