@@ -112,7 +112,6 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95),
 	}
 	country <- get.country.object(country, e0.pred$mcmc.set$meta)
 
-	T_end_c <- e0.pred$mcmc.set$meta$T.end.c
 	if (!joint.male) {
 		e0.mtx <- e0.pred$mcmc.set$meta$e0.matrix
 		e0.matrix.reconstructed <- get.e0.reconstructed(e0.pred$e0.matrix.reconstructed, 
@@ -124,13 +123,14 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95),
 	x1 <- as.integer(rownames(e0.matrix.reconstructed))
 	x2 <- as.numeric(dimnames(e0.pred$quantiles)[[3]])
 
-	lpart1 <- T_end_c[country$index]
-	y1.part1 <- e0.mtx[1:T_end_c[country$index],country$index]
+	if(!is.null(e0.pred$mcmc.set$meta$T.end.c)) lpart1 <- e0.pred$mcmc.set$meta$T.end.c[country$index]
+	else lpart1 <- e0.pred$mcmc.set$meta$Tc.index[[country$index]][length(e0.pred$mcmc.set$meta$Tc.index[[country$index]])]
+	y1.part1 <- e0.mtx[1:lpart1,country$index]
 	y1.part2 <- NULL
-	lpart2 <- nrow(e0.mtx) - T_end_c[country$index]
+	lpart2 <- nrow(e0.mtx) - lpart1
 	if (lpart2 > 0) 
 		y1.part2 <- e0.matrix.reconstructed[
-			(T_end_c[country$index]+1):nrow(e0.matrix.reconstructed),country$index]
+			(lpart1+1):nrow(e0.matrix.reconstructed),country$index]
 	trajectories <- bayesTFR:::get.trajectories(e0.pred, country$code, nr.traj, typical.trajectory=typical.trajectory)
 	e0.median <- bayesTFR:::get.median.from.prediction(e0.pred, country$index, country$code)
 	cqp <- list()
@@ -277,17 +277,15 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
     mcmc.list <- get.mcmc.list(mcmc.list)
     meta <- mcmc.list[[1]]$meta
     country <- get.country.object(country, meta)
-    T.total <- nrow(meta$e0.matrix)
-    incr <- meta$d.ct[, country$index]
-    obs.data <- meta$e0.matrix[1:(T.total - 1), country$index]
+    data.idx <- which(!is.na(meta$d.ct[,country$index]))
+    incr <- meta$d.ct[data.idx, country$index]
+    obs.data <- meta$e0.matrix[data.idx, country$index]
     if(!is.null(meta$suppl.data$e0.matrix)) {
     	supp.c.idx <- which(is.element(meta$suppl.data$index.to.all.countries, country$index))
     	if(length(supp.c.idx) > 0) {
-    		obs.data <- c( 
-    			meta$suppl.data$e0.matrix[meta$suppl.data$T.start.c[supp.c.idx]:nrow(meta$suppl.data$e0.matrix), 
-    										supp.c.idx], obs.data)
-    		incr <- c(meta$suppl.data$d.ct[meta$suppl.data$T.start.c[supp.c.idx]:nrow(meta$suppl.data$d.ct), 
-    										supp.c.idx], incr)    		}
+    		suppl.data.idx <- which(!is.na(meta$suppl.data$d.ct[,supp.c.idx]))
+    		obs.data <- c(meta$suppl.data$e0.matrix[suppl.data.idx, supp.c.idx], obs.data)
+    		incr <- c(meta$suppl.data$d.ct[suppl.data.idx, supp.c.idx], incr)    		}
     }
     if (is.null(e0.lim)) e0.lim <- c(min(40, obs.data), max(90, obs.data))
     x <- seq(e0.lim[1], e0.lim[2], length=1000)

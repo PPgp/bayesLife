@@ -188,7 +188,7 @@ void dnormtrunc(double *x, double *mu, double *sigma,
 
 void dologdensityTrianglekz(double *x, double *mu, double *sigma, 
 			double *low, double *up, int *par_idx, double *dlpars, double *p1, double *p2,
-			double *le, int *idx, int *lidx, double *dct, double *loess_sd, double *logdens) {
+			double *le, int *lidx, double *dct, double *loess_sd, double *logdens) {
 	double dl[*lidx], dens[*lidx], dnt[1];
 	double s;
 	int i;

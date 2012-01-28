@@ -323,29 +323,37 @@ init.nodes.e0 <- function() {
 
 .do.part.e0.mcmc.meta.ini <- function(data) {
 	nr_countries <- ncol(data$e0.matrix)
-    T_end_c <- T_start_c <- rep(NA, nr_countries)
+    #T_end_c <- rep(NA, nr_countries)
+    Tc.index <- list()
 	for (country in 1:nr_countries) {
-    	T_end_c[country] <- sum(!is.na(data$e0.matrix[,country]))
-    	if(T_end_c[country] < 2) stop('Problem with ', data$regions$country_name[country], 
+		Tc.index[[country]] <- which(!is.na(data$e0.matrix[,country]))
+    	#T_end_c[country] <- sum(!is.na(data$e0.matrix[,country]))
+    	if(length(Tc.index[[country]]) < 2) stop('Problem with ', data$regions$country_name[country], 
     						". At least two data points must be observed.")
     }
 	T <- nrow(data$e0.matrix)
-	d.ct <- loessSD <- matrix(NA, nrow=T-1, ncol=nr_countries)
+	d.ct <- loessSD <- matrix(NA, nrow=T-1, ncol=nr_countries, 
+							dimnames=list(rownames(data$e0.matrix)[1:(T-1)],
+										  colnames(data$e0.matrix)))
 	for(i in 2:T) {
 		nisna1 <- !is.na(data$e0.matrix[i,])
 		nisna2 <- nisna1 & !is.na(data$e0.matrix[i-1,])
-		if (sum(nisna2) > 0)
+		if (sum(nisna2) > 0) {
 			d.ct[i-1,nisna2] <- data$e0.matrix[i,nisna2] - data$e0.matrix[i-1,nisna2]
+			outliers <- nisna2 & ((d.ct[i-1,] < -5) | (d.ct[i-1,] > 10))
+			d.ct[i-1,outliers] <- NA
+		}
 		if (sum(nisna1) > 0)
-			loessSD[i-1,nisna1]<-sapply(data$e0.matrix[i,nisna1],loess.lookup)
+			loessSD[i-1,nisna1]<-sapply(data$e0.matrix[i-1,nisna1],loess.lookup)
 	}
 	D.supp.ct <- loessSD.suppl <- NULL
 	nr_countries.suppl <- 0
 	suppl <- data$suppl.data
 	if(!is.null(suppl$e0.matrix)) {
 		nr_countries.suppl <- ncol(suppl$e0.matrix)
+		suppl$Tc.index <- list()
 		for (country in 1:nr_countries.suppl) 
-    		T_start_c[country] <- sum(is.na(suppl$e0.matrix[,country])) + 1
+    		suppl$Tc.index[[country]] <- which(!is.na(suppl$e0.matrix[,country]))
 		# add first time point of the observed data to get the last increment of the supplemental data
 		data.suppl <- rbind(suppl$e0.matrix, data$e0.matrix[1,suppl$index.to.all.countries])
 		T <- nrow(data.suppl)
@@ -353,18 +361,20 @@ init.nodes.e0 <- function() {
 		for(i in 2:T) {		
 			nisna1 <- !is.na(data.suppl[i,])
 			nisna2 <- nisna1 & !is.na(data.suppl[i-1,])
-			if (sum(nisna2) > 0)
+			if (sum(nisna2) > 0) {
 				d.suppl.ct[i-1,nisna2] <- data.suppl[i,nisna2] - data.suppl[i-1,nisna2]
+				outliers <- nisna2 & ((d.suppl.ct[i-1,] < -5) | (d.suppl.ct[i-1,] > 10))
+				d.suppl.ct[i-1,outliers] <- NA
+			}
 			if (sum(nisna1) > 0)
-				loessSD.suppl[i-1,nisna1]<-sapply(data.suppl[i,nisna1],loess.lookup)
+				loessSD.suppl[i-1,nisna1]<-sapply(data.suppl[i-1,nisna1],loess.lookup)
 		}
 		suppl$nr.countries <- nr_countries.suppl
-		suppl$T.start.c <- T_start_c
 		suppl$d.ct <- d.suppl.ct
 		suppl$loessSD <- loessSD.suppl
 	}
 	data$nr.countries <- nr_countries
-	data$T.end.c <- T_end_c
+	data$Tc.index <- Tc.index
 	data$d.ct <- d.ct
 	data$loessSD <- loessSD
 	data$suppl.data <- suppl
@@ -442,10 +452,10 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries=NULL, my.e0.file = NULL,
 		meta[[name]][,id.replace] <- Emeta[[name]][,is.old]
 		new.meta[[name]] <- cbind(meta[[name]], Emeta[[name]][,is.new])
 	}
-	for (name in c('T.end.c')) {
-		meta[[name]][id.replace] <- Emeta[[name]][is.old]
-		new.meta[[name]] <- c(meta[[name]], Emeta[[name]][is.new])
-	}
+	#for (name in c('T.end.c')) {
+	#	meta[[name]][id.replace] <- Emeta[[name]][is.old]
+	#	new.meta[[name]] <- c(meta[[name]], Emeta[[name]][is.new])
+	#}
 	new.meta[['regions']] <- list()
 	for (name in c('code', 'area_code', 'country_code')) {
 		meta$regions[[name]][id.replace] <- Emeta$regions[[name]][is.old]

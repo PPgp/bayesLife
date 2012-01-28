@@ -203,13 +203,14 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
 				selected.simu$index <- sample(selected.simu$index, nr_simu, replace=TRUE)
 			cs.par.values <- cs.par.values[selected.simu$index,]
 		}
-		missing <- is.na(e0.matrix.reconstructed[,country])
-		nmissing <- sum(missing)
+		this.T_end <- mcmc.set$meta$Tc.index[[country]][length(mcmc.set$meta$Tc.index[[country]])]
+		nmissing <- le0.matrix - this.T_end
+		missing <- (this.T_end+1):le0.matrix
+
 		if (verbose && nmissing > 0) 
 			cat('\t', nmissing, 'data points reconstructed.\n')
 
 		this.nr_project <- nr_project + nmissing
-		this.T_end <- mcmc.set$meta$T.end.c[country]
 		#sum.delta <- apply(cs.par.values[,1:4], 1, sum)
 		#use.traj <- which(sum.delta <= 110)
 		trajectories <- matrix(NA, this.nr_project+1, nr_simu)
@@ -218,7 +219,7 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
     	#for(j in 1:length(use.traj)){
     		#k <- use.traj[j]
            trajectories[,j]<-e0.proj.le.SDPropToLoess(cs.par.values[j,], 
-           							mcmc.set$meta$e0.matrix[mcmc.set$meta$T.end.c[country], country], 
+           							mcmc.set$meta$e0.matrix[this.T_end, country], 
            							kap=var.par.values[j,'omega'],n.proj=this.nr_project,
            							p1=mcmc.set$meta$dl.p1, p2=mcmc.set$meta$dl.p2)
     	}
