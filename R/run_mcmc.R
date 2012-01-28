@@ -336,15 +336,16 @@ init.nodes.e0 <- function() {
 							dimnames=list(rownames(data$e0.matrix)[1:(T-1)],
 										  colnames(data$e0.matrix)))
 	for(i in 2:T) {
+		nisna0 <- !is.na(data$e0.matrix[i-1,])
 		nisna1 <- !is.na(data$e0.matrix[i,])
-		nisna2 <- nisna1 & !is.na(data$e0.matrix[i-1,])
+		nisna2 <- nisna1 & nisna0
 		if (sum(nisna2) > 0) {
 			d.ct[i-1,nisna2] <- data$e0.matrix[i,nisna2] - data$e0.matrix[i-1,nisna2]
 			outliers <- nisna2 & ((d.ct[i-1,] < -5) | (d.ct[i-1,] > 10))
 			d.ct[i-1,outliers] <- NA
 		}
-		if (sum(nisna1) > 0)
-			loessSD[i-1,nisna1]<-sapply(data$e0.matrix[i-1,nisna1],loess.lookup)
+		if (sum(nisna0) > 0)
+			loessSD[i-1,nisna0]<-sapply(data$e0.matrix[i-1,nisna0],loess.lookup)
 	}
 	D.supp.ct <- loessSD.suppl <- NULL
 	nr_countries.suppl <- 0
@@ -358,16 +359,17 @@ init.nodes.e0 <- function() {
 		data.suppl <- rbind(suppl$e0.matrix, data$e0.matrix[1,suppl$index.to.all.countries])
 		T <- nrow(data.suppl)
 		d.suppl.ct <- loessSD.suppl <- matrix(NA, nrow=T-1, ncol=nr_countries.suppl)
-		for(i in 2:T) {		
+		for(i in 2:T) {
+			nisna0 <- !is.na(data.suppl[i-1,])
 			nisna1 <- !is.na(data.suppl[i,])
-			nisna2 <- nisna1 & !is.na(data.suppl[i-1,])
+			nisna2 <- nisna1 & nisna0
 			if (sum(nisna2) > 0) {
 				d.suppl.ct[i-1,nisna2] <- data.suppl[i,nisna2] - data.suppl[i-1,nisna2]
 				outliers <- nisna2 & ((d.suppl.ct[i-1,] < -5) | (d.suppl.ct[i-1,] > 10))
 				d.suppl.ct[i-1,outliers] <- NA
 			}
-			if (sum(nisna1) > 0)
-				loessSD.suppl[i-1,nisna1]<-sapply(data.suppl[i-1,nisna1],loess.lookup)
+			if (sum(nisna0) > 0)
+				loessSD.suppl[i-1,nisna0]<-sapply(data.suppl[i-1,nisna0],loess.lookup)
 		}
 		suppl$nr.countries <- nr_countries.suppl
 		suppl$d.ct <- d.suppl.ct
