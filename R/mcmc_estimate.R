@@ -211,34 +211,48 @@ Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
 	k.c.width <- mcmc$meta$k.c.width
 	z.c.width <- mcmc$meta$z.c.width
 	Triangle.prop <- rep(0,4)
+	dlx <- c(mcmc$Triangle.c[,country], mcmc$k.c[country], mcmc$z.c[country])
 	while(TRUE) {
 		for (i in 1:4) {
 			Triangle.prop[i] <- slice.sampling(mcmc$Triangle.c[i, country],
 										logdensity.Triangle.k.z.c, Triangle.c.width[i], 
 										mean=mcmc$Triangle[i], 
-										sd=sigmas[i], low=mcmc$meta$Triangle.c.prior.low[i], 
+										sd=sigmas[i], dlx=dlx,
+										low=mcmc$meta$Triangle.c.prior.low[i], 
 										up=mcmc$meta$Triangle.c.prior.up[i], par.idx=i, 
-										mcmc=mcmc, 
-										country=country, DLdata=DLdata)
+										p1=mcmc$meta$dl.p1, p2=mcmc$meta$dl.p2, omega=mcmc$omega,
+										DLdata=DLdata[[country]])
+			dlx[i] <- Triangle.prop[i]
 		}
 		if(sum(Triangle.prop) <= 110) break
+		dlx <- c(mcmc$Triangle.c[,country], mcmc$k.c[country], mcmc$z.c[country])
 	}
 	mcmc$Triangle.c[, country] <- Triangle.prop
 	mcmc$k.c[country] <- slice.sampling(mcmc$k.c[country],
 										logdensity.Triangle.k.z.c, k.c.width, mean=mcmc$k, 
-										sd=1/sqrt(mcmc$lambda.k),
+										sd=1/sqrt(mcmc$lambda.k), dlx=dlx,
 										low=mcmc$meta$k.c.prior.low, up=mcmc$meta$k.c.prior.up, 
-										par.idx=5, mcmc=mcmc, 
-										country=country, DLdata=DLdata)
+										par.idx=5, p1=mcmc$meta$dl.p1, p2=mcmc$meta$dl.p2, 
+										omega=mcmc$omega, DLdata=DLdata[[country]])
+	dlx[5] <- mcmc$k.c[country]
 	if(mcmc$meta$vary.z.over.countries)
 		mcmc$z.c[country] <- slice.sampling(mcmc$z.c[country],
 										logdensity.Triangle.k.z.c, z.c.width, mean=mcmc$z, 
-										sd=1/sqrt(mcmc$lambda.z),
+										sd=1/sqrt(mcmc$lambda.z), dlx=dlx,
 										low=mcmc$meta$z.c.prior.low, up=mcmc$meta$z.c.prior.up, 
-										par.idx=6, mcmc=mcmc, 
-										country=country, DLdata=DLdata)
+										par.idx=6, p1=mcmc$meta$dl.p1, p2=mcmc$meta$dl.p2, 
+										omega=mcmc$omega, DLdata=DLdata[[country]])
 	else mcmc$z.c[country] <- mcmc$z
 	return()
+}
+
+logdensity.Triangle.k.z.c <- function(x, mean, sd, dlx, low, up, par.idx, p1, p2, omega, DLdata) {
+	logdens <- 0.0
+	res <- .C("dologdensityTrianglekz", x, mean, sd, low, up, par.idx, dlx, 
+				p1, p2, DLdata['e0',], ncol(DLdata), 
+				DLdata['dct',], omega*DLdata['loess',], logdens=logdens)
+
+	return(res$logdens)	
 }
 
 lambdas.update <- function(mcmc) {
@@ -305,19 +319,6 @@ logdensity.omega <- function(x, mcmc, dlf, DLdata, low, up) {
 }
 
 
-logdensity.Triangle.k.z.c <- function(x, mean, sd, low, up, par.idx, mcmc, country, DLdata) {
-	dlx <- c(Triangle_1=mcmc$Triangle.c[1,country], Triangle_2=mcmc$Triangle.c[2,country],
-			Triangle_3=mcmc$Triangle.c[3,country], Triangle_4=mcmc$Triangle.c[4,country],
-			k=mcmc$k.c[country], z=mcmc$z.c[country])
-	logdens <- 0.0
-	res <- .C("dologdensityTrianglekz", x, mean, sd, low, up, par.idx, dlx, 
-				mcmc$meta$dl.p1, mcmc$meta$dl.p2,
-				DLdata[[country]]['e0',], ncol(DLdata[[country]]), 
-				DLdata[[country]]['dct',], mcmc$omega*DLdata[[country]]['loess',], 
-				logdens=logdens)
-
-	return(res$logdens)	
-}
 
 z.gibbs.use <- function(mcmc, it) {
 	library(msm)

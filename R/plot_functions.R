@@ -98,17 +98,24 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95),
 								  nr.traj=NULL, typical.trajectory=FALSE,
 								  xlim=NULL, ylim=NULL, type='b', 
 								  xlab='Year', ylab='Life expectancy', main=NULL, 
-								  lwd=c(2,2,2,2,1), show.legend=TRUE, ...
+								  lwd=c(2,2,2,2,1), col=c('black', 'green', 'red', 'red', 'gray'),
+								  show.legend=TRUE, add=FALSE, ...
 								  ) {
-	# lwd is a vector of 5 line widths for: 
+	# lwd/col is a vector of 5 line widths/colors for: 
 	#	1. observed data, 2. imputed missing data, 3. median, 4. quantiles, 5. trajectories
 
 	if (missing(country)) {
 		stop('Argument "country" must be given.')
 	}
 	if(length(lwd) < 5) {
+		llwd <- length(lwd)
 		lwd <- rep(lwd, 5)
-		lwd[5] <- 1
+		lwd[(llwd+1):5] <- c(2,2,2,2,1)[(llwd+1):5]
+	}
+	if(length(col) < 5) {
+		lcol <- length(col)
+		col <- rep(col, 5)
+		col[(lcol+1):5] <- c('black', 'green', 'red', 'red', 'gray')[(lcol+1):5]
 	}
 	country <- get.country.object(country, e0.pred$mcmc.set$meta)
 
@@ -142,58 +149,67 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95),
 							trajectories$trajectories[,trajectories$index]
 					  else NULL, 
 					  y1.part1, y1.part2, e0.median, na.rm=TRUE))
-	for (i in 1:length(pi)) {
-		cqp[[i]] <- bayesTFR:::get.traj.quantiles(e0.pred, country$index, 
-					country$code, trajectories=trajectories$trajectories, 
-												pi=pi[i])
-		if (!is.null(cqp[[i]]) && is.null(ylim))
-			ylim.loc <- c(min(ylim.loc[1], cqp[[i]], na.rm=TRUE), 
-						  max(ylim.loc[2], cqp[[i]], na.rm=TRUE))
+	if(length(pi) > 0) {
+		for (i in 1:length(pi)) {
+			cqp[[i]] <- bayesTFR:::get.traj.quantiles(e0.pred, country$index, 
+							country$code, trajectories=trajectories$trajectories, pi=pi[i])
+			if (!is.null(cqp[[i]]) && is.null(ylim))
+				ylim.loc <- c(min(ylim.loc[1], cqp[[i]], na.rm=TRUE), 
+						  	max(ylim.loc[2], cqp[[i]], na.rm=TRUE))
+		}
 	}
 	if(is.null(xlim)) xlim <- c(min(x1,x2), max(x1,x2))
 	if(is.null(ylim)) ylim <- ylim.loc
 	if(is.null(main)) main <- country$name
 	# plot historical data: observed
-	plot(x1[1:lpart1], y1.part1, type=type, xlim=xlim, ylim=ylim, ylab=ylab, xlab=xlab, main=main, 
-			panel.first = grid(), lwd=lwd[1], ...
+	if (!add)
+		plot(x1[1:lpart1], y1.part1, type=type, xlim=xlim, ylim=ylim, ylab=ylab, xlab=xlab, main=main, 
+			panel.first = grid(), lwd=lwd[1], col=col[1], ...
+					)
+	else # add to an existing plot
+		points(x1[1:lpart1], y1.part1, type=type, lwd=lwd[1], col=col[1], ...
 					)
 	if(lpart2 > 0) {
-		lines(x1[(lpart1+1): length(x1)], y1.part2, pch=2, type='b', col='green', lwd=lwd[2])
-		lines(x1[lpart1:(lpart1+1)], c(y1.part1[lpart1], y1.part2[1]), col='green', lwd=lwd[2]) # connection between the two parts
+		lines(x1[(lpart1+1): length(x1)], y1.part2, pch=2, type='b', col=col[2], lwd=lwd[2])
+		lines(x1[lpart1:(lpart1+1)], c(y1.part1[lpart1], y1.part2[1]), col=col[2], lwd=lwd[2]) # connection between the two parts
 	}
 	
 	# plot trajectories
 	if(!is.null(trajectories$trajectories)) { 
 		for (i in 1:length(trajectories$index)) {
-			lines(x2, trajectories$trajectories[,trajectories$index[i]], type='l', col='gray', lwd=lwd[5])
+			lines(x2, trajectories$trajectories[,trajectories$index[i]], type='l', col=col[5], lwd=lwd[5])
 		}
 	}
 	# plot median	
-	lines(x2, e0.median, type='l', col='red', lwd=lwd[3]) 
+	lines(x2, e0.median, type='l', col=col[3], lwd=lwd[3])
+	legend <- c('median')
+	lty <- 1
 	# plot given CIs
-	lty <- 2:(length(pi)+1)
-	for (i in 1:length(pi)) {
-		if (!is.null(cqp[[i]])) {
-			lines(x2, cqp[[i]][1,], type='l', col='red', lty=lty[i], lwd=lwd[4])
-			lines(x2, cqp[[i]][2,], type='l', col='red', lty=lty[i], lwd=lwd[4])
+	if(length(pi) > 0) {
+		tlty <- 2:(length(pi)+1)
+		for (i in 1:length(pi)) {
+			if (!is.null(cqp[[i]])) {
+				lines(x2, cqp[[i]][1,], type='l', col=col[4], lty=tlty[i], lwd=lwd[4])
+				lines(x2, cqp[[i]][2,], type='l', col=col[4], lty=tlty[i], lwd=lwd[4])
+			}
 		}
+		legend <- c(legend, paste('PI', pi))
+		lty <- c(lty, tlty)
 	}
-	legend <- c('median', paste('PI', pi))
-	col <- rep('red', length(lty)+1)
 	legend <- c(legend, 'observed LifeExp')
-	col <- c(col, 'black')
 	lty <- c(lty, 1)
 	pch <- c(rep(-1, length(legend)-1), 1)
 	lwds <- c(lwd[3], rep(lwd[4], length(pi)), lwd[1])
+	cols <- c(col[3], rep(col[4], length(pi)), col[1])
 	if(lpart2 > 0) {
 		legend <- c(legend, 'imputed LifeExp')
-		col <- c(col, 'green')
+		cols <- c(cols, col[2])
 		lty <- c(lty, 1)
 		pch <- c(pch, 2)
 		lwds <- c(lwds, lwd[2])
 	}
 	if(show.legend)
-		legend('topleft', legend=legend, lty=c(1,lty), bty='n', col=col, pch=pch, lwd=lwds)
+		legend('topleft', legend=legend, lty=lty, bty='n', col=cols, pch=pch, lwd=lwds)
 	#abline(h=1, lty=3)
 	#abline(h=1.5, lty=3)
 	#abline(h=2.1, lty=3)

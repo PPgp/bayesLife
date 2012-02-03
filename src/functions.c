@@ -206,4 +206,3 @@ void dologdensityTrianglekz(double *x, double *mu, double *sigma,
 	/*Rprintf("\ns=%f dnt=%f res = %f", s, dnt[0], logdens[0]);*/
 	return;
 }
-

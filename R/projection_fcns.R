@@ -407,9 +407,11 @@ joint.male.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18), verbose
  						'(code', country$code, ')')
 		trajectoriesF <- bayesTFR:::get.trajectories(e0.pred, country$code)$trajectories
 		Mtraj <- matrix(NA, nrow=nrow(trajectoriesF), ncol=ncol(trajectoriesF))
-		G1 <- e0f.data[Tc[icountry],icountry] - e0m.data[Tc[icountry],icountry]
+		#G1 <- e0f.data[Tc[icountry],icountry] - e0m.data[Tc[icountry],icountry]
+		Tc <- meta$Tc.index[[icountry]][length(meta$Tc.index[[icountry]])]
+		G1 <- e0f.data[Tc,icountry] - e0m.data[Tc,icountry]
 		for (itraj in 1:dim(trajectoriesF)[2]) {
-			Mtraj[1,itraj] <- e0m.data[Tc[icountry],icountry]
+			Mtraj[1,itraj] <- e0m.data[Tc,icountry]
 			Gprev <- G1
 			for(time in 2:dim(trajectoriesF)[1]) {
 				if(trajectoriesF[time-1,itraj] <= maxe0) { # 1st part of Equation 3.1
