@@ -19,7 +19,7 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
     Triangle.prop <- rep(0,4)
     
     dlf <- list()
-    DLdata.T <- get.DLdata.for.estimation(meta, C)
+    DLdata.T <- get.DLdata.for.estimation(meta, 1:C)
     DLdata <- DLdata.T$DLdata
     T.all <- DLdata.T$T.all
     psi.shape <- T.all/2
@@ -120,7 +120,7 @@ e0.mcmc.sampling.extra <- function(mcmc, mcmc.list, countries, posterior.sample,
 						# copying of the mcmc list 
 	for (item in names(mcmc)) mcenv[[item]] <- mcmc[[item]]
 	updated.var.names <- c('Triangle.c', 'k.c', 'z.c')
-	DLdata.T <- get.DLdata.for.estimation(mcmc$meta, C)
+	DLdata.T <- get.DLdata.for.estimation(mcmc$meta, countries)
     DLdata <- DLdata.T$DLdata
 	for(iter in 1:niter) {
 		if(verbose || (iter %% 10 == 0))
@@ -162,11 +162,11 @@ e0.mcmc.sampling.extra <- function(mcmc, mcmc.list, countries, posterior.sample,
 }
 
 
-get.DLdata.for.estimation <- function(meta, C) {
+get.DLdata.for.estimation <- function(meta, countries) {
 	DLdata <- list()
     T.all <- 0
     T.suppl.end <- if(!is.null(meta$suppl.data$e0.matrix)) nrow(meta$suppl.data$e0.matrix) else 0
-    for(country in 1:C) {
+    for(country in countries) {
     	idx <- which(!is.na(meta$d.ct[, country]))
     	DLdata[[country]] <- matrix(NA, nrow=3, ncol=length(idx), 
     							dimnames=list(c('e0', 'dct', 'loess'), 
