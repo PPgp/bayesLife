@@ -35,6 +35,7 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
     	for(country in 1:ncol(meta$suppl.data$e0.matrix)) {
     		cidx <- meta$suppl.data$index.to.all.countries[country]
     		idx <- which(!is.na(meta$suppl.data$d.ct[, country]))
+    		if(length(idx) <= 0) next
     		start.col <- ncol(DLdata[[cidx]]) + 1
     		DLdata[[cidx]] <- cbind(DLdata[[cidx]], 
     								matrix(NA, nrow=3, ncol=length(idx),
