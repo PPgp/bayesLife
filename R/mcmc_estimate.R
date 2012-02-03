@@ -18,36 +18,10 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
     for (item in names(mcmc)) mcenv[[item]] <- mcmc[[item]]
     Triangle.prop <- rep(0,4)
     
-    DLdata <- dlf <- list()
-    T.all <- 0
-    T.suppl.end <- if(!is.null(meta$suppl.data$e0.matrix)) nrow(meta$suppl.data$e0.matrix) else 0
-    for(country in 1:C) {
-    	idx <- which(!is.na(meta$d.ct[, country]))
-    	DLdata[[country]] <- matrix(NA, nrow=3, ncol=length(idx), 
-    							dimnames=list(c('e0', 'dct', 'loess'), 
-    										rownames(meta$d.ct[idx,country])))
-    	DLdata[[country]][1,] <- meta$e0.matrix[idx,country]
-    	DLdata[[country]][2,] <- meta$d.ct[idx,country]
-    	DLdata[[country]][3,] <- meta$loessSD[idx,country]
-    	T.all <- T.all + ncol(DLdata[[country]]) - 1
-    }
-    if(T.suppl.end > 0) {
-    	for(country in 1:ncol(meta$suppl.data$e0.matrix)) {
-    		cidx <- meta$suppl.data$index.to.all.countries[country]
-    		idx <- which(!is.na(meta$suppl.data$d.ct[, country]))
-    		if(length(idx) <= 0) next
-    		start.col <- ncol(DLdata[[cidx]]) + 1
-    		DLdata[[cidx]] <- cbind(DLdata[[cidx]], 
-    								matrix(NA, nrow=3, ncol=length(idx),
-    										dimnames=list(rownames(DLdata[[cidx]]), 
-    											rownames(meta$suppl.data$d.ct[idx,country]))))
-    		end.col <- ncol(DLdata[[cidx]])
-    		DLdata[[cidx]][1,start.col:end.col] <- meta$suppl.data$e0.matrix[idx,country]
-       		DLdata[[cidx]][2,start.col:end.col] <- meta$suppl.data$d.ct[idx,country]
-          	DLdata[[cidx]][3,start.col:end.col] <- meta$suppl.data$loessSD[idx,country]  
-			T.all <- T.all + length(idx)
-  		}
-    }
+    dlf <- list()
+    DLdata.T <- get.DLdata.for.estimation(meta, C)
+    DLdata <- DLdata.T$DLdata
+    T.all <- DLdata.T$T.all
     psi.shape <- T.all/2
 	for(iter in start.iter:niter) {
 		if(verbose || (iter %% 10 == 0))
@@ -146,7 +120,8 @@ e0.mcmc.sampling.extra <- function(mcmc, mcmc.list, countries, posterior.sample,
 						# copying of the mcmc list 
 	for (item in names(mcmc)) mcenv[[item]] <- mcmc[[item]]
 	updated.var.names <- c('Triangle.c', 'k.c', 'z.c')
-
+	DLdata.T <- get.DLdata.for.estimation(mcmc$meta, C)
+    DLdata <- DLdata.T$DLdata
 	for(iter in 1:niter) {
 		if(verbose || (iter %% 10 == 0))
 			cat('\nIteration:', iter, '--', date())
@@ -162,7 +137,7 @@ e0.mcmc.sampling.extra <- function(mcmc, mcmc.list, countries, posterior.sample,
 		# Update Triangle.c, k.c and z.c using slice sampling
 		###########################################
 		for(country in countries) {
-			Triangle.k.z.c.update(mcenv, country)
+			Triangle.k.z.c.update(mcenv, country, DLdata=DLdata)
 		}
 
 		################################################################### 
@@ -186,6 +161,40 @@ e0.mcmc.sampling.extra <- function(mcmc, mcmc.list, countries, posterior.sample,
 	return(mcmc.orig)
 }
 
+
+get.DLdata.for.estimation <- function(meta, C) {
+	DLdata <- list()
+    T.all <- 0
+    T.suppl.end <- if(!is.null(meta$suppl.data$e0.matrix)) nrow(meta$suppl.data$e0.matrix) else 0
+    for(country in 1:C) {
+    	idx <- which(!is.na(meta$d.ct[, country]))
+    	DLdata[[country]] <- matrix(NA, nrow=3, ncol=length(idx), 
+    							dimnames=list(c('e0', 'dct', 'loess'), 
+    										rownames(meta$d.ct[idx,country])))
+    	DLdata[[country]][1,] <- meta$e0.matrix[idx,country]
+    	DLdata[[country]][2,] <- meta$d.ct[idx,country]
+    	DLdata[[country]][3,] <- meta$loessSD[idx,country]
+    	T.all <- T.all + ncol(DLdata[[country]]) - 1
+    }
+    if(T.suppl.end > 0) {
+    	for(country in 1:ncol(meta$suppl.data$e0.matrix)) {
+    		cidx <- meta$suppl.data$index.to.all.countries[country]
+    		idx <- which(!is.na(meta$suppl.data$d.ct[, country]))
+    		if(length(idx) <= 0) next
+    		start.col <- ncol(DLdata[[cidx]]) + 1
+    		DLdata[[cidx]] <- cbind(DLdata[[cidx]], 
+    								matrix(NA, nrow=3, ncol=length(idx),
+    										dimnames=list(rownames(DLdata[[cidx]]), 
+    											rownames(meta$suppl.data$d.ct[idx,country]))))
+    		end.col <- ncol(DLdata[[cidx]])
+    		DLdata[[cidx]][1,start.col:end.col] <- meta$suppl.data$e0.matrix[idx,country]
+       		DLdata[[cidx]][2,start.col:end.col] <- meta$suppl.data$d.ct[idx,country]
+          	DLdata[[cidx]][3,start.col:end.col] <- meta$suppl.data$loessSD[idx,country]  
+			T.all <- T.all + length(idx)
+  		}
+    }
+	return(list(DLdata=DLdata, T.all=T.all))	
+}
 
 slice.sampling <- function(x0, fun, width,  ..., low, up) {
 	gx0 <- fun(x0, ..., low=low, up=up)
