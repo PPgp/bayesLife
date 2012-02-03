@@ -127,17 +127,31 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95),
 		e0.pred <- e0.pred$joint.male # overwrite the prediction object by the male prediction
 		e0.mtx <- e0.matrix.reconstructed <- e0.pred$e0.matrix.reconstructed
 	}
+	meta <- e0.pred$mcmc.set$meta
 	x1 <- as.integer(rownames(e0.matrix.reconstructed))
 	x2 <- as.numeric(dimnames(e0.pred$quantiles)[[3]])
 
-	if(!is.null(e0.pred$mcmc.set$meta$T.end.c)) lpart1 <- e0.pred$mcmc.set$meta$T.end.c[country$index]
-	else lpart1 <- e0.pred$mcmc.set$meta$Tc.index[[country$index]][length(e0.pred$mcmc.set$meta$Tc.index[[country$index]])]
+	if(!is.null(meta$T.end.c)) lpart1 <- meta$T.end.c[country$index]
+	else lpart1 <- meta$Tc.index[[country$index]][length(meta$Tc.index[[country$index]])]
+	
 	y1.part1 <- e0.mtx[1:lpart1,country$index]
 	y1.part2 <- NULL
 	lpart2 <- nrow(e0.mtx) - lpart1
-	if (lpart2 > 0) 
+	if (lpart2 > 0) # imputed values
 		y1.part2 <- e0.matrix.reconstructed[
 			(lpart1+1):nrow(e0.matrix.reconstructed),country$index]
+			
+	if(!is.null(meta$suppl.data$e0.matrix)) {
+    	supp.c.idx <- which(is.element(meta$suppl.data$index.to.all.countries, country$index))
+    	if(length(supp.c.idx) > 0) {
+    		suppl.data.idx <- which(!is.na(meta$suppl.data$e0.matrix[,supp.c.idx]))
+    		lpart1 <- lpart1 + length(suppl.data.idx)
+    		y1.part1 <- c(meta$suppl.data$e0.matrix[suppl.data.idx, supp.c.idx], y1.part1)
+    		x1 <- c(as.integer(rownames(meta$suppl.data$e0.matrix[suppl.data.idx,,drop=FALSE])), x1)
+ 		}
+    }
+
+			
 	trajectories <- bayesTFR:::get.trajectories(e0.pred, country$code, nr.traj, typical.trajectory=typical.trajectory)
 	e0.median <- bayesTFR:::get.median.from.prediction(e0.pred, country$index, country$code)
 	cqp <- list()

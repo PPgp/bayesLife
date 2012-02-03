@@ -66,7 +66,8 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
 				Triangle.prop[i] <- rnorm.trunc(mean=Tr.mean[i], sd=Tr.sd[i], 
 									low=meta$Triangle.prior.low[i], high=meta$Triangle.prior.up[i])
 			}
-			if(sum(Triangle.prop) < 110) break # discard samples for which the sum(Triangle) > 110.
+			sT <- sum(Triangle.prop)
+			if(sT <= 110 && sT >= 50) break # discard samples for which the sum(Triangle) is outside of [50,110].
 		}
 		mcenv$Triangle <- Triangle.prop
 		# k is truncated normal in [0,10]
@@ -224,7 +225,8 @@ Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
 										DLdata=DLdata[[country]])
 			dlx[i] <- Triangle.prop[i]
 		}
-		if(sum(Triangle.prop) <= 110) break
+		sT <- sum(Triangle.prop)
+		if(sT <= 110 && sT >= 50) break
 		dlx <- c(mcmc$Triangle.c[,country], mcmc$k.c[country], mcmc$z.c[country])
 	}
 	mcmc$Triangle.c[, country] <- Triangle.prop
