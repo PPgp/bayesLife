@@ -26,7 +26,7 @@ run.e0.mcmc <- function(sex=c("Male", "Female"), nr.chains=3, iter=100000,
 						 k.c.prior.low=0, k.c.prior.up=10, z.c.prior.low=0, z.c.prior.up=1.15,
 						 Triangle.c.width = c(4, 6, 3, 4), k.c.width=1, z.c.width=0.2,
 						 #Triangle.c.width = c(5, 5, 5, 5), k.c.width=0.5, z.c.width=0.06,
-						 nu=4, dl.p1=9, dl.p2=9,
+						 nu=4, dl.p1=9, dl.p2=9, sumTriangle.lim = c(80, 105),
                          seed = NULL, parallel=FALSE, nr.nodes=nr.chains,
                          auto.conf = list(max.loops=5, iter=100000, iter.incr=20000, nr.chains=3, thin=120, burnin=20000),
 						 verbose=FALSE, ...) {
@@ -103,7 +103,8 @@ run.e0.mcmc <- function(sex=c("Male", "Female"), nr.chains=3, iter=100000,
                                         k.c.prior.low=k.c.prior.low, k.c.prior.up=k.c.prior.up, 
                                         z.c.prior.low=z.c.prior.low, z.c.prior.up=z.c.prior.up, 
                                         Triangle.c.width=Triangle.c.width, k.c.width=k.c.width, z.c.width=z.c.width,
-                                        nu=nu, dl.p1=dl.p1, dl.p2=dl.p2, buffer.size=buffer.size, 
+                                        nu=nu, dl.p1=dl.p1, dl.p2=dl.p2, sumTriangle.lim=sumTriangle.lim, 
+                                        buffer.size=buffer.size, 
                                         auto.conf=auto.conf, verbose=verbose)
     store.bayesLife.meta.object(bayesLife.mcmc.meta, output.dir)
     
@@ -431,6 +432,32 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter=100,
 
 e0.mcmc.meta.ini.extra <- function(mcmc.set, countries=NULL, my.e0.file = NULL, 
 									burnin = 200, verbose=FALSE) {
+	update.regions <- function(reg, ereg, id.replace, is.new, is.old) {
+		nreg <- list()
+		for (name in c('code', 'area_code', 'country_code')) {
+			reg[[name]][id.replace] <- ereg[[name]][is.old]
+			nreg[[name]] <- c(reg[[name]], ereg[[name]][is.new])
+		}
+		for (name in c('name', 'area_name', 'country_name')) {
+			reg[[name]][id.replace] <- as.character(ereg[[name]])[is.old]
+			nreg[[name]] <- c(as.character(reg[[name]]), 
+									  as.character(ereg[[name]])[is.new])
+		}
+		return(nreg)
+	}
+	update.Tc.index <- function(Tci, eTci, id.replace, is.old) {
+		nTci <- Tci
+		j <- length(Tci) + 1
+		for (i in 1:length(eTci)) {
+			if (is.old[i])
+				nTci[[id.replace[i]]] <- eTci[[i]]
+			else {
+				nTci[[j]] <- eTci[[i]]
+				j <- j+1
+			}
+		}
+		return(nTci)
+	}
 	meta <- mcmc.set$meta
 	#create e0 matrix only for the extra countries
 	e0.with.regions <- set.e0.wpp.extra(meta, countries=countries, 
@@ -458,15 +485,36 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries=NULL, my.e0.file = NULL,
 	#	meta[[name]][id.replace] <- Emeta[[name]][is.old]
 	#	new.meta[[name]] <- c(meta[[name]], Emeta[[name]][is.new])
 	#}
-	new.meta[['regions']] <- list()
-	for (name in c('code', 'area_code', 'country_code')) {
-		meta$regions[[name]][id.replace] <- Emeta$regions[[name]][is.old]
-		new.meta$regions[[name]] <- c(meta$regions[[name]], Emeta$regions[[name]][is.new])
-	}
-	for (name in c('name', 'area_name', 'country_name')) {
-		meta$regions[[name]][id.replace] <- as.character(Emeta$regions[[name]])[is.old]
-		new.meta$regions[[name]] <- c(as.character(meta$regions[[name]]), 
-									  as.character(Emeta$regions[[name]])[is.new])
+	new.meta[['Tc.index']] <- update.Tc.index(meta$Tc.index, Emeta$Tc.index, id.replace, is.old)
+	#stop('')
+	new.meta[['regions']] <- update.regions(meta$regions, Emeta$regions, id.replace, is.new, is.old)
+
+	if(!is.null(Emeta$suppl.data$e0.matrix)) {
+		suppl.id.replace <- meta$suppl.data$index.from.all.countries[id.replace]
+		suppl.id.replace <- suppl.id.replace[!is.na(suppl.id.replace)]
+		suppl.is.old <- which(is.old)[which(is.element(id.replace, suppl.id.replace))]
+		suppl.old <- Emeta$suppl.data$index.from.all.countries[suppl.is.old]
+		suppl.is.new <- which(is.new & !is.na(Emeta$suppl.data$index.from.all.countries))
+		suppl.new <- Emeta$suppl.data$index.from.all.countries[suppl.is.new]
+		for (name in c('e0.matrix', 'd.ct', 'loessSD')) {
+			meta$suppl.data[[name]][,suppl.id.replace] <- Emeta$suppl.data[[name]][,suppl.old]
+			new.meta$suppl.data[[name]] <- cbind(meta$suppl.data[[name]], Emeta$suppl.data[[name]][,suppl.new])
+		}
+		suppl.is.old.tmp <- rep(FALSE, Emeta$suppl.data$nr.countries)
+		suppl.is.old.tmp[suppl.is.old] <- TRUE
+		new.meta$suppl.data$Tc.index <- update.Tc.index(meta$suppl.data$Tc.index, Emeta$suppl.data$Tc.index, 
+											suppl.id.replace, suppl.is.old.tmp)
+		new.meta$suppl.data$regions <- update.regions(meta$suppl.data$regions, Emeta$suppl.data$regions, 
+												suppl.id.replace, suppl.new, suppl.old)
+		n.new <- ncol(new.meta$suppl.data$e0.matrix) - ncol(meta$suppl.data$e0.matrix)
+		if (n.new > 0) {
+			new.meta$suppl.data$nr.countries <- ncol(new.meta$suppl.data$e0.matrix)
+			new.meta$suppl.data$index.from.all.countries <- c(meta$suppl.data$index.from.all.countries, rep(NA, sum(is.new)))
+			new.meta$suppl.data$index.from.all.countries[meta$nr.countries + suppl.is.new] <- seq(meta$suppl.data$nr.countries + 1, 
+												length=n.new)
+			new.meta$suppl.data$index.to.all.countries <- c(meta$suppl.data$index.to.all.countries, 
+											seq(meta$nr.countries+1, new.meta$nr.countries)[suppl.is.new])
+		}
 	}
 	index <- id.replace
 	if (new.meta$nr.countries > meta$nr.countries) 

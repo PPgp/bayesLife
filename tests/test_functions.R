@@ -109,6 +109,47 @@ test.estimate.mcmc.with.same.z <- function() {
 	unlink(sim.dir, recursive=TRUE)
 }
 
+test.estimate.mcmc.with.suppl.data <- function() {
+	sim.dir <- tempfile()
+    # run MCMC
+    test.name <- 'estimating MCMC using supplemental data'
+	start.test(test.name)
+    m <- run.e0.mcmc(nr.chains=1, iter=10, thin=1, output.dir=sim.dir, start.year=1750)
+    stopifnot(length(m$meta$suppl.data$regions$country_code) == 29)
+	stopifnot(all(dim(m$meta$suppl.data$e0.matrix) == c(40, 29)))
+	test.ok(test.name)
+	
+	# continue MCMC
+	test.name <- 'continuing MCMC with supplemental data'
+	start.test(test.name)
+	m <- continue.e0.mcmc(iter=10, output.dir=sim.dir)
+	stopifnot(m$mcmc.list[[1]]$finished.iter == 20)
+	stopifnot(get.total.iterations(m$mcmc.list, 0) == 20)
+	stopifnot(!is.element(900, m$meta$regions$country_code)) # 'World' should not be included
+	test.ok(test.name)
+	
+	# run MCMC for an aggregation
+	test.name <- 'estimating MCMC for extra areas with supplemental data'
+	start.test(test.name)
+	data.dir <- file.path(.find.package("bayesLife"), 'data')
+	m <- run.e0.mcmc.extra(sim.dir=sim.dir, 
+					my.e0.file=file.path(data.dir, 'my_e0_template.txt'), burnin=0)
+	stopifnot(is.element(900, m$meta$regions$country_code)) # 'World' should be included
+	test.ok(test.name)
+	
+	# run prediction
+	test.name <- 'running projections for simulation with supplemental data'
+	start.test(test.name)
+	pred <- e0.predict(m, burnin=0, verbose=FALSE)
+	spred <- summary(pred)
+	stopifnot(spred$nr.traj == 20)
+	stopifnot(!is.element(903, pred$mcmc.set$regions$country_code))
+	npred <- dim(pred$e0.matrix.reconstructed)[2]
+	test.ok(test.name)
+	unlink(sim.dir, recursive=TRUE)
+}
+
+
 test.existing.simulation <- function() {
 	test.name <- 'retrieving MCMC results'
 	start.test(test.name)

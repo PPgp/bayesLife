@@ -42,7 +42,8 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
 									low=meta$Triangle.prior.low[i], high=meta$Triangle.prior.up[i])
 			}
 			sT <- sum(Triangle.prop)
-			if(sT <= 110 && sT >= 50) break # discard samples for which the sum(Triangle) is outside of [50,110].
+			# discard samples for which the sum(Triangle) is outside of given interval.
+			if(sT <= meta$sumTriangle.lim[2] && sT >= meta$sumTriangle.lim[1]) break 
 		}
 		mcenv$Triangle <- Triangle.prop
 		# k is truncated normal in [0,10]
@@ -179,6 +180,7 @@ get.DLdata.for.estimation <- function(meta, countries) {
     if(T.suppl.end > 0) {
     	for(country in 1:ncol(meta$suppl.data$e0.matrix)) {
     		cidx <- meta$suppl.data$index.to.all.countries[country]
+    		if (!is.element(cidx, countries)) next
     		idx <- which(!is.na(meta$suppl.data$d.ct[, country]))
     		if(length(idx) <= 0) next
     		start.col <- ncol(DLdata[[cidx]]) + 1
@@ -236,7 +238,7 @@ Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
 			dlx[i] <- Triangle.prop[i]
 		}
 		sT <- sum(Triangle.prop)
-		if(sT <= 110 && sT >= 50) break
+		if(sT <= mcmc$meta$sumTriangle.lim[2] && sT >= mcmc$meta$sumTriangle.lim[1]) break
 		dlx <- c(mcmc$Triangle.c[,country], mcmc$k.c[country], mcmc$z.c[country])
 	}
 	mcmc$Triangle.c[, country] <- Triangle.prop

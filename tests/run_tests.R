@@ -1,6 +1,7 @@
 library(bayesLife)
 source('test_functions.R')
 #test.estimate.mcmc.with.same.z()
+test.estimate.mcmc.with.suppl.data()
 test.get.wpp.data()
 test.estimate.mcmc()
 #test.estimate.mcmc.with.same.z()
