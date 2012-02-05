@@ -35,7 +35,8 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
 		Tr.var <- 1./(1./delta.sq + C*lambdas)
 		Tr.sd <- sqrt(Tr.var)
 		Tr.mean <- (meta$a/delta.sq + sum.Trkz.c*lambdas)*Tr.var
-		while(TRUE) {
+		ntries <- 1
+		while(ntries <= 50) {
 			for (i in 1:4) {
 				# Triangle is truncated normal in [0,100]
 				Triangle.prop[i] <- rnorm.trunc(mean=Tr.mean[i], sd=Tr.sd[i], 
@@ -43,7 +44,8 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE) {
 			}
 			sT <- sum(Triangle.prop)
 			# discard samples for which the sum(Triangle) is outside of given interval.
-			if(sT <= meta$sumTriangle.lim[2] && sT >= meta$sumTriangle.lim[1]) break 
+			if(sT <= meta$sumTriangle.lim[2] && sT >= meta$sumTriangle.lim[1]) break
+			ntries <- ntries + 1
 		}
 		mcenv$Triangle <- Triangle.prop
 		# k is truncated normal in [0,10]
@@ -225,7 +227,8 @@ Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
 	z.c.width <- mcmc$meta$z.c.width
 	Triangle.prop <- rep(0,4)
 	dlx <- c(mcmc$Triangle.c[,country], mcmc$k.c[country], mcmc$z.c[country])
-	while(TRUE) {
+	ntries <- 1
+	while(ntries <= 50) {
 		for (i in 1:4) {
 			Triangle.prop[i] <- slice.sampling(mcmc$Triangle.c[i, country],
 										logdensity.Triangle.k.z.c, Triangle.c.width[i], 
@@ -240,6 +243,7 @@ Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
 		sT <- sum(Triangle.prop)
 		if(sT <= mcmc$meta$sumTriangle.lim[2] && sT >= mcmc$meta$sumTriangle.lim[1]) break
 		dlx <- c(mcmc$Triangle.c[,country], mcmc$k.c[country], mcmc$z.c[country])
+		ntries <- ntries + 1
 	}
 	mcmc$Triangle.c[, country] <- Triangle.prop
 	mcmc$k.c[country] <- slice.sampling(mcmc$k.c[country],
