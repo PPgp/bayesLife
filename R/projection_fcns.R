@@ -4,7 +4,7 @@ e0.proj.le.SDPropToLoess<-function(x,l.start,kap,n.proj=11, p1=9, p2=9){
   proj<-NULL
   proj[1]<-l.start
   for(a in 2:(n.proj+1)){
-   proj[a]<-proj[a-1]+g.dl6(x,proj[a-1], p1=p1, p2=p2)+rnorm(1,mean=0,sd=(kap*loess.lookup(proj[a-1])))
+  	proj[a]<-proj[a-1]+g.dl6(x,proj[a-1], p1=p1, p2=p2)+rnorm(1,mean=0,sd=(kap*loess.lookup(proj[a-1])))
   }
   return(proj)
 }
@@ -38,7 +38,8 @@ e0.predict <- function(mcmc.set=NULL, end.year=2100, sim.dir=file.path(getwd(), 
 		# Try to select those that suggest nr.traj >= 2000 (take the minimum of those)
 		traj.is.notna <- !is.na(use.nr.traj)
 		larger2T <- traj.is.notna & use.nr.traj>=2000
-		nr.traj.idx <- if(sum(larger2T)>0) (1:ldiag)[larger2T][which.min(use.nr.traj[larger2T])] else (1:ldiag)[traj.is.notna][which.max(use.nr.traj[traj.is.notna])]
+		nr.traj.idx <- if(sum(larger2T)>0) (1:ldiag)[larger2T][which.min(use.nr.traj[larger2T])] 
+						else (1:ldiag)[traj.is.notna][which.max(use.nr.traj[traj.is.notna])]
 		nr.traj <- use.nr.traj[nr.traj.idx]
 		burnin <- use.burnin[nr.traj.idx]
 		if(verbose)
@@ -320,15 +321,15 @@ e0.median.set <- function(sim.dir, country, values, years=NULL) {
 				values=values, years=years))
 }
 
-joint.male.estimate <- function(mcmc.set, countries.index=1:get.nr.countries.est(mcmc.set$meta), 
+joint.male.estimate <- function(mcmc.set, countries.index=NULL, 
 								estDof.eq1 = TRUE, start.eq1 = list(dof = 2), 
-								age.threshold.eq2 = 80, estDof.eq2 = TRUE, start.eq2 = list(dof = 2), 
-								verbose=FALSE) {
+								min.e0.eq2 = 80, estDof.eq2 = TRUE, start.eq2 = list(dof = 2), 
+								my.e0.file=NULL, verbose=FALSE) {
 	# Estimate coefficients for joint prediction of female and male e0
 	require(hett)
-
+	if (is.null(countries.index)) countries.index <- 1:get.nr.countries.est(mcmc.set$meta)
 	e0f.data <- get.data.matrix(mcmc.set$meta)[,countries.index]
-	e0m.data <- get.wpp.e0.data.for.countries(mcmc.set$meta, sex='M',
+	e0m.data <- get.wpp.e0.data.for.countries(mcmc.set$meta, sex='M', my.e0.file=my.e0.file,
 					verbose=verbose)$e0.matrix[,countries.index]
 	T <- dim(e0f.data)[1] - 1 
 	if(verbose) {
@@ -353,7 +354,7 @@ joint.male.estimate <- function(mcmc.set, countries.index=1:get.nr.countries.est
 	errscale.eq1<-as.numeric(exp(fit.eq1$scale.fit$coefficients[1]))
 	errsd.eq1<-sqrt(errscale.eq1)
 
-	data.eq2 <- data.eq1[data.eq1$e0 >= age.threshold.eq2,]
+	data.eq2 <- data.eq1[data.eq1$e0 >= min.e0.eq2,]
 	if(verbose) 
 		cat('\n\nUsing', nrow(data.eq2), 'data points for equation 2.\n\n')
 	fit.eq2 <- tlm(G~-1+Gprev, data=data.eq2, start = start.eq2, estDof = estDof.eq2)
@@ -361,26 +362,28 @@ joint.male.estimate <- function(mcmc.set, countries.index=1:get.nr.countries.est
 		print(summary(fit.eq2))
 	errscale.eq2<-as.numeric(exp(fit.eq2$scale.fit$coefficients[1]))
 	errsd.eq2<-sqrt(errscale.eq2)
-	return(list(eq1.coefficients=fit.eq1$loc.fit$coefficients, 
-				eq1.sigma=errsd.eq1, eq1.dof = fit.eq1$dof, eq1.fit=fit.eq1,
-				eq2.coefficients=fit.eq2$loc.fit$coefficients,
-				eq2.sigma=errsd.eq2, eq2.dof = fit.eq2$dof, eq2.fit=fit.eq2
+	return(list(eq1 = list(coefficients=fit.eq1$loc.fit$coefficients, 
+						   sigma=errsd.eq1, dof = fit.eq1$dof, fit=fit.eq1),
+				eq2 = list(coefficients=fit.eq2$loc.fit$coefficients,
+						   sigma=errsd.eq2, dof = fit.eq2$dof, fit=fit.eq2)
 				))
 }
 
-joint.male.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18), verbose=TRUE, ...
-			) {
+joint.male.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18), my.e0.file=NULL, verbose=TRUE, ...) {
 	# Predicting male e0 from female predictions. estimates is the result of 
 	# the joint.male.estimate function. If it is NULL, the estimation is performed 
 	# using the ... arguments
+	# If my.e0.file given, it should be a male e0 file. 
 	
-	if(is.null(estimates)) estimates <- joint.male.estimate(e0.pred$mcmc.set, verbose=verbose, ...
-		)
 	meta <- e0.pred$mcmc.set$meta
+	if (meta$sex != 'F') stop('The prediction object must be a result of FEMALE projections.')
+	if(is.null(estimates)) 
+		estimates <- joint.male.estimate(e0.pred$mcmc.set, verbose=verbose, ...)
+	
 	e0f.data <- get.e0.reconstructed(e0.pred$e0.matrix.reconstructed, meta)
-	Tc <- meta$T.end.c
+	#Tc <- meta$T.end.c
 
-	e0m.data <- get.wpp.e0.data.for.countries(meta, sex='M', verbose=verbose)$e0.matrix
+	e0m.data <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, verbose=verbose)$e0.matrix
 	maxe0 <- max(e0f.data)
 
 	bayesLife.prediction <- e0.pred
@@ -415,19 +418,19 @@ joint.male.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18), verbose
 			Gprev <- G1
 			for(time in 2:dim(trajectoriesF)[1]) {
 				if(trajectoriesF[time-1,itraj] <= maxe0) { # 1st part of Equation 3.1
-					Gtdeterm <- (estimates$eq1.coefficients[1] + # intercept
-					   			 estimates$eq1.coefficients['Gprev']*Gprev +
-					   			 estimates$eq1.coefficients['e0.1953']*e0f.data['1953',icountry] +
-					   			 estimates$eq1.coefficients['e0']*trajectoriesF[time-1,itraj] +
-					   			 estimates$eq1.coefficients['e0d75']*max(0, trajectoriesF[time-1,itraj]-75)					   			)
-					Gt <- Gtdeterm + estimates$eq1.sigma*rt(1,estimates$eq1.dof)
+					Gtdeterm <- (estimates$eq1$coefficients[1] + # intercept
+					   			 estimates$eq1$coefficients['Gprev']*Gprev +
+					   			 estimates$eq1$coefficients['e0.1953']*e0f.data['1953',icountry] +
+					   			 estimates$eq1$coefficients['e0']*trajectoriesF[time-1,itraj] +
+					   			 estimates$eq1$coefficients['e0d75']*max(0, trajectoriesF[time-1,itraj]-75)					   			)
+					Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
 					while(Gt < gap.lim[1] || Gt > gap.lim[2]) 
-						Gt <- Gtdeterm + estimates$eq1.sigma*rt(1,estimates$eq1.dof)
+						Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
 				} else {  # 2nd part of Equation 3.1
-					Gtdeterm <- estimates$eq2.coefficients['Gprev']*Gprev
-					Gt <- Gtdeterm + estimates$eq2.sigma*rt(1,estimates$eq2.dof)
+					Gtdeterm <- estimates$eq2$coefficients['Gprev']*Gprev
+					Gt <- Gtdeterm + estimates$eq2$sigma*rt(1,estimates$eq2$dof)
 					while(Gt < gap.lim[1] || Gt > gap.lim[2]) 
-						Gt <- Gtdeterm + estimates$eq2.sigma*rt(1,estimates$eq2.dof)
+						Gt <- Gtdeterm + estimates$eq2$sigma*rt(1,estimates$eq2$dof)
 				}
 				Mtraj[time,itraj] <- trajectoriesF[time,itraj] - Gt
 				Gprev <- Gt

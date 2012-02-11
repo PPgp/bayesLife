@@ -29,6 +29,8 @@ e0.gap.plot <- function(e0.pred, country, e0.pred2=NULL, pi=c(80, 95), nr.traj=0
 	}
 	country <- get.country.object(country, e0.pred$mcmc.set$meta)
 	if(is.null(e0.pred2)) e0.pred2 <- e0.pred$joint.male
+	if(is.null(e0.pred2)) 
+		stop('No male projection is contained in this prediction object. Use joint.male.predict.')
 	e0.mtx <- e0.pred$e0.matrix.reconstructed
 	e0.mtx2 <- e0.pred2$e0.matrix.reconstructed
 	T <- nrow(e0.mtx)
@@ -125,6 +127,7 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95),
 									e0.pred$mcmc.set$meta)
 	} else {
 		e0.pred <- e0.pred$joint.male # overwrite the prediction object by the male prediction
+		if(is.null(e0.pred)) stop('No male projection is contained in this prediction object. Use joint.male.predict.')
 		e0.mtx <- e0.matrix.reconstructed <- e0.pred$e0.matrix.reconstructed
 	}
 	meta <- e0.pred$mcmc.set$meta

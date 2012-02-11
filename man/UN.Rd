@@ -5,13 +5,15 @@
 \alias{UN2010e0F}
 \alias{UN2010e0M}
 \alias{UN2010e0}
+\alias{UN2010e0F_supplemental}
+\alias{UN2010e0M_supplemental}
 \alias{my_e0_template}
 \docType{data}
 \title{
 United Nations Time Series of the Life Expectancy
 }
 \description{
-Data sets containing the United Nations time series of the life expectancy for all countries of the world as available in 2010 and 2008. These are TAB-separated ASCII files, \dQuote{UN2010e0F.txt}, {UN2010e0M.txt}, {UN2008e0F.txt}, and \dQuote{UN2008e0M.txt}, corresponding to female and male life expectancy, respectively, in the particular years. \code{my_e0_template} is a template for user-specific data.
+Data sets containing the United Nations time series of the life expectancy for all countries of the world as available in 2010 and 2008. These are TAB-separated ASCII files, \dQuote{UN2010e0F.txt}, {UN2010e0M.txt}, {UN2008e0F.txt}, and \dQuote{UN2008e0M.txt}, corresponding to female and male life expectancy, respectively, in the particular years. \code{my_e0_template} is a template for user-specific data. \dQuote{UN2010e0F_supplemental.txt} and \dQuote{UN2010e0M_supplemental.txt} contain a subset of countries for which data prior 1950 are available.
 }
 \usage{
 data(UN2010e0F)
@@ -21,6 +23,10 @@ data(UN2010e0M)
 data(UN2008e0F)
 
 data(UN2008e0M)
+
+data(UN2010e0F_supplemental)
+
+data(UN2010e0M_supplemental)
 
 data(my_e0_template)
 }

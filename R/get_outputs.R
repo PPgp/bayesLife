@@ -221,10 +221,14 @@ summary.bayesLife.mcmc.set <- function(object, country=NULL, chain.id=NULL,
 								par.names.cs=e0.parameter.names.cs(), 
 								meta.only=FALSE, thin=1, burnin=0, ...) {
 	if(is.null(country) & missing(par.names.cs)) par.names.cs <- NULL
-	cat('\nMCMC parameters estimated for', object$meta$nr.countries, 'countries.')
-	cat('\nHyperparameters estimated using', object$meta$nr.countries.estimation, 'countries.\n')
+	cat('\nSimulation:', if (object$meta$sex == 'F') 'Female' else 'Male', 'life expectancy')
 	cat('\nWPP:', object$meta$wpp.year)
-	cat('\nInput data: e0 for period', object$meta$start.year, '-', object$meta$present.year,'.')
+	cat('\nInput data: e0 for period', object$meta$start.year, '-', object$meta$present.year,'\n')
+	
+	cat('\nMCMC parameters estimated for', object$meta$nr.countries, 'countries.')
+	cat('\nHyperparameters estimated using', object$meta$nr.countries.estimation, 'countries.')
+	
+	
 	cat('\n')
 	if(meta.only) {
 		get.iter <- function(x) x$finished.iter

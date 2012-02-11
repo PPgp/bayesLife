@@ -17,8 +17,9 @@ It contains information that is common to all chains. It is a part of a \code{\l
 		\code{lambda.z.ini, Triangle.ini.low, 
 		Triangle.ini.up, k.ini.low, k.ini.up, z.ini.low, z.ini.up, lambda.ini.low, lambda.ini.up, 
 		lambda.k.ini.low, lambda.k.ini.up, lambda.z.ini.low, lambda.z.ini.up, omega.ini.low, omega.ini.up,
-		Triangle.c.ini.norm, k.c.ini.norm, z.c.ini.norm,}\cr
-		\code{Triangle.c.width, k.c.width, z.c.width, nu, dl.p1, dl.p2}. 
+		Triangle.c.ini.norm, k.c.ini.norm, z.c.ini.norm, Triangle.c.prior.low, Triangle.c.prior.up,
+		k.c.prior.low, k.c.prior.up, z.c.prior.low, z.c.prior.up,
+		Triangle.c.width, k.c.width, z.c.width, nu, dl.p1, dl.p2, sumTriangle.lim, auto.conf}. 
 		Their meaning and value are the same as the input arguments 
 			to the \code{\link{run.e0.mcmc}} function. Furthermore, it contains components:
 	\item{e0.matrix.all}{A \eqn{q \times n}{q x n} matrix with the United Nations life expectancy estimates. \eqn{q} is number of years, \eqn{n} is number of countries (see \code{nr.countries} below). The first \eqn{n_e} columns correspond to countries included in the MCMC estimation (see \code{nr.countries.estimation} below), where \eqn{n_e <= n}. The order of the countries corresponds to the order of countries in the element \code{regions}, see below.}
@@ -28,7 +29,7 @@ It contains information that is common to all chains. It is a part of a \code{\l
 	\item{loessSD}{The loess matrix of \code{d.ct}.}
 	\item{nr.countries}{Number of countries included in the e0 matrices.}
 	\item{nr.countries.estimation}{Number of countries included in the MCMC estimation. It must be smaller or equal to \code{nr.countries}.}
-	\item{T.end.c}{For each country, number of years for which United Nations historical data are available.}
+	\item{Tc.index}{A list with one element per country. For each country, it contains the index within \code{e0.matrix} where the observed historical data are not \code{NA}, i.e. it points to the data used in the estimation.}
 	\item{regions}{List of arrays of length \code{nr.countries}. These are: \cr
 		\code{name} - Region name for each country.\cr
 		\code{code} - Region code for each country. \cr
@@ -38,6 +39,9 @@ It contains information that is common to all chains. It is a part of a \code{\l
 		\code{country_code} - Array of country codes. \cr
 		Any country indices in the \code{bayesLife.mcmc.meta} object are derived from this component.}
 	\item{output.dir}{Directory for storing simulation output.}
+	\item{suppl.data}{If supplemental data were used in the simulation (i.e. start year was set prior to 1950), this is a list containing information about the additional data. It has the following components of the same form as described above, but related only to the additional data: \code{e0.matrix},  \code{regions}, \code{Tc.index}, \code{nr.countries}, \code{d.ct}, \code{loessSD}. In addition, it has the vectors\cr
+		\code{index.from.all.countries} - a vector of size \code{nr.countries} (all countries) where each element is an index to the supplemental data, i.e. a match from regions$country_code to suppl.data$regions$country_code.\cr
+		\code{index.to.all.countries} - a vector of size \code{suppl.data$nr.countries} (additional countries) where each element is an index to all data, i.e. a match from suppl.data$regions$country_code to regions$country_code.
 }
 
 \details{

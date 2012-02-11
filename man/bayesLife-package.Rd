@@ -13,7 +13,7 @@ using a Bayesian hierarchical model and the United Nations demographic time seri
 \tabular{ll}{
 Package: \tab bayesLife\cr
 Type: \tab Package\cr
-Version: \tab 0.3-0\cr
+Version: \tab 0.3-2\cr
 Date: \tab 2011-11-17\cr
 Depends: \tab R (>= 2.9.0), bayesTFR\cr
 License: \tab GPL (>= 2)\cr
@@ -63,7 +63,7 @@ J. L. Chunn, A. E. Raftery, P. Gerland (2010): Bayesian Probabilistic Projection
   \code{\link[bayesTFR:bayesTFR-package]{bayesTFR}}
 }
 \examples{
-m <- run.e0.mcmc(nr.chains=3, iter=50, seed=1, thin=2, 
+m <- run.e0.mcmc(sex='F', nr.chains=3, iter=50, seed=1, thin=2, 
                  verbose=TRUE, replace.output=TRUE)
 pred <- e0.predict(m, burnin=30, verbose=TRUE)
 summary(pred, country='Canada')

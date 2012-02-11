@@ -11,9 +11,12 @@ The functions plot/tabulate the posterior distribution of trajectories of the li
 }
 \usage{
 e0.trajectories.plot(e0.pred, country, pi = c(80, 95), 
-    nr.traj = NULL, xlim = NULL, ylim = NULL, 
-    type = "b", xlab = "Year", ylab = "Life expectancy", 
-    main = NULL, \dots)
+    joint.male = FALSE, nr.traj = NULL, typical.trajectory=FALSE,
+    xlim = NULL, ylim = NULL, type = "b", 
+    xlab = "Year", ylab = "Life expectancy", 
+    main = NULL, lwd = c(2,2,2,2,1), 
+    col = c('black', 'green', 'red', 'red', 'gray'),
+	show.legend = TRUE, add = FALSE, \dots)
     
 e0.trajectories.plot.all(e0.pred, 
     output.dir = file.path(getwd(), 'e0trajectories'),
@@ -26,10 +29,15 @@ e0.trajectories.table(e0.pred, \dots)
   \item{e0.pred}{Object of class \code{\link{bayesLife.prediction}}.}
   \item{country}{Name or numerical code of a country.}
   \item{pi}{Probability interval. It can be a single number or an array.}
+  \item{joint.male}{Logical. If \code{TRUE}, the functions are applied to a male prediction that was generated using the joint female-male model implemented in the function \code{\link{joint.male.predict}}.}
   \item{nr.traj}{Number of trajectories to be plotted. If \code{NULL}, all trajectories are plotted, otherwise they are thinned evenly.}
+  \item{typical.trajectory}{Logical. If \code{TRUE} one trajectory is shown that has the smallest distance to the median.}
   \item{xlim, ylim, type, xlab, ylab, main}{Graphical parameters passed to the \code{plot} function.}
+  \item{lwd, col}{Vector of five elements giving the line width and color for: 1. observed data, 2. imputed missing data, 3. median, 4. quantiles, 5. trajectories.}
+  \item{show.legend}{Logical controlling whether the legend should be drawn.}
+  \item{add}{Logical controlling whether the trajectories should be plotted into a new graphic device (\code{FALSE}) or into an existing device (\code{TRUE}). One can use this argument to plot trajectories from multiple countries into one graphics.}
   \item{\dots}{Additional graphical parameters. In addition, for \code{e0.trajectories.plot.all}, \code{\dots} 
-  	contains the arguments \code{pi} and \code{nr.traj}, and for \code{e0.trajectories.table}, \code{\dots} contains 
+  	contains any of the arguments of  \code{e0.trajectories.plot}, and for \code{e0.trajectories.table}, \code{\dots} contains 
   	the \code{pi} and \code{country} arguments.}
   \item{output.dir}{Directory into which resulting graphs are stored.}
   \item{output.type}{Type of the resulting files. It can be \dQuote{png}, \dQuote{pdf}, \dQuote{jpeg}, \dQuote{bmp}, \dQuote{tiff}, or \dQuote{postscript}.}
@@ -55,9 +63,14 @@ Hana Sevcikova
 sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
 pred <- get.e0.prediction(sim.dir)
 e0.trajectories.table(pred, country='Japan', pi=c(80, 95))
-\dontrun{
 e0.trajectories.plot(pred, country='Japan', pi=c(80, 95))
-}
+
+# plot multiple countries into one plot
+e0.trajectories.plot(pred, 'Japan', col=rep('green', 5), nr.traj=0, pi=c(80), 
+				show.legend=FALSE, main='')
+e0.trajectories.plot(pred, 'United States of America', col=rep('blue', 5),  
+				add=TRUE, nr.traj=0, pi=c(80), show.legend=FALSE)
+legend('topleft', legend=c('Japan', 'USA'), col=c('green', 'blue'), lty=1, bty='n')
 }
 
 \keyword{ hplot }

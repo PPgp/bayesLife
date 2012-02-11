@@ -108,7 +108,7 @@ set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, verbose=FALS
 	return(extra.wpp)
 }
 
-get.wpp.e0.data.for.countries <- function(meta, sex='M', verbose=FALSE) {
+get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, verbose=FALSE) {
 	sex <- toupper(sex)
 	if(sex != 'M' && sex != 'F')
 		stop('Allowed values for argument "sex" are "M" and "F".')
@@ -116,7 +116,7 @@ get.wpp.e0.data.for.countries <- function(meta, sex='M', verbose=FALSE) {
 	# set data and match with areas
 	########################################
 	data <- read.UNe0(sex=sex, wpp.year=meta$wpp.year, present.year=meta$present.year, 
-						verbose=verbose)$data.object$data
+						my.e0.file=my.e0.file, verbose=verbose)$data.object$data
 	# get region and area data
 	locations <- bayesTFR:::read.UNlocations(data, wpp.year=meta$wpp.year, package='bayesLife', verbose=verbose)
 	loc_data <- locations$loc_data
