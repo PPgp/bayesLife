@@ -1,10 +1,12 @@
-run.e0.mcmc <- function(sex=c("Male", "Female"), nr.chains=3, iter=100000, 
+run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=100000, 
 							output.dir=file.path(getwd(), 'bayesLife.output'), 
                          thin=10, replace.output=FALSE,
                          start.year=1950, present.year=2010, wpp.year=2010,
                          my.e0.file = NULL, buffer.size=100,
-                         a=c(15.7669391,40.9658241,0.2107961,19.8188061,2.9306625,0.400688628),
-						 delta=c(1.887, 1.982, 1.99, 1.949, 0.995, 0.4), 
+                         a=c(13.215, 41.070, 9.235, 17.605, 2.84, 0.385),
+                         #a=c(15.7669391,40.9658241,0.2107961,19.8188061,2.9306625,0.400688628),
+						 delta=c(3.844, 4.035, 11.538, 5.639, 0.901, 0.4),
+						 #delta=c(1.887, 1.982, 1.99, 1.949, 0.995, 0.4), 
 						 tau=c(15.5976503,23.6500060,14.5056919,14.7185980,3.4514285,0.5667531), 
 						 Triangle.ini = list(NULL, NULL, NULL, NULL), k.ini=NULL, z.ini=NULL,
 						 lambda.ini=list(NULL, NULL, NULL, NULL), 
@@ -25,7 +27,7 @@ run.e0.mcmc <- function(sex=c("Male", "Female"), nr.chains=3, iter=100000,
 						 k.c.prior.low=0, k.c.prior.up=10, z.c.prior.low=0, z.c.prior.up=1.15,
 						 Triangle.c.width = c(4, 6, 3, 4), k.c.width=1, z.c.width=0.2,
 						 #Triangle.c.width = c(5, 5, 5, 5), k.c.width=0.5, z.c.width=0.06,
-						 nu=4, dl.p1=9, dl.p2=9, sumTriangle.lim = c(80, 105),
+						 nu=4, dl.p1=9, dl.p2=9, sumTriangle.lim = c(75, 95), constant.variance=FALSE,
                          seed = NULL, parallel=FALSE, nr.nodes=nr.chains,
                          auto.conf = list(max.loops=5, iter=100000, iter.incr=20000, nr.chains=3, thin=120, burnin=20000),
 						 verbose=FALSE, ...) {
@@ -102,6 +104,7 @@ run.e0.mcmc <- function(sex=c("Male", "Female"), nr.chains=3, iter=100000,
                                         z.c.prior.low=z.c.prior.low, z.c.prior.up=z.c.prior.up, 
                                         Triangle.c.width=Triangle.c.width, k.c.width=k.c.width, z.c.width=z.c.width,
                                         nu=nu, dl.p1=dl.p1, dl.p2=dl.p2, sumTriangle.lim=sumTriangle.lim, 
+                                        constant.variance=constant.variance,
                                         buffer.size=buffer.size, 
                                         auto.conf=auto.conf, verbose=verbose)
     store.bayesLife.meta.object(bayesLife.mcmc.meta, output.dir)
@@ -320,7 +323,7 @@ init.nodes.e0 <- function() {
 	library(bayesLife)
 }
 
-.do.part.e0.mcmc.meta.ini <- function(data) {
+.do.part.e0.mcmc.meta.ini <- function(data, meta) {
 	nr_countries <- ncol(data$e0.matrix)
     #T_end_c <- rep(NA, nr_countries)
     Tc.index <- list()
@@ -333,7 +336,8 @@ init.nodes.e0 <- function() {
 	T <- nrow(data$e0.matrix)
 	d.ct <- loessSD <- matrix(NA, nrow=T-1, ncol=nr_countries, 
 							dimnames=list(rownames(data$e0.matrix)[1:(T-1)],
-										  colnames(data$e0.matrix)))
+									  colnames(data$e0.matrix)))
+	loessSD[,] <- 1
 	for(i in 2:T) {
 		nisna0 <- !is.na(data$e0.matrix[i-1,])
 		nisna1 <- !is.na(data$e0.matrix[i,])
@@ -343,7 +347,7 @@ init.nodes.e0 <- function() {
 			outliers <- nisna2 & ((d.ct[i-1,] < -5) | (d.ct[i-1,] > 10))
 			d.ct[i-1,outliers] <- NA
 		}
-		if (sum(nisna0) > 0)
+		if (sum(nisna0) > 0 && !meta$constant.variance)
 			loessSD[i-1,nisna0]<-sapply(data$e0.matrix[i-1,nisna0],loess.lookup)
 	}
 	D.supp.ct <- loessSD.suppl <- NULL
@@ -368,7 +372,7 @@ init.nodes.e0 <- function() {
 				d.suppl.ct[i-1,outliers] <- NA
 			}
 			if (sum(nisna0) > 0)
-				loessSD.suppl[i-1,nisna0]<-sapply(data.suppl[i-1,nisna0],loess.lookup)
+				loessSD.suppl[i-1,nisna0]<- if(meta$constant.variance) 1 else sapply(data.suppl[i-1,nisna0],loess.lookup)
 		}
 		suppl$nr.countries <- nr_countries.suppl
 		suppl$d.ct <- d.suppl.ct
@@ -393,7 +397,7 @@ e0.mcmc.meta.ini <- function(sex="M", nr.chains=1, start.year=1950, present.year
 						
     data <- get.wpp.e0.data (sex, start.year=start.year, present.year=present.year, 
 						wpp.year=wpp.year, my.e0.file = my.e0.file, verbose=verbose)
-	part.ini <- .do.part.e0.mcmc.meta.ini(data)
+	part.ini <- .do.part.e0.mcmc.meta.ini(data, mcmc.input)
 	return(structure(c(mcmc.input, part.ini), class='bayesLife.mcmc.meta'))
 }
 
@@ -459,7 +463,7 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries=NULL, my.e0.file = NULL,
 	e0.with.regions <- set.e0.wpp.extra(meta, countries=countries, 
 									  my.e0.file = my.e0.file, verbose=verbose)
 	if(is.null(e0.with.regions)) return(list(meta=meta, index=c()))
-	part.ini <- .do.part.e0.mcmc.meta.ini(e0.with.regions)
+	part.ini <- .do.part.e0.mcmc.meta.ini(e0.with.regions, meta)
 	Emeta <- part.ini
 						 		
 	# join the new meta with the existing one

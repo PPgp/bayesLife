@@ -1,10 +1,11 @@
 
 
-e0.proj.le.SDPropToLoess<-function(x,l.start,kap,n.proj=11, p1=9, p2=9){
+e0.proj.le.SDPropToLoess<-function(x,l.start,kap,n.proj=11, p1=9, p2=9, const.var=FALSE){
   proj<-NULL
   proj[1]<-l.start
   for(a in 2:(n.proj+1)){
-  	proj[a]<-proj[a-1]+g.dl6(x,proj[a-1], p1=p1, p2=p2)+rnorm(1,mean=0,sd=(kap*loess.lookup(proj[a-1])))
+  	proj[a]<-proj[a-1]+g.dl6(x,proj[a-1], p1=p1, p2=p2)+rnorm(1,mean=0,
+  				sd=(kap*if(const.var) 1 else loess.lookup(proj[a-1])))
   }
   return(proj)
 }
@@ -222,7 +223,8 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
            trajectories[,j]<-e0.proj.le.SDPropToLoess(cs.par.values[j,], 
            							mcmc.set$meta$e0.matrix[this.T_end, country], 
            							kap=var.par.values[j,'omega'],n.proj=this.nr_project,
-           							p1=mcmc.set$meta$dl.p1, p2=mcmc.set$meta$dl.p2)
+           							p1=mcmc.set$meta$dl.p1, p2=mcmc.set$meta$dl.p2, 
+           							const.var=mcmc.set$meta$constant.variance)
     	}
     	if (nmissing > 0) {
     		e0.matrix.reconstructed[(this.T_end+1):le0.matrix,country] <- apply(matrix(trajectories[2:(nmissing+1),],

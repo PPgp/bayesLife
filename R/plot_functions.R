@@ -273,7 +273,11 @@ e0.get.dlcurves <- function(x, mcmc.list, country.code, country.index, burnin, n
 						paste('k.c', postfix,sep=''),
 						paste('z.c', postfix,sep=''))
 	T <- length(mcmc.list[[1]]$meta$loessSD[,country.index])
-	loessSD <- sapply(x, loess.lookup)
+	if(predictive.distr) {
+		loessSD <- sapply(x, loess.lookup)
+		if(!is.null(mcmc.list[[1]]$meta$constant.variance) && mcmc.list[[1]]$meta$constant.variance)
+			loessSD[] <- 1
+	}
     for (mcmc in mcmc.list) {
     	th.burnin <- bayesTFR:::get.thinned.burnin(mcmc,burnin)
     	thincurves.mc <- bayesTFR:::get.thinning.index(nr.curves.from.mc, 
