@@ -9,18 +9,23 @@ g.dl6<-function(x,l, p1, p2){
 
 loess.lookup<-function(look){
    #-- spline function
-     a<- 2.1828214 
-     b<- -0.0335983
-     c<- 0.0463050 
-     d<- -0.0495180 
-   
-     x1<- 51.2058
-     x2<-65.801 
-   
-     val<-a+b*look+c*(ifelse(look>x1,look-x1,0))+d*(ifelse(look>x2,look-x2,0))
-     
-     if(look>77.2) val<-a+b*77.2+c*(ifelse(77.2>x1,77.2-x1,0))+d*(ifelse(77.2>x2,77.2-x2,0))
+#     a<- 2.1828214 
+#     b<- -0.0335983
+#     c<- 0.0463050 
+#     d<- -0.0495180 
+#   
+#     x1<- 51.2058
+#     x2<-65.801 
+#   
+#     val<-a+b*look+c*(ifelse(look>x1,look-x1,0))+d*(ifelse(look>x2,look-x2,0))
+#     
+#     if(look>77.2) val<-a+b*77.2+c*(ifelse(77.2>x1,77.2-x1,0))+d*(ifelse(77.2>x2,77.2-x2,0))
       
+   data(loess_sd)
+   idx <- cut(look, loess.sd$x, labels=FALSE, include.lowest = TRUE)
+   val <- loess.sd$y[idx]
+   rightend <- which(look > loess.sd$x[loess.sd$n])
+   if(length(rightend) > 0) val[rightend] <- loess.sd$y[loess.sd$n]
    return(val)
 }
 

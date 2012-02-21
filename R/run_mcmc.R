@@ -348,7 +348,8 @@ init.nodes.e0 <- function() {
 			d.ct[i-1,outliers] <- NA
 		}
 		if (sum(nisna0) > 0 && !meta$constant.variance)
-			loessSD[i-1,nisna0]<-sapply(data$e0.matrix[i-1,nisna0],loess.lookup)
+			loessSD[i-1,nisna0]<- loess.lookup(data$e0.matrix[i-1,nisna0])
+			#loessSD[i-1,nisna0]<-sapply(data$e0.matrix[i-1,nisna0],loess.lookup)
 	}
 	D.supp.ct <- loessSD.suppl <- NULL
 	nr_countries.suppl <- 0
@@ -372,7 +373,8 @@ init.nodes.e0 <- function() {
 				d.suppl.ct[i-1,outliers] <- NA
 			}
 			if (sum(nisna0) > 0)
-				loessSD.suppl[i-1,nisna0]<- if(meta$constant.variance) 1 else sapply(data.suppl[i-1,nisna0],loess.lookup)
+				loessSD.suppl[i-1,nisna0]<- if(meta$constant.variance) 1 else loess.lookup(data.suppl[i-1,nisna0])
+				#loessSD.suppl[i-1,nisna0]<- if(meta$constant.variance) 1 else sapply(data.suppl[i-1,nisna0],loess.lookup)
 		}
 		suppl$nr.countries <- nr_countries.suppl
 		suppl$d.ct <- d.suppl.ct
