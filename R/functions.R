@@ -21,12 +21,9 @@ loess.lookup<-function(look){
 #     
 #     if(look>77.2) val<-a+b*77.2+c*(ifelse(77.2>x1,77.2-x1,0))+d*(ifelse(77.2>x2,77.2-x2,0))
       
-   data(loess_sd)
+   # call data(loess_sd) before using this function
    idx <- cut(look, loess.sd$x, labels=FALSE, include.lowest = TRUE)
-   val <- loess.sd$y[idx]
-   rightend <- which(look > loess.sd$x[loess.sd$n])
-   if(length(rightend) > 0) val[rightend] <- loess.sd$y[loess.sd$n]
-   return(val)
+   return(loess.sd$y[idx])
 }
 
 

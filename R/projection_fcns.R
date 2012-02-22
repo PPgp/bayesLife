@@ -124,6 +124,7 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
 							    save.as.ascii=1000, output.dir = NULL, write.summary.files=TRUE, 
 							    force.creating.thinned.mcmc=FALSE,
 							    verbose=verbose){
+	data(loess_sd)
 	# if 'countries' is given, it is an index
 	nr_project <- ceiling((end.year - mcmc.set$meta$present.year)/5)
 	cat('\nPrediction from', mcmc.set$meta$present.year, 
