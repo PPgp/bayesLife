@@ -43,6 +43,7 @@ It contains information that is common to all chains. It is a part of a \code{\l
 		\code{index.from.all.countries} - a vector of size \code{nr.countries} (all countries) where each element is an index to the supplemental data, i.e. a match from regions$country_code to suppl.data$regions$country_code.\cr
 		\code{index.to.all.countries} - a vector of size \code{suppl.data$nr.countries} (additional countries) where each element is an index to all data, i.e. a match from suppl.data$regions$country_code to regions$country_code.
 }
+}
 
 \details{
 The object is in standard cases not to be manipulated by itself, but rather as part of a \code{\link{bayesLife.mcmc.set}} object.

@@ -274,7 +274,8 @@ e0.get.dlcurves <- function(x, mcmc.list, country.code, country.index, burnin, n
 						paste('z.c', postfix,sep=''))
 	T <- length(mcmc.list[[1]]$meta$loessSD[,country.index])
 	if(predictive.distr) {
-		loessSD <- sapply(x, loess.lookup)
+		data(loess_sd)
+		loessSD <- loess.lookup(x)
 		if(!is.null(mcmc.list[[1]]$meta$constant.variance) && mcmc.list[[1]]$meta$constant.variance)
 			loessSD[] <- 1
 	}

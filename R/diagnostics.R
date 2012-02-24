@@ -25,9 +25,96 @@ e0.GoF.dl <- function(sim.dir, pi=c(80,90,95), burnin=20000, verbose=TRUE) {
 		mcmc.set <- pred$mcmc.set
 		burnin = 0 # because the prediction mcmc.set is already burned and collapsed
 	} else mcmc.set <- get.e0.mcmc(sim.dir)
-	return(bayesTFR:::.doGoF.dl(mcmc.set, pi=pi, type='e0', burnin=burnin, verbose=verbose))
+	#return(bayesTFR:::.doGoF.dl(mcmc.set, pi=pi, type='e0', burnin=burnin, verbose=verbose))
+	return(.do.e0GoF.dl(mcmc.set, pi=pi, burnin=burnin, verbose=verbose))
 }
 
 e0.DLisDecrement <- function() {
 	return(FALSE)
+}
+
+.do.e0GoF.dl <- function(mcmc.set, pi=c(80,90,95), burnin=0, verbose=TRUE) {
+	# Like .doGoF.dl (in bayesTFR) but it also considers supplemental data
+	meta <- mcmc.set$meta
+	countries.index <- get.countries.index(meta)
+	data <- get.data.matrix(meta)
+	T.total <- nrow(data)
+	T.recent.start <- 0
+	T.names <- rownames(data)[1:(T.total-1)]
+	if(!is.null(meta$suppl.data$e0.matrix)) {
+		T.recent.start <- nrow(meta$suppl.data$e0.matrix) 
+		T.total <- T.total + T.recent.start
+		T.names <- c(rownames(meta$suppl.data$e0.matrix), T.names)
+	}
+	al.low <- (1 - pi/100)/2
+	al.high <- 1 - al.low
+	total.GoF <- rep(0, length(pi))
+	time.GoF <- matrix(0, nrow=length(pi), ncol=T.total-1)
+	country.GoF <- matrix(0, nrow=length(pi), ncol=max(countries.index))
+	total.mse <- 0
+	time.mse <- rep(0, T.total-1)
+	country.mse <- rep(0, max(countries.index))
+	counter <- matrix(0, ncol=max(countries.index), nrow=T.total-1)
+	if(verbose) cat('\nAssessing goodness of fit for country ')
+	for(icountry in countries.index) {
+		if(verbose) cat(icountry, ', ')
+		country.code <- meta$regions$country_code[icountry]
+		valid.time <- which(!is.na(meta$d.ct[,icountry]))
+		if(length(valid.time) == 0) next
+		observed <- meta$d.ct[valid.time, icountry]
+		x <- data[valid.time, icountry]
+		valid.time.all <- valid.time + T.recent.start
+		if(!is.null(meta$suppl.data$e0.matrix)) {
+    		supp.c.idx <- which(is.element(meta$suppl.data$index.to.all.countries, icountry))
+    		if(length(supp.c.idx) > 0) {
+    			suppl.data.idx <- which(!is.na(meta$suppl.data$d.ct[,supp.c.idx]))
+    			x <- c(meta$suppl.data$e0.matrix[suppl.data.idx, supp.c.idx], x)
+    			observed <- c(meta$suppl.data$d.ct[suppl.data.idx, supp.c.idx], observed)
+    			valid.time.all <- c(suppl.data.idx, valid.time.all)
+   			}
+    	}
+		dlc <- e0.get.dlcurves(x, mcmc.set$mcmc.list, country.code, icountry, burnin=burnin, 
+							nr.curves=2000, predictive.distr=TRUE)
+		counter[valid.time.all,icountry] <- counter[valid.time.all,icountry] + 1
+		for (i in 1:length(pi)) {
+        	dlpi <- apply(dlc, 2, quantile, c(al.low[i], al.high[i]))
+        	country.GoF[i,icountry] <- sum(observed >= dlpi[1,] & observed <= dlpi[2,])
+        	total.GoF[i] <- total.GoF[i] + country.GoF[i,icountry]
+        	for(itime in 1:length(valid.time.all)) {
+        		time.GoF[i,valid.time.all[itime]] <- time.GoF[i,valid.time.all[itime]] + (observed[itime] >= dlpi[1,itime] & observed[itime] <= dlpi[2,itime])
+        	}
+        }
+        dlmean <- apply(dlc, 2, mean)
+        country.mse[icountry] <- sum((observed-dlmean)^2)
+        total.mse <- total.mse + country.mse[icountry]
+        for(itime in 1:length(valid.time.all))
+        	time.mse[valid.time.all[itime]] <- time.mse[valid.time.all[itime]] + (observed[itime] - dlmean[itime])^2
+        
+	}
+	if(verbose) cat('\n')	
+	total.GoF <- total.GoF/sum(counter)
+	total.mse <- total.mse/sum(counter)
+	pi.names <- paste(pi, '%', sep='')
+	names(total.GoF) <- pi.names
+	names(total.mse) <- 'MSE'
+	rowsum.counter <- rowSums(counter)
+	for(row in 1:nrow(time.GoF)) {
+		time.GoF[row,] <- time.GoF[row,]/rowsum.counter
+	}
+	time.mse <- time.mse/rowsum.counter
+	dimnames(time.GoF) <- list(pi.names, T.names)
+	names(time.mse) <- T.names
+	colsum.counter <- colSums(counter)
+	for(row in 1:nrow(country.GoF)) {
+		country.GoF[row,] <- country.GoF[row,]/colsum.counter
+	}
+	country.mse <- country.mse/colsum.counter
+	dimnames(country.GoF) <- list(pi.names, meta$regions$country_code[1:max(countries.index)])
+	names(country.mse) <- meta$regions$country_code[1:max(countries.index)]
+	country.GoF[is.nan(country.GoF)] <- NA
+	country.mse[is.nan(country.mse)] <- NA
+	if(verbose) cat('Done.\n')
+	return(list(total.gof=total.GoF, time.gof=time.GoF, country.gof=country.GoF,
+				total.mse=total.mse, time.mse=time.mse, country.mse=country.mse,
+				n=counter))
 }

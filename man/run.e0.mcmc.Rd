@@ -10,14 +10,13 @@ Running Markov Chain Monte Carlo for Parameters of Life Expectancy
 Runs (or continues running) MCMCs for simulating the life expectancy for all countries of the world, using a Bayesian hierarchical model.
 }
 \usage{
-run.e0.mcmc(sex = c("Male", "Female"), nr.chains = 3, iter = 100000, 
+run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 100000, 
     output.dir = file.path(getwd(), "bayesLife.output"), 
     thin = 10, replace.output = FALSE, 
     start.year = 1950, present.year = 2010, wpp.year = 2010, 
     my.e0.file = NULL, buffer.size = 100, 
-    a = c(15.7669391, 40.9658241, 0.2107961, 
-          19.8188061, 2.9306625, 0.400688628), 
-    delta = c(1.887, 1.982, 1.99, 1.949, 0.995, 0.4), 
+    a = c(13.215, 41.070, 9.235, 17.605, 2.84, 0.385), 
+    delta = c(3.844, 4.035, 11.538, 5.639, 0.901, 0.4), 
     tau = c(15.5976503, 23.650006, 14.5056919, 
             14.718598, 3.4514285, 0.5667531), 
     Triangle.ini = list(NULL, NULL, NULL, NULL), k.ini = NULL, 
@@ -42,8 +41,9 @@ run.e0.mcmc(sex = c("Male", "Female"), nr.chains = 3, iter = 100000,
     Triangle.c.prior.up=c(100, 100, 100, 100),
     k.c.prior.low=0, k.c.prior.up=10, z.c.prior.low=0, z.c.prior.up=1.15,
     Triangle.c.width = c(4, 6, 3, 4), k.c.width = 1, z.c.width = 0.2, 
-    nu = 4, dl.p1 = 9, dl.p2 = 9, sumTriangle.lim = c(80, 105),  
-    seed = NULL, parallel = FALSE, nr.nodes = nr.chains, 
+    nu = 4, dl.p1 = 9, dl.p2 = 9, sumTriangle.lim = c(75, 95),  
+    constant.variance = FALSE, seed = NULL, 
+    parallel = FALSE, nr.nodes = nr.chains, 
     auto.conf = list(max.loops=5, iter=100000, iter.incr=20000, 
         nr.chains=3, thin=120, burnin=20000),
     verbose = FALSE, \dots)
@@ -104,6 +104,7 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{nu}{The shape parameter of the Gamma distributions of all \eqn{\lambda}{lambda} parameters is \code{nu/2}.}
   \item{dl.p1, dl.p2}{Values of the parameters \eqn{p_1} and \eqn{p_2} of the double logistic function.}
   \item{sumTriangle.lim}{Lower and upper limits for the sum of the \eqn{\Delta_i}{Triangle_i} parameters. MCMC proposals that are outside of this limit are rejected. It is applied to both, the world parameters as well as the country specific parameters.}
+  \item{constant.variance}{Logical indicating if the model should be estimated using constant variance.}
   \item{seed}{Seed of the random number generator. If \code{NULL} no seed is set. It can be used to generate reproducible results.}
   \item{parallel}{Logical determining if the simulation should run multiple chains in parallel. If it is \code{TRUE}, the package \pkg{\link[snowFT]{snowFT}} is required.}
   \item{nr.nodes}{Relevant only if \code{parallel} is \code{TRUE}. It gives the number of nodes for running the simulation in parallel. By default it equals to the number of chains.}

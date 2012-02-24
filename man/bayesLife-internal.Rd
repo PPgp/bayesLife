@@ -15,6 +15,10 @@
 \alias{get.UN.variant.names.bayesLife.prediction}
 \alias{store.bayesLife.convergence}
 \alias{store.bayesLife.prediction}
+
+#datasets
+\alias{loess.sd}
+
 \title{
 Internal Functions and datasets of bayesLife
 }
