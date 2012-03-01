@@ -16,7 +16,7 @@
 \alias{store.bayesLife.convergence}
 \alias{store.bayesLife.prediction}
 
-#datasets
+%datasets
 \alias{loess.sd}
 
 \title{

@@ -84,11 +84,11 @@ e0.DLisDecrement <- function() {
         		time.GoF[i,valid.time.all[itime]] <- time.GoF[i,valid.time.all[itime]] + (observed[itime] >= dlpi[1,itime] & observed[itime] <= dlpi[2,itime])
         	}
         }
-        dlmean <- apply(dlc, 2, mean)
-        country.mse[icountry] <- sum((observed-dlmean)^2)
+        dlmedian <- apply(dlc, 2, median)
+        country.mse[icountry] <- sum((observed-dlmedian)^2)
         total.mse <- total.mse + country.mse[icountry]
         for(itime in 1:length(valid.time.all))
-        	time.mse[valid.time.all[itime]] <- time.mse[valid.time.all[itime]] + (observed[itime] - dlmean[itime])^2
+        	time.mse[valid.time.all[itime]] <- time.mse[valid.time.all[itime]] + (observed[itime] - dlmedian[itime])^2
         
 	}
 	if(verbose) cat('\n')	
