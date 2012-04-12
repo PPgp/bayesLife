@@ -1,5 +1,5 @@
-\name{joint.male.estimate}
-\alias{joint.male.estimate}
+\name{e0.jmale.estimate}
+\alias{e0.jmale.estimate}
 
 \title{
 Estimation of the Joint Female-Male Model
@@ -8,14 +8,14 @@ Estimation of the Joint Female-Male Model
 The function estimates the joint female-male model of life expectancy, as described in Lalic (2011). It consist of two equations with t-distributed errors, see Details below.
 }
 \usage{
-joint.male.estimate(mcmc.set, countries.index = NULL, 
+e0.jmale.estimate(mcmc.set, countries.index = NULL, 
     estDof.eq1 = TRUE, start.eq1 = list(dof = 2), min.e0.eq2 = 80, 
     estDof.eq2 = TRUE, start.eq2 = list(dof = 2), 
     my.e0.file = NULL, verbose = FALSE)
 }
 
 \arguments{
-  \item{mcmc.set}{Object of class \code{\link{bayesLife.mcmc.set}}.}
+  \item{mcmc.set}{Object of class \code{\link{bayesLife.mcmc.set}} containing estimation results of female life expectancy.}
   \item{countries.index}{Index of countries (within the mcmc.set object) to be included in the estimation. By default, all countries included in the estimation of \code{mcmc.set} are used.}
   \item{estDof.eq1, estDof.eq2}{Logical, controlling whether the degrees of freedom of the first and second  equation, respectively, should be estimated. If it is \code{FALSE} the degrees of freedom are set using the arguments \code{start.eq1} and \code{start.eq2}, respectively.}
   \item{start.eq1, start.eq2}{Argument \code{start} of the \code{\link[hett]{tlm}} function of the \pkg{hett} package, which is applied to the first and second equation of the model, respectively. It is a list of possibly four named components, ("beta", "lambda", "dof", "omega"), for the location, scale, degrees of freedom parameters and random scale effects respectively. If \code{estDof.eq1} (\code{estDof.eq2}) is \code{FALSE}, the "dof" component must be given.
@@ -66,12 +66,12 @@ Hana Sevcikova
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{joint.male.predict}}
+\code{\link{e0.jmale.predict}}
 }
 \examples{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
+sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
 m <- get.e0.mcmc(sim.dir)
-fit <- joint.male.estimate(m, verbose=TRUE)
+fit <- e0.jmale.estimate(m, verbose=TRUE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

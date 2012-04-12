@@ -90,21 +90,21 @@ set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, verbose=FALS
 	data <- un.object$data.object
 	extra.wpp <- bayesTFR:::.extra.matrix.regions(data=data, countries=countries, meta=meta, 
 							package="bayesLife", verbose=verbose)
-	if(!is.null(extra.wpp))
+	if(!is.null(extra.wpp)) {
 		extra.wpp <- list(e0.matrix=extra.wpp$tfr_matrix, 
 						  e0.matrix.all=extra.wpp$tfr_matrix_all, 
 						  regions=extra.wpp$regions, 
 						  nr.countries.estimation=extra.wpp$nr_countries_estimation,
 						  is_processed = extra.wpp$is_processed)
-	locations <- bayesTFR:::read.UNlocations(data$data, wpp.year=meta$wpp.year, package='bayesLife', verbose=verbose)
-	suppl.wpp <- .get.suppl.matrix.and.regions(un.object, extra.wpp, locations$loc_data, 
+		locations <- bayesTFR:::read.UNlocations(data$data, wpp.year=meta$wpp.year, package='bayesLife', verbose=verbose)
+		suppl.wpp <- .get.suppl.matrix.and.regions(un.object, extra.wpp, locations$loc_data, 
 									meta$start.year, meta$present.year)
-	extra.wpp$suppl.data=list(
-		e0.matrix=if(!is.null(suppl.wpp)) suppl.wpp$obs_matrix else NULL,
-		regions=if(!is.null(suppl.wpp)) suppl.wpp$regions else NULL,
-		index.to.all.countries=if(!is.null(suppl.wpp)) suppl.wpp$all.countries.index else NULL,
-		index.from.all.countries=if(!is.null(suppl.wpp)) suppl.wpp$index.from.all.countries else NULL)
-	
+		extra.wpp$suppl.data=list(
+			e0.matrix=if(!is.null(suppl.wpp)) suppl.wpp$obs_matrix else NULL,
+			regions=if(!is.null(suppl.wpp)) suppl.wpp$regions else NULL,
+			index.to.all.countries=if(!is.null(suppl.wpp)) suppl.wpp$all.countries.index else NULL,
+			index.from.all.countries=if(!is.null(suppl.wpp)) suppl.wpp$index.from.all.countries else NULL)
+	}
 	return(extra.wpp)
 }
 
@@ -115,8 +115,9 @@ get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, verbos
 	########################################
 	# set data and match with areas
 	########################################
-	data <- read.UNe0(sex=sex, wpp.year=meta$wpp.year, present.year=meta$present.year, 
-						my.e0.file=my.e0.file, verbose=verbose)$data.object$data
+	un.object <- read.UNe0(sex=sex, wpp.year=meta$wpp.year, present.year=meta$present.year, 
+						my.e0.file=my.e0.file, verbose=verbose)
+	data <- un.object$data.object$data
 	# get region and area data
 	locations <- bayesTFR:::read.UNlocations(data, wpp.year=meta$wpp.year, package='bayesLife', verbose=verbose)
 	loc_data <- locations$loc_data
@@ -133,9 +134,22 @@ get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, verbos
 							start.year=meta$start.year, 
 							present.year=meta$present.year)
 	if (verbose) 
-		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')											
+		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')
+	LEXmatrixsuppl.regions <- .get.suppl.matrix.and.regions(un.object, LEXmatrix.regions, loc_data, 
+									meta$start.year, meta$present.year)
+	if(!is.null(un.object$suppl.data.object) && verbose) 
+		cat('Dimension of the supplemental e0 matrix:', dim(LEXmatrixsuppl.regions$obs_matrix), '\n')
+											
 	return(list(e0.matrix=LEXmatrix.regions$obs_matrix, 
 				e0.matrix.all=LEXmatrix.regions$obs_matrix_all, 
 				regions=LEXmatrix.regions$regions, 
-				nr.countries.estimation=nrow(data_incl)))
+				nr.countries.estimation=nrow(data_incl),
+				suppl.data=list(
+					e0.matrix=if(!is.null(LEXmatrixsuppl.regions)) LEXmatrixsuppl.regions$obs_matrix else NULL,
+					regions=if(!is.null(LEXmatrixsuppl.regions)) LEXmatrixsuppl.regions$regions else NULL,
+					index.to.all.countries=if(!is.null(LEXmatrixsuppl.regions)) 
+									LEXmatrixsuppl.regions$all.countries.index else NULL,
+					index.from.all.countries=if(!is.null(LEXmatrixsuppl.regions)) 
+									LEXmatrixsuppl.regions$index.from.all.countries else NULL)
+				))
 }

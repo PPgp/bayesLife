@@ -7,7 +7,7 @@ Converting Trajectories of Life Expectancy into ACSII Files}
 Converts trajectories of the life expectancy stored in a binary format into two CSV files of a UN-specific format.
 }
 \usage{
-convert.e0.trajectories(dir = file.path(getwd(), 'bayesLife.output'), 
+convert.e0.trajectories(dir = file.path(getwd(), "bayesLife.output"), 
     n = 1000, output.dir = NULL, verbose = FALSE)
 }
 \arguments{
@@ -40,16 +40,16 @@ Hana Sevcikova
 }
 \examples{
 \dontrun{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
-pred.dir <- file.path(getwd(), 'exampleLEpred')
+sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
+pred.dir <- file.path(getwd(), "exampleLEpred")
 
-# stores 10 trajectories out of 39 (3x(50-25)/2) into 
+# stores 10 trajectories out of 26 (2x(60-35)/2 + 1) into 
 # exampleLEpred/predictions/ascii_trajectories.csv
 e0.predict(sim.dir=sim.dir, output.dir=pred.dir, 
-            burnin=25, save.as.ascii=10, verbose=TRUE)
+            burnin=35, save.as.ascii=10, verbose=TRUE)
             
-# stores all 39 trajectories into the current directory
-convert.e0.trajectories(dir=pred.dir, n='all', output.dir='.', verbose=TRUE)
+# stores all 26 trajectories into the current directory
+convert.e0.trajectories(dir=pred.dir, n="all", output.dir=".", verbose=TRUE)
 
 # Note: If the output.dir argument in e0.predict is omitted, 
 # call convert.e0.trajectories with dir=sim.dir 

@@ -10,8 +10,7 @@ Function \code{e0.diagnose} runs convergence diagnostics of existing MCMCs, usin
 }
 \usage{
 e0.diagnose(sim.dir, thin=120, burnin = 20000, express = FALSE, 
-    country.sampling.prop = NULL, keep.thin.mcmc=FALSE, 
-    verbose = TRUE)
+    country.sampling.prop = NULL, keep.thin.mcmc=FALSE, verbose = TRUE)
 }
 \arguments{
   \item{sim.dir}{Directory with the MCMC simulation results.}

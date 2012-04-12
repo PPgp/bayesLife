@@ -41,12 +41,12 @@ Hana Sevcikova
 \code{\link{bayesLife.mcmc.set}}, \code{\link{e0.predict}}
 }
 \examples{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
+sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
 m <- get.e0.mcmc(sim.dir)
 # MCMC created when generating predictions using:
 # e0.predict(m, burnin=30)
 mb <- get.thinned.e0.mcmc(m, thin=2, burnin=30)
-summary(mb, meta.only=TRUE) # length 30 = 3chains x (50-30)iters./2thin
+summary(mb, meta.only=TRUE) # length 30 = 2chains x (60-30)iters./2thin
 }
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the

@@ -10,12 +10,12 @@ The functions plot the posterior distribution of the double logistic function us
 }
 \usage{
 e0.DLcurve.plot(mcmc.list, country, burnin = NULL, pi = 80, 
-    e0.lim = NULL, nr.curves = 20, predictive.distr=FALSE, ylim = NULL, 
+    e0.lim = NULL, nr.curves = 20, predictive.distr = FALSE, ylim = NULL, 
     xlab = "e(0)", ylab = "5-year gains", main = NULL, \dots)
     
-e0.DLcurve.plot.all(mcmc.list=NULL, sim.dir=NULL, 
-    output.dir=file.path(getwd(), 'DLcurves'),
-    output.type="png", burnin=NULL, verbose=FALSE, \dots)
+e0.DLcurve.plot.all(mcmc.list = NULL, sim.dir = NULL, 
+    output.dir = file.path(getwd(), "DLcurves"),
+    output.type = "png", burnin = NULL, verbose = FALSE, \dots)
 }
 \arguments{
   \item{mcmc.list}{List of \code{\link{bayesLife.mcmc}} objects, an object of class \code{\link{bayesLife.mcmc.set}} or of class \code{\link{bayesLife.prediction}}. In case of \code{e0.DLcurve.plot.all} if it si \code{NULL}, it is loaded from \code{sim.dir}.}
@@ -41,9 +41,9 @@ Hana Sevcikova
 
 \examples{
 \dontrun{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
+sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
 mcmc.set <- get.e0.mcmc(sim.dir=sim.dir)
-e0.DLcurve.plot(country='Japan', mcmc.set, burnin=40)
+e0.DLcurve.plot(country="Japan", mcmc.set, burnin=40)
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

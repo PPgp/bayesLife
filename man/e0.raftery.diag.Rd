@@ -7,12 +7,10 @@ Raftery Diagnostics for Parameters of the Life Expectancy
 \description{
 The function computes the Raftery diagnostics for each parameter in the same way as \code{\link[bayesTFR]{tfr.raftery.diag}} of the \pkg{bayesTFR} package.}
 \usage{
-e0.raftery.diag(mcmc = NULL, 
-    sim.dir = file.path(getwd(), "bayesLife.output"), 
-    burnin = 0, country = NULL,
-    par.names = e0.parameter.names(), 
+e0.raftery.diag(mcmc = NULL, sim.dir = file.path(getwd(), "bayesLife.output"), 
+    burnin = 0, country = NULL, par.names = e0.parameter.names(), 
     par.names.cs = e0.parameter.names.cs(),
-    country.sampling.prop = 1, verbose=TRUE, \dots)
+    country.sampling.prop = 1, verbose = TRUE, \dots)
 }
 
 \arguments{
@@ -34,7 +32,7 @@ Names of country-specific parameters for which the Raftery diagnostics should be
 }
 \item{country.sampling.prop}{Proportion of countries that are included in the diagnostics. It should be between 0 and 1. If it is smaller than 1, the countries are randomly sampled. It is only relevant if \code{par.names.cs} is not \code{NULL}. }
 \item{verbose}{Logical switching log messages on and off.}
-\item{\dots}{Additional arguments passed to the \code{\link{coda.mcmc.list}} function.}
+\item{\dots}{Additional arguments passed to the \code{\link{e0.coda.list.mcmc}} function.}
 }
 \details{
 See \code{\link[bayesTFR]{tfr.raftery.diag}} for details. This function is called from \code{\link{e0.diagnose}}. 

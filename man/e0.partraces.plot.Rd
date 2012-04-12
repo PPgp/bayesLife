@@ -39,16 +39,15 @@ Hana Sevcikova
 }
 
 \seealso{
-\code{\link{e0.coda.mcmc.list}} and \code{\link{get.e0.parameter.traces}} for retrieving the raw values of traces.
+\code{\link{e0.coda.list.mcmc}} and \code{\link{get.e0.parameter.traces}} for retrieving the raw values of traces.
 }
 \examples{
 \dontrun{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
+sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
 e0.partraces.plot(sim.dir=sim.dir)
-e0.partraces.cs.plot(country='Ireland', sim.dir=sim.dir)
+e0.partraces.cs.plot(country="Ireland", sim.dir=sim.dir)
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{ hplot }

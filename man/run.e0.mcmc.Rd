@@ -13,7 +13,7 @@ Runs (or continues running) MCMCs for simulating the life expectancy for all cou
 run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 100000, 
     output.dir = file.path(getwd(), "bayesLife.output"), 
     thin = 10, replace.output = FALSE, 
-    start.year = 1950, present.year = 2010, wpp.year = 2010, 
+    start.year = 1873, present.year = 2010, wpp.year = 2010, 
     my.e0.file = NULL, buffer.size = 100, 
     a = c(13.215, 41.070, 9.235, 17.605, 2.84, 0.385), 
     delta = c(3.844, 4.035, 11.538, 5.639, 0.901, 0.4), 
@@ -22,36 +22,33 @@ run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 100000,
     Triangle.ini = list(NULL, NULL, NULL, NULL), k.ini = NULL, 
     z.ini = NULL, lambda.ini = list(NULL, NULL, NULL, NULL), 
     lambda.k.ini = NULL, lambda.z.ini = NULL, omega.ini = NULL, 
-    Triangle.ini.low = c(10, 30, 0.1, 10), 
-    Triangle.ini.up = c(30, 50, 10, 30), k.ini.low = 1, k.ini.up = 5, 
-    z.ini.low = 1e-04, z.ini.up = 1.1, 
+    Triangle.ini.low = c(10, 30, 0.1, 10), Triangle.ini.up = c(30, 50, 10, 30), 
+    k.ini.low = 1, k.ini.up = 5, z.ini.low = 1e-04, z.ini.up = 1.1, 
     lambda.ini.low = c(1e-04, 1e-04, 1e-04, 1e-04), 
     lambda.ini.up = c(0.1, 0.1, 0.1, 0.1), 
     lambda.k.ini.low = 0.1, lambda.k.ini.up = 1, 
     lambda.z.ini.low = 1, lambda.z.ini.up = 40, 
     omega.ini.low = 0.1, omega.ini.up = 5, 
-    Triangle.prior.low=c(0, 0, 0, 0), Triangle.prior.up=c(100, 100, 100, 100),
-    k.prior.low=0, k.prior.up=10, z.prior.low=0, z.prior.up=1.15,
+    Triangle.prior.low=c(0, 0, -20, 0), Triangle.prior.up=c(100, 100, 100, 100),
+    k.prior.low = 0, k.prior.up = 10, z.prior.low = 0, z.prior.up = 1.15,
     Triangle.c.ini.norm = list(round(
-    	Triangle.ini.low + (Triangle.ini.up - Triangle.ini.low)/2), 
-                               c(2, 2, 2, 2)), 
+    	Triangle.ini.low + (Triangle.ini.up - Triangle.ini.low)/2), c(2, 2, 2, 2)), 
     k.c.ini.norm = c(round(k.ini.low + (k.ini.up - k.ini.low)/2), 2), 
     z.c.ini.norm = c(round(z.ini.low + (z.ini.up - z.ini.low)/2, 2), 0.2), 
-    Triangle.c.prior.low=c(0, 0, 0, 0), 
-    Triangle.c.prior.up=c(100, 100, 100, 100),
-    k.c.prior.low=0, k.c.prior.up=10, z.c.prior.low=0, z.c.prior.up=1.15,
+    Triangle.c.prior.low = c(0, 0, -20, 0), Triangle.c.prior.up = c(100, 100, 100, 100),
+    k.c.prior.low = 0, k.c.prior.up = 10, z.c.prior.low = 0, z.c.prior.up = 1.15,
     Triangle.c.width = c(4, 6, 3, 4), k.c.width = 1, z.c.width = 0.2, 
-    nu = 4, dl.p1 = 9, dl.p2 = 9, sumTriangle.lim = c(75, 95),  
-    constant.variance = FALSE, seed = NULL, 
+    country.overwrites = NULL, nu = 4, dl.p1 = 9, dl.p2 = 9, 
+    sumTriangle.lim = c(30, 110), constant.variance = FALSE, seed = NULL, 
     parallel = FALSE, nr.nodes = nr.chains, 
     auto.conf = list(max.loops=5, iter=100000, iter.incr=20000, 
         nr.chains=3, thin=120, burnin=20000),
-    verbose = FALSE, \dots)
+    verbose = FALSE, verbose.iter = 10, \dots)
     
 continue.e0.mcmc(iter, chain.ids = NULL, 
     output.dir = file.path(getwd(), "bayesLife.output"), 
     parallel = FALSE, nr.nodes = NULL, auto.conf = NULL, 
-    verbose = FALSE, \dots)
+    verbose = FALSE, verbose.iter = 10, \dots)
 }
 
 \arguments{
@@ -75,11 +72,9 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{tau}{A vector of the \eqn{\tau_1}{tau_1}, \dots ,\eqn{\tau_6}{tau_6} parameters, which is the square root rate of the prior Gamma distribution of the world-level parameters 
   			(\eqn{\lambda_1}{lambda_1}, \dots, \eqn{\lambda_4}{lambda_4}, \eqn{\lambda_k}{lambda_k}, \eqn{\lambda_z}{lambda_z}).}
   \item{Triangle.ini}{List (of length four) of initial values for \eqn{\Delta_1}{Triangle_1}, \dots, \eqn{\Delta_4}{Triangle_4}. Each list item should be of the length \code{nr.chains}. If a list item is \code{NULL}, the initial values are equally spaced between \code{Triangle.ini.low} and \code{Triangle.ini.up}. By default, if there is just one chain, the value is the middle point of the interval.}
-  \item{k.ini}{An array of length \code{nr.chains} of initial values for \eqn{k}. By default, the initial values are equally spaced between \code{k.ini.low} and \code{k.ini.up}. If \code{nr.chains=1} and \code{k.ini} is \code{NULL}, the initial value is the middle point of the interval.}
-  \item{z.ini}{An array of length \code{nr.chains} of initial values for \eqn{z}. By default, the initial values are equally spaced between \code{z.ini.low} and \code{z.ini.up}. If \code{nr.chains=1} and \code{z.ini} is \code{NULL}, the initial value is the middle point of the interval.}
+  \item{k.ini, z.ini}{An array of length \code{nr.chains} of initial values for \eqn{k} (\eqn{z}). By default, the initial values are equally spaced between \code{k.ini.low} and \code{k.ini.up} (\code{z.ini.low} and \code{z.ini.up}). If \code{nr.chains=1} and \code{k.ini} (\code{z.ini})is \code{NULL}, the initial value is the middle point of the interval.}
   \item{lambda.ini}{List (of length four) of initial values for \eqn{\lambda_1}{lambda_1}, \dots, \eqn{\lambda_4}{lambda_4}. Each list item should be of the length \code{nr.chains}. If a list item is \code{NULL}, the initial values are equally spaced between \code{lambda.ini.low} and \code{lambda.ini.up}. By default, if there is just one chain, the value is the middle point of the interval.}
-  \item{lambda.k.ini}{An array of length \code{nr.chains} of initial values for \eqn{\lambda_k}{lambda_k}. By default, the initial values are equally spaced between \code{lambda.k.ini.low} and \code{lambda.k.ini.up}. If \code{nr.chains=1} and \code{lambda.k.ini} is \code{NULL}, the initial value is the middle point of the interval.}
-  \item{lambda.z.ini}{An array of length \code{nr.chains} of initial values for \eqn{\lambda_z}{lambda_z}. By default, the initial values are equally spaced between \code{lambda.z.ini.low} and \code{lambda.z.ini.up}. If \code{nr.chains=1} and \code{lambda.z.ini} is \code{NULL}, the initial value is the middle point of the interval.}
+  \item{lambda.k.ini, lambda.z.ini}{An array of length \code{nr.chains} of initial values for \eqn{\lambda_k}{lambda_k} (\eqn{\lambda_z}{lambda_z}). By default, the initial values are equally spaced between \code{lambda.k.ini.low} and \code{lambda.k.ini.up} (\code{lambda.z.ini.low} and \code{lambda.z.ini.up}). If \code{nr.chains=1} and \code{lambda.k.ini} (\code{lambda.z.ini}) is \code{NULL}, the initial value is the middle point of the interval.}
   \item{omega.ini}{An array of length \code{nr.chains} of initial values for \eqn{\omega}{omega}. By default, the initial values are equally spaced between \code{omega.ini.low} and \code{omega.ini.up}. If \code{nr.chains=1} and \code{omega.ini} is \code{NULL}, the initial value is the middle point of the interval.}
   \item{Triangle.ini.low, Triangle.ini.up}{A vector of length four. They are the lower and upper bounds for initial values of \eqn{\Delta_1}{Triangle_1}, \dots, \eqn{\Delta_4}{Triangle_4}. An \eqn{i}-th item is only used if \code{Triangle.ini[[i]]} is \code{NULL}.}
   \item{k.ini.low, k.ini.up}{Single value giving the lower and upper bounds for initial values of \eqn{k}. It is only used if \code{k.ini} is \code{NULL}.}
@@ -93,14 +88,13 @@ continue.e0.mcmc(iter, chain.ids = NULL,
     \item{k.prior.low, k.prior.up}{Single value giving the lower and upper bounds for the prior (truncated normal) distribution  of \eqn{k}. }
     \item{z.prior.low, z.prior.up}{Single value giving the lower and upper bounds for the prior (truncated normal) distribution  of \eqn{z}.}
   \item{Triangle.c.ini.norm}{A list with two elements, each of them being a vector of size four. The first and second element in the list corresponds to the means and standard deviation, respectively, for the initial values of the country-specific parameters \eqn{\Delta_1^c}{Triangle_1_c}, \dots, \eqn{\Delta_4^c}{Triangle_4_c} which are drawn from a truncated normal distribution with bounds defined by \code{Triangle.c.prior.low} and \code{Triangle.c.prior.up}.}
-  \item{k.c.ini.norm}{A vector of length two. The first and second element corresponds to the means and standard deviation, respectively, for the initial values of the country-specific parameters \eqn{k^c} which are drawn from a normal distribution truncated between \code{k.c.prior.low} and \code{k.c.prior.up}.}
-  \item{z.c.ini.norm}{A vector of length two. The first and second element corresponds to the means and standard deviation, respectively, for the initial values of the country-specific parameters \eqn{z^c} which are drawn from a normal distribution truncated between \code{z.c.prior.low} and \code{z.c.prior.up}.}
+  \item{k.c.ini.norm, z.c.ini.norm}{A vector of length two. The first and second element corresponds to the means and standard deviation, respectively, for the initial values of the country-specific parameters \eqn{k^c} (\eqn{z^c}) which are drawn from a normal distribution truncated between \code{k.c.prior.low} and \code{k.c.prior.up} (\code{z.c.prior.low} and \code{z.c.prior.up}).}
     \item{Triangle.c.prior.low, Triangle.c.prior.up}{A vector of length four. They are the lower and upper bounds for the prior (truncated normal) distribution of country-specific \eqn{\Delta_1^c}{Triangle_1_c}, \dots, \eqn{\Delta_4^c}{Triangle_4_c}.}
     \item{k.c.prior.low, k.c.prior.up}{Single value giving the lower and upper bounds for the prior (truncated normal) distribution  of country-specific \eqn{k^c}. }
     \item{z.c.prior.low, z.c.prior.up}{Single value giving the lower and upper bounds for the prior (truncated normal) distribution  of country-specific \eqn{z^c}.}
   \item{Triangle.c.width}{Width for slice sampling used when updating the country-specific parameters \eqn{\Delta_i^c}{Triangle_i_c} with \eqn{i=1,\dots,4}.}
-  \item{k.c.width}{Width for slice sampling used when updating the country-specific parameters \eqn{k^c}.}
-  \item{z.c.width}{Width for slice sampling used when updating the country-specific parameters \eqn{z^c}.}
+  \item{k.c.width, z.c.width}{Width for slice sampling used when updating the country-specific parameters \eqn{k^c} (\eqn{z^c}).}
+  \item{country.overwrites}{This argument allows to overwrite some of the prior parameters for specific countries. If it is not \code{NULL} it should be a data frame with an obligatory column \sQuote{country_code}. Each row then corresponds to one country. Other columns can be \sQuote{k.c.prior.low}, \sQuote{k.c.prior.up}, \sQuote{z.c.prior.low}, \sQuote{z.c.prior.up}, \sQuote{Triangle_\eqn{x}.c.prior.low} and \sQuote{Triangle_\eqn{x}.c.prior.up} where \eqn{x} can be an integer from 1 to 4.}
   \item{nu}{The shape parameter of the Gamma distributions of all \eqn{\lambda}{lambda} parameters is \code{nu/2}.}
   \item{dl.p1, dl.p2}{Values of the parameters \eqn{p_1} and \eqn{p_2} of the double logistic function.}
   \item{sumTriangle.lim}{Lower and upper limits for the sum of the \eqn{\Delta_i}{Triangle_i} parameters. MCMC proposals that are outside of this limit are rejected. It is applied to both, the world parameters as well as the country specific parameters.}
@@ -110,6 +104,7 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{nr.nodes}{Relevant only if \code{parallel} is \code{TRUE}. It gives the number of nodes for running the simulation in parallel. By default it equals to the number of chains.}
     \item{auto.conf}{List containing a configuration for an \sQuote{automatic} run (see description of argument \code{iter}). Item \code{iter} gives the number of iterations in the first chunk of the MCMC simulation; item \code{iter.incr} gives the number of iterations in the following chunks; \code{nr.chains} gives the number of chains in all chunks of the MCMC simulation; items \code{thin} and \code{burnin} are used in the convergence diagnostics following each chunk; \code{max.loops} controls the maximum number of chunks. All items must be integer values. This argument is only used if the function argument \code{iter} is set to \sQuote{auto}.}
   \item{verbose}{Logical switching log messages on and off.}
+  \item{verbose.iter}{Integer determining how often (in number of iterations) log messages are outputted during the estimation.}
   \item{\dots}{Additional parameters to be passed to the function \code{\link[snowFT]{performParallel}}, if \code{parallel} is \code{TRUE}.}
   \item{chain.ids}{Array of chain identifiers that should be resumed. If it is \code{NULL}, all existing chains in \code{output.dir} are resumed.}
 }

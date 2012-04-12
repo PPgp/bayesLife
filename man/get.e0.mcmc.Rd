@@ -12,8 +12,7 @@ The function \code{get.e0.mcmc} retrieves results of an MCMC simulation and crea
 }
 \usage{
 get.e0.mcmc(sim.dir = file.path(getwd(), "bayesLife.output"), 
-    chain.ids = NULL, low.memory = TRUE, burnin = 0, 
-    verbose = FALSE)
+    chain.ids = NULL, low.memory = TRUE, burnin = 0, verbose = FALSE)
     
 has.e0.mcmc(sim.dir)
 
@@ -47,7 +46,7 @@ Hana Sevcikova
 }
 
 \examples{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
+sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
 m <- get.e0.mcmc(sim.dir)
 summary(m)
 

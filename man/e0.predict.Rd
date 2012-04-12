@@ -10,11 +10,10 @@ Using the posterior parameter samples simulated by \code{\link{run.e0.mcmc}} the
 }
 \usage{
 e0.predict(mcmc.set = NULL, end.year = 2100, 
-    sim.dir = file.path(getwd(), "bayesLife.output"), 
-    replace.output = FALSE, nr.traj = NULL, thin = NULL, 
-    burnin = 2e+04, use.diagnostics = FALSE,
-    save.as.ascii = 1000, output.dir = NULL, 
-    low.memory = TRUE, seed = NULL, verbose = TRUE)
+    sim.dir = file.path(getwd(), "bayesLife.output"), replace.output = FALSE, 
+    nr.traj = NULL, thin = NULL, burnin = 20000, use.diagnostics = FALSE,
+    save.as.ascii = 1000, output.dir = NULL, low.memory = TRUE, seed = NULL, 
+    verbose = TRUE)
 }
 
 \arguments{
@@ -74,7 +73,7 @@ Hana Sevcikova, using code from Jennifer Chunn
 \dontrun{
 m <- run.e0.mcmc(nr.chains=1, iter=50, thin=1, verbose=TRUE)
 pred <- e0.predict(m, burnin=25, verbose=TRUE)
-summary(pred, country='Portugal')
+summary(pred, country="Portugal")
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

@@ -6,7 +6,7 @@
 Accessing a Convergence Object
 }
 \description{
-The functions load objects of class \code{\link{bayesLife.convergence}} from disk.
+The functions load objects of class \code{\link{bayesLife.convergence}} from disk that were created using the function \code{\link{e0.diagnose}}.
 }
 \usage{
 get.e0.convergence(sim.dir = file.path(getwd(), "bayesLife.output"), 
@@ -37,7 +37,7 @@ Hana Sevcikova
 %}
 
 \seealso{
-\code{\link{bayesLife.convergence}}, \code{\link{summary.bayesLife.convergence}}.
+\code{\link{e0.diagnose}}, \code{\link{summary.bayesLife.convergence}}.
 }
 %\examples{
 %}

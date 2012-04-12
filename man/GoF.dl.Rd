@@ -7,7 +7,7 @@ Goodness of Fit of the Double Logistic Function
 The function computes the ratio of observed data fitted within the given probability intervals of the predictive posterior distribution of the double logistic function. 
 }
 \usage{
-    e0.GoF.dl(sim.dir, pi = c(80, 90, 95), burnin=20000, verbose=TRUE)
+e0.GoF.dl(sim.dir, pi = c(80, 90, 95), burnin = 20000, verbose = TRUE)
 }
 
 \arguments{
@@ -40,7 +40,7 @@ To see the fit visually per country, use \code{\link{e0.DLcurve.plot}(\dots, pre
 \code{\link{e0.DLcurve.plot}}
 }
 \examples{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
+sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
 e0 <- get.e0.mcmc(sim.dir)
 # Note that this simulation is a toy example and thus has not converged.
 e0.GoF.dl(sim.dir)

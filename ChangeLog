@@ -1,5 +1,21 @@
-0.3-2 
+0.3-2 (04/12/2012)
 -----
+Some defaults of run.e0.mcmc changed (e.g. start.year was set 1873).
+
+Argument joint.male added to get.e0.prediction.
+
+Added functions get.e0.jmale.prediction and has.e0.jmale.prediction.
+
+Function e0.trajectories.plot can plot distribution for both sexes into one plot (argument both.sexes).
+
+Example data reduced from 3x50/2 iterations to 2x60/2 iterations.
+
+Functionality for overwriting country specific prior parameters added (argument country.overwrites in run.e0.mcmc and run.e0.mcmc.extra).
+
+Arguments verbose.iter and constant.variance added to run.e0.mcmc.
+
+e0.coda.mcmc.list renamed to e0.coda.list.mcmc to be consistent with bayesTFR's function coda.list.mcmc.
+
 Some clean up of the experimental code.
 
 

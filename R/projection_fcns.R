@@ -324,7 +324,7 @@ e0.median.set <- function(sim.dir, country, values, years=NULL) {
 				values=values, years=years))
 }
 
-joint.male.estimate <- function(mcmc.set, countries.index=NULL, 
+e0.jmale.estimate <- function(mcmc.set, countries.index=NULL, 
 								estDof.eq1 = TRUE, start.eq1 = list(dof = 2), 
 								min.e0.eq2 = 80, estDof.eq2 = TRUE, start.eq2 = list(dof = 2), 
 								my.e0.file=NULL, verbose=FALSE) {
@@ -372,21 +372,23 @@ joint.male.estimate <- function(mcmc.set, countries.index=NULL,
 				))
 }
 
-joint.male.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18), my.e0.file=NULL, verbose=TRUE, ...) {
+e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18), my.e0.file=NULL, verbose=TRUE, ...) {
 	# Predicting male e0 from female predictions. estimates is the result of 
-	# the joint.male.estimate function. If it is NULL, the estimation is performed 
+	# the e0.jmale.estimate function. If it is NULL, the estimation is performed 
 	# using the ... arguments
 	# If my.e0.file given, it should be a male e0 file. 
 	
 	meta <- e0.pred$mcmc.set$meta
 	if (meta$sex != 'F') stop('The prediction object must be a result of FEMALE projections.')
 	if(is.null(estimates)) 
-		estimates <- joint.male.estimate(e0.pred$mcmc.set, verbose=verbose, ...)
+		estimates <- e0.jmale.estimate(e0.pred$mcmc.set, verbose=verbose, ...)
 	
 	e0f.data <- get.e0.reconstructed(e0.pred$e0.matrix.reconstructed, meta)
 	#Tc <- meta$T.end.c
 
-	e0m.data <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, verbose=verbose)$e0.matrix
+	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, verbose=verbose)
+	e0m.data <- e0mwpp$e0.matrix
+	meta.changes <- list(sex='M', e0.matrix=e0m.data, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
 	maxe0 <- max(e0f.data)
 
 	bayesLife.prediction <- e0.pred
@@ -396,6 +398,10 @@ joint.male.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18), my.e0.f
 	joint.male$output.directory <- file.path(e0.pred$output.directory, 'joint_male')
 	joint.male$e0.matrix.reconstructed <- e0m.data
 	joint.male$fit <- estimates
+	joint.male$meta.changes <- meta.changes
+	joint.male$mcmc.set <- NULL
+	joint.male$joint.male <- NULL
+	
 	if(file.exists(joint.male$output.directory)) unlink(joint.male$output.directory, recursive=TRUE)
 	dir.create(joint.male$output.directory, recursive=TRUE)
 	bayesLife.prediction$joint.male <- joint.male
@@ -452,3 +458,14 @@ joint.male.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18), my.e0.f
 	cat('\nPrediction stored into', joint.male$output.directory, '\n')
 	invisible(bayesLife.prediction)
 }
+
+get.e0.jmale.prediction <- function(e0.pred) {
+	male.pred <- e0.pred$joint.male
+	if(is.null(male.pred)) stop('A joint male prediction does not exist for the given object. Use e0.jmale.predict to simulate male projections from existing female projections.')
+	male.pred$mcmc.set <- e0.pred$mcmc.set
+	for(item in names(male.pred$meta.changes))
+		male.pred$mcmc.set$meta[[item]] <- male.pred$meta.changes[[item]]
+	return(male.pred)
+}
+
+has.e0.jmale.prediction <- function(e0.pred) return(!is.null(e0.pred$joint.male))

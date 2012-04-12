@@ -28,9 +28,7 @@ e0.gap.plot <- function(e0.pred, country, e0.pred2=NULL, pi=c(80, 95), nr.traj=0
 		stop('Argument "country" must be given.')
 	}
 	country <- get.country.object(country, e0.pred$mcmc.set$meta)
-	if(is.null(e0.pred2)) e0.pred2 <- e0.pred$joint.male
-	if(is.null(e0.pred2)) 
-		stop('No male projection is contained in this prediction object. Use joint.male.predict.')
+	if(is.null(e0.pred2)) e0.pred2 <- get.e0.jmale.prediction(e0.pred)
 	e0.mtx <- e0.pred$e0.matrix.reconstructed
 	e0.mtx2 <- e0.pred2$e0.matrix.reconstructed
 	T <- nrow(e0.mtx)
@@ -95,17 +93,30 @@ e0.gap.plot <- function(e0.pred, country, e0.pred2=NULL, pi=c(80, 95), nr.traj=0
 	legend('topleft', legend=legend, lty=c(1,lty), bty='n', col=col, pch=pch)
 }
 
-e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), 
-								  joint.male = FALSE,
+e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALSE,
 								  nr.traj=NULL, typical.trajectory=FALSE,
 								  xlim=NULL, ylim=NULL, type='b', 
-								  xlab='Year', ylab='Life expectancy', main=NULL, 
+								  xlab='Year', ylab='Life expectancy at birth', main=NULL, 
 								  lwd=c(2,2,2,2,1), col=c('black', 'green', 'red', 'red', 'gray'),
+								  col2=c('gray39', 'greenyellow', 'hotpink', 'hotpink', 'gray'),
 								  show.legend=TRUE, add=FALSE, ...
 								  ) {
 	# lwd/col is a vector of 5 line widths/colors for: 
 	#	1. observed data, 2. imputed missing data, 3. median, 4. quantiles, 5. trajectories
 
+	lowerize <- function(str) { # taken from the cwhmisc package
+		ff <- function(x) paste(lapply(unlist(strsplit(x, NULL)),lower),collapse="") 
+		capply(str,ff)
+	}
+	capply <- function (str, ff, ...) { # taken from the cwhmisc package
+    	x <- strsplit(str, NULL)
+    	y <- lapply(x, ff, ...)
+    	sapply(y, paste, collapse = "")
+	}
+	lower <- function (char) { # taken from the cwhmisc package
+    	if (any(ind <- LETTERS == char)) letters[ind]
+    	else char
+	}
 	if (missing(country)) {
 		stop('Argument "country" must be given.')
 	}
@@ -120,113 +131,165 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95),
 		col[(lcol+1):5] <- c('black', 'green', 'red', 'red', 'gray')[(lcol+1):5]
 	}
 	country <- get.country.object(country, e0.pred$mcmc.set$meta)
-
-	if (!joint.male) {
-		e0.mtx <- e0.pred$mcmc.set$meta$e0.matrix
-		e0.matrix.reconstructed <- get.e0.reconstructed(e0.pred$e0.matrix.reconstructed, 
-									e0.pred$mcmc.set$meta)
-	} else {
-		e0.pred <- e0.pred$joint.male # overwrite the prediction object by the male prediction
-		if(is.null(e0.pred)) stop('No male projection is contained in this prediction object. Use joint.male.predict.')
-		e0.mtx <- e0.matrix.reconstructed <- e0.pred$e0.matrix.reconstructed
-	}
-	meta <- e0.pred$mcmc.set$meta
-	x1 <- as.integer(rownames(e0.matrix.reconstructed))
-	x2 <- as.numeric(dimnames(e0.pred$quantiles)[[3]])
-
-	if(!is.null(meta$T.end.c)) lpart1 <- meta$T.end.c[country$index]
-	else lpart1 <- meta$Tc.index[[country$index]][length(meta$Tc.index[[country$index]])]
-	
-	y1.part1 <- e0.mtx[1:lpart1,country$index]
-	y1.part2 <- NULL
-	lpart2 <- nrow(e0.mtx) - lpart1
-	if (lpart2 > 0) # imputed values
-		y1.part2 <- e0.matrix.reconstructed[
-			(lpart1+1):nrow(e0.matrix.reconstructed),country$index]
-			
-	if(!is.null(meta$suppl.data$e0.matrix)) {
-    	supp.c.idx <- which(is.element(meta$suppl.data$index.to.all.countries, country$index))
-    	if(length(supp.c.idx) > 0) {
-    		suppl.data.idx <- which(!is.na(meta$suppl.data$e0.matrix[,supp.c.idx]))
-    		lpart1 <- lpart1 + length(suppl.data.idx)
-    		y1.part1 <- c(meta$suppl.data$e0.matrix[suppl.data.idx, supp.c.idx], y1.part1)
-    		x1 <- c(as.integer(rownames(meta$suppl.data$e0.matrix[suppl.data.idx,,drop=FALSE])), x1)
- 		}
-    }
-
-			
-	trajectories <- bayesTFR:::get.trajectories(e0.pred, country$code, nr.traj, typical.trajectory=typical.trajectory)
-	e0.median <- bayesTFR:::get.median.from.prediction(e0.pred, country$index, country$code)
-	cqp <- list()
-	ylim.loc <- c(min(if (!is.null(trajectories$trajectories))
-							trajectories$trajectories[,trajectories$index]
-					  else NULL, 
-					  y1.part1, y1.part2, e0.median, na.rm=TRUE), 
-				  max(if (!is.null(trajectories$trajectories))
-							trajectories$trajectories[,trajectories$index]
-					  else NULL, 
-					  y1.part1, y1.part2, e0.median, na.rm=TRUE))
-	if(length(pi) > 0) {
-		for (i in 1:length(pi)) {
-			cqp[[i]] <- bayesTFR:::get.traj.quantiles(e0.pred, country$index, 
-							country$code, trajectories=trajectories$trajectories, pi=pi[i])
-			if (!is.null(cqp[[i]]) && is.null(ylim))
-				ylim.loc <- c(min(ylim.loc[1], cqp[[i]], na.rm=TRUE), 
-						  	max(ylim.loc[2], cqp[[i]], na.rm=TRUE))
+	pred <- list(e0.pred)
+	plotcols <- list(col)
+	do.both.sexes <- FALSE
+	if(both.sexes == TRUE) {
+		do.both.sexes <- TRUE
+		if(e0.pred$mcmc.set$meta$sex != 'F') {
+			warnings('If both.sexes is TRUE, the given prediction obect must be Female prediction, but is ',  
+					get.sex.label(e0.pred$mcmc.set$meta))
+			do.both.sexes <- FALSE
+		}
+		if(!has.e0.jmale.prediction(e0.pred)) {
+			warnings('A male prediction does not exist for the given prediction object.')
+			do.both.sexes <- FALSE
+		}
+		if(do.both.sexes) {
+			pred <- c(pred, list(get.e0.jmale.prediction(e0.pred)))
+			if(length(col2) < 5) {
+				lcol <- length(col2)
+				col2 <- rep(col2, 5)
+				col2[(lcol+1):5] <- c('gray39', 'greenyellow', 'hotpink', 'hotpink', 'gray')[(lcol+1):5]
+			}
+			plotcols <- c(list(col2), plotcols)
+			if(missing(nr.traj)) nr.traj <- 0
+			if(missing(pi)) pi <- 95
 		}
 	}
-	if(is.null(xlim)) xlim <- c(min(x1,x2), max(x1,x2))
-	if(is.null(ylim)) ylim <- ylim.loc
-	if(is.null(main)) main <- country$name
-	# plot historical data: observed
-	if (!add)
-		plot(x1[1:lpart1], y1.part1, type=type, xlim=xlim, ylim=ylim, ylab=ylab, xlab=xlab, main=main, 
-			panel.first = grid(), lwd=lwd[1], col=col[1], ...
-					)
-	else # add to an existing plot
-		points(x1[1:lpart1], y1.part1, type=type, lwd=lwd[1], col=col[1], ...
-					)
-	if(lpart2 > 0) {
-		lines(x1[(lpart1+1): length(x1)], y1.part2, pch=2, type='b', col=col[2], lwd=lwd[2])
-		lines(x1[lpart1:(lpart1+1)], c(y1.part1[lpart1], y1.part2[1]), col=col[2], lwd=lwd[2]) # connection between the two parts
-	}
+	lty.all <- cols.all <- legend.all <- pch.all <- lwd.all <- c()
+	plot.data <- list()
+	ylim.loc <- c(100,0)
+	for(ipred in 1:length(pred)) {
+		e0pred <- pred[[ipred]]
+		meta <- e0pred$mcmc.set$meta
 	
-	# plot trajectories
-	if(!is.null(trajectories$trajectories)) { 
-		for (i in 1:length(trajectories$index)) {
-			lines(x2, trajectories$trajectories[,trajectories$index[i]], type='l', col=col[5], lwd=lwd[5])
-		}
+		e0.mtx <- meta$e0.matrix
+		e0.matrix.reconstructed <- get.e0.reconstructed(e0pred$e0.matrix.reconstructed, meta)
+	
+		x1 <- as.integer(rownames(e0.matrix.reconstructed))
+		x2 <- as.numeric(dimnames(e0pred$quantiles)[[3]])
+
+		if(!is.null(meta$T.end.c)) lpart1 <- meta$T.end.c[country$index]
+		else lpart1 <- meta$Tc.index[[country$index]][length(meta$Tc.index[[country$index]])]
+	
+	
+		y1.part1 <- e0.mtx[1:lpart1,country$index]
+		y1.part2 <- NULL
+		lpart2 <- nrow(e0.mtx) - lpart1
+		if (lpart2 > 0) # imputed values
+			y1.part2 <- e0.matrix.reconstructed[
+				(lpart1+1):nrow(e0.matrix.reconstructed),country$index]
+			
+		if(!is.null(meta$suppl.data$e0.matrix)) {
+    		supp.c.idx <- meta$suppl.data$index.from.all.countries[country$index]
+    		if(!is.na(supp.c.idx)) {
+    			suppl.data.idx <- which(!is.na(meta$suppl.data$e0.matrix[,supp.c.idx]))
+    			lpart1 <- lpart1 + length(suppl.data.idx)
+    			y1.part1 <- c(meta$suppl.data$e0.matrix[suppl.data.idx, supp.c.idx], y1.part1)
+    			x1 <- c(as.integer(rownames(meta$suppl.data$e0.matrix[suppl.data.idx,,drop=FALSE])), x1)
+ 			}
+    	}
+    	plot.data[[ipred]] <- list(obs.x=x1[1:lpart1], obs.y=y1.part1, pred.x=x2)
+    	ylim.loc <- c(min(ylim.loc[1], plot.data[[ipred]]$obs.y), max(ylim.loc[2], plot.data[[ipred]]$obs.y))
+    	if(lpart2 > 0) {
+    		plot.data[[ipred]]$rec.x <- x1[(lpart1+1): length(x1)]
+    		plot.data[[ipred]]$rec.y <- y1.part2
+    		ylim.loc <- c(min(ylim.loc[1], plot.data[[ipred]]$rec.y), max(ylim.loc[2], plot.data[[ipred]]$rec.y))
+    	}
 	}
-	# plot median	
-	lines(x2, e0.median, type='l', col=col[3], lwd=lwd[3])
-	legend <- c('median')
-	lty <- 1
-	# plot given CIs
-	if(length(pi) > 0) {
-		tlty <- 2:(length(pi)+1)
-		for (i in 1:length(pi)) {
-			if (!is.null(cqp[[i]])) {
-				lines(x2, cqp[[i]][1,], type='l', col=col[4], lty=tlty[i], lwd=lwd[4])
-				lines(x2, cqp[[i]][2,], type='l', col=col[4], lty=tlty[i], lwd=lwd[4])
+	for(ipred in 1:length(pred)) {
+		e0pred <- pred[[ipred]]
+		this.col <- plotcols[[ipred]]
+		meta <- e0pred$mcmc.set$meta
+		trajectories <- bayesTFR:::get.trajectories(e0pred, country$code, nr.traj, typical.trajectory=typical.trajectory)
+		e0.median <- bayesTFR:::get.median.from.prediction(e0pred, country$index, country$code)
+		cqp <- list()
+		if(ipred > 1) add <- TRUE
+		if(!add)
+			ylim.loc <- c(min(if (!is.null(trajectories$trajectories))
+							trajectories$trajectories[,trajectories$index]
+					  	else NULL, 
+					  	ylim.loc[1], e0.median, na.rm=TRUE), 
+				  	max(if (!is.null(trajectories$trajectories))
+							trajectories$trajectories[,trajectories$index]
+					  else NULL, 
+					  ylim.loc[2], e0.median, na.rm=TRUE))
+		if(length(pi) > 0) {
+			for (i in 1:length(pi)) {
+				cqp[[i]] <- bayesTFR:::get.traj.quantiles(e0pred, country$index, 
+								country$code, trajectories=trajectories$trajectories, pi=pi[i])
+				if (!add && !is.null(cqp[[i]]) && is.null(ylim))
+					ylim.loc <- c(min(ylim.loc[1], cqp[[i]], na.rm=TRUE), 
+						  		max(ylim.loc[2], cqp[[i]], na.rm=TRUE))
 			}
 		}
-		legend <- c(legend, paste('PI', pi))
-		lty <- c(lty, tlty)
-	}
-	legend <- c(legend, 'observed LifeExp')
-	lty <- c(lty, 1)
-	pch <- c(rep(-1, length(legend)-1), 1)
-	lwds <- c(lwd[3], rep(lwd[4], length(pi)), lwd[1])
-	cols <- c(col[3], rep(col[4], length(pi)), col[1])
-	if(lpart2 > 0) {
-		legend <- c(legend, 'imputed LifeExp')
-		cols <- c(cols, col[2])
+		if (!add) {
+			if(is.null(xlim)) xlim <- c(min(x1,x2), max(x1,x2))
+			if(is.null(ylim)) ylim <- ylim.loc
+			if(is.null(main)) {
+				main <- country$name
+				if(!do.both.sexes)
+					main <- paste(main, '-', get.sex.label(meta))
+			}
+		    # plot historical data: observed
+			plot(plot.data[[ipred]]$obs.x, plot.data[[ipred]]$obs.y, type=type, xlim=xlim, ylim=ylim, ylab=ylab, xlab=xlab, main=main, 
+				panel.first = grid(), lwd=lwd[1], col=this.col[1], ...
+					)
+		} else # add to an existing plot
+			points(plot.data[[ipred]]$obs.x, plot.data[[ipred]]$obs.y, type=type, lwd=lwd[1], col=this.col[1], ...
+					)
+		if(!is.null(plot.data[[ipred]]$rec.x)) { # plot reconstructed missing data
+			lines(plot.data[[ipred]]$rec.x, plot.data[[ipred]]$rec.y, pch=2, type='b', col=this.col[2], lwd=lwd[2])
+			lines(c(plot.data[[ipred]]$obs.x[length(plot.data[[ipred]]$obs.x)], plot.data[[ipred]]$rec.x[1]), 
+				c(plot.data[[ipred]]$obs.y[length(plot.data[[ipred]]$obs.y)], plot.data[[ipred]]$rec.y[1]), 
+				col=this.col[2], lwd=lwd[2]) # connection between the two parts
+		}
+	
+		# plot trajectories
+		if(!is.null(trajectories$trajectories)) { 
+			for (i in 1:length(trajectories$index)) {
+				lines(plot.data[[ipred]]$pred.x, trajectories$trajectories[,trajectories$index[i]], type='l', 
+					col=this.col[5], lwd=lwd[5])
+			}
+		}
+		# plot median	
+		lines(plot.data[[ipred]]$pred.x, e0.median, type='l', col=this.col[3], lwd=lwd[3])
+		legend <- 'median'
+		if(do.both.sexes) legend <- paste(lowerize(get.sex.label(meta)), legend)
+		lty <- 1
+		# plot given CIs
+		if(length(pi) > 0) {
+			tlty <- 2:(length(pi)+1)
+			for (i in 1:length(pi)) {
+				if (!is.null(cqp[[i]])) {
+					lines(plot.data[[ipred]]$pred.x, cqp[[i]][1,], type='l', col=this.col[4], lty=tlty[i], lwd=lwd[4])
+					lines(plot.data[[ipred]]$pred.x, cqp[[i]][2,], type='l', col=this.col[4], lty=tlty[i], lwd=lwd[4])
+				}
+			}
+			legend <- c(legend, paste(pi, '% PI ', if(do.both.sexes) lowerize(get.sex.label(meta)) else '', sep=''))
+			lty <- c(lty, tlty)
+		}
+		legend <- c(legend, paste('observed', if(do.both.sexes) paste(lowerize(get.sex.label(meta)), 'e0') else 'e0'))
 		lty <- c(lty, 1)
-		pch <- c(pch, 2)
-		lwds <- c(lwds, lwd[2])
+		pch <- c(rep(-1, length(legend)-1), 1)
+		lwds <- c(lwd[3], rep(lwd[4], length(pi)), lwd[1])
+		cols <- c(this.col[3], rep(this.col[4], length(pi)), this.col[1])
+		if(lpart2 > 0) {
+			legend <- c(legend, paste('imputed', if(do.both.sexes) paste(lowerize(get.sex.label(meta)), 'e0') else 'e0'))
+			cols <- c(cols, this.col[2])
+			lty <- c(lty, 1)
+			pch <- c(pch, 2)
+			lwds <- c(lwds, lwd[2])
+		}
+		lty.all <- c(lty.all, lty)
+		legend.all <- c(legend.all, legend)
+		cols.all <- c(cols.all, cols)
+		pch.all <- c(pch.all, pch)
+		lwd.all <- c(lwd.all, lwds)
 	}
 	if(show.legend)
-		legend('topleft', legend=legend, lty=lty, bty='n', col=cols, pch=pch, lwd=lwds)
+		legend('topleft', legend=legend.all, lty=lty.all, bty='n', col=cols.all, pch=pch.all, lwd=lwd.all)
 	#abline(h=1, lty=3)
 	#abline(h=1.5, lty=3)
 	#abline(h=2.1, lty=3)
@@ -435,10 +498,12 @@ get.e0.map.parameters <- function(pred, e0.range=NULL, nr.cats=50, same.scale=TR
 							quantile=quantile, ...))
 }
 
-.map.main.default.bayesLife.prediction <- function(pred, ...) return('e0: quantile')
+.map.main.default.bayesLife.prediction <- function(pred, ...) 
+	return(paste(get.sex.label(pred$mcmc.set$meta), 'e0: quantile'))
 
-e0.map <- function(pred, ...) return(bayesTFR:::tfr.map(pred, ...))
-
+e0.map <- function(pred, ...) {
+	return(bayesTFR:::tfr.map(pred, ...))
+}
 e0.map.all <- function(pred, output.dir, output.type='png', e0.range=NULL, nr.cats=50, same.scale=TRUE, 
 						quantile=0.5, file.prefix='e0wrldmap_', ...) {
 	bayesTFR:::bdem.map.all(pred=pred, output.dir=output.dir, type='e0', output.type=output.type, range=e0.range,
@@ -449,8 +514,7 @@ e0.map.gvis <- function(pred, ...)
 	bdem.map.gvis(pred, ...)
 						
 bdem.map.gvis.bayesLife.prediction <- function(pred, ...) {
-	sex.label <- list(M='Male', F='Female')
-	bayesTFR:::.do.gvis.bdem.map('e0', paste(sex.label[[pred$mcmc.set$meta$sex]], 'Life Expectancy'), pred, ...)
+	bayesTFR:::.do.gvis.bdem.map('e0', paste(get.sex.label(pred$mcmc.set$meta), 'Life Expectancy'), pred, ...)
 }
 
 par.names.for.worldmap.bayesLife.prediction <- function(pred, ...) {
@@ -459,3 +523,5 @@ par.names.for.worldmap.bayesLife.prediction <- function(pred, ...) {
 
 get.data.for.worldmap.bayesLife.prediction <- function(pred, ...)
 	return(bayesTFR:::get.data.for.worldmap.bayesTFR.prediction(pred, ...))
+
+get.sex.label <- function(meta) return(list(M='Male', F='Female')[[meta$sex]])

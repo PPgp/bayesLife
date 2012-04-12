@@ -21,7 +21,7 @@ The function loads trajectories of life expectancy for the given country from di
 and returns it as a matrix.
 }
 \value{
-Array of size the number of projetion periods (including the present year) times number of trajectories. The row names correspond to the mid-years of the prediction periods.
+Array of size the number of projection periods (including the present year) times the number of trajectories. The row names correspond to the mid-years of the prediction periods.
 }
 %\references{
 %% ~put references to the literature/web site here ~
@@ -35,9 +35,9 @@ Hana Sevcikova
 %, \code{\link{e0.median.shift}}
 }
 \examples{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output') 
+sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output") 
 pred <- get.e0.prediction(sim.dir=sim.dir)
-get.e0.trajectories(pred, 'Germany')
+get.e0.trajectories(pred, "Germany")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

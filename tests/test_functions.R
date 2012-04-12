@@ -101,7 +101,7 @@ test.estimate.mcmc.with.suppl.data <- function() {
     # run MCMC
     test.name <- 'estimating MCMC using supplemental data'
 	start.test(test.name)
-    m <- run.e0.mcmc(nr.chains=1, iter=10, thin=1, output.dir=sim.dir, start.year=1750)
+    m <- run.e0.mcmc(nr.chains=1, iter=30, thin=1, output.dir=sim.dir, start.year=1750, seed=1)
     stopifnot(length(m$meta$suppl.data$regions$country_code) == 29)
 	stopifnot(all(dim(m$meta$suppl.data$e0.matrix) == c(40, 29)))
 	test.ok(test.name)
@@ -110,8 +110,8 @@ test.estimate.mcmc.with.suppl.data <- function() {
 	test.name <- 'continuing MCMC with supplemental data'
 	start.test(test.name)
 	m <- continue.e0.mcmc(iter=10, output.dir=sim.dir)
-	stopifnot(m$mcmc.list[[1]]$finished.iter == 20)
-	stopifnot(get.total.iterations(m$mcmc.list, 0) == 20)
+	stopifnot(m$mcmc.list[[1]]$finished.iter == 40)
+	stopifnot(get.total.iterations(m$mcmc.list, 0) == 40)
 	stopifnot(!is.element(900, m$meta$regions$country_code)) # 'World' should not be included
 	test.ok(test.name)
 	
@@ -127,9 +127,9 @@ test.estimate.mcmc.with.suppl.data <- function() {
 	# run prediction
 	test.name <- 'running projections for simulation with supplemental data'
 	start.test(test.name)
-	pred <- e0.predict(m, burnin=0, verbose=FALSE)
+	pred <- e0.predict(m, burnin=10, verbose=FALSE, save.as.ascii=0)
 	spred <- summary(pred)
-	stopifnot(spred$nr.traj == 20)
+	stopifnot(spred$nr.traj == 30)
 	stopifnot(!is.element(903, pred$mcmc.set$regions$country_code))
 	npred <- dim(pred$e0.matrix.reconstructed)[2]
 	test.ok(test.name)
@@ -143,11 +143,11 @@ test.existing.simulation <- function() {
 	sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
 	m <- get.e0.mcmc(sim.dir, low.memory=FALSE, chain.ids=c(1,2))
 	stopifnot(length(m$mcmc.list)==2)
-	stopifnot(dim(m$mcmc.list[[1]]$traces)[1]==26) # because the chains are thinned by two + init value
+	stopifnot(dim(m$mcmc.list[[1]]$traces)[1]==31) # because the chains are thinned by two + init value (i.e. 60/2 + 1)
 	m <- get.e0.mcmc(sim.dir)
-	summary(m)
-	summary(e0.mcmc(m, 1), par.names.cs=NULL)
-	stopifnot(bayesTFR:::get.total.iterations(m$mcmc.list) == 150)
+	#summary(m)
+	#summary(e0.mcmc(m, 1), par.names.cs=NULL)
+	stopifnot(bayesTFR:::get.total.iterations(m$mcmc.list) == 120)
 	stopifnot(bayesTFR:::get.stored.mcmc.length(m$mcmc.list, burnin=30) == 30)
 	test.ok(test.name)
 	
@@ -257,19 +257,19 @@ test.get.parameter.traces <- function() {
 	start.test(test.name)
 	sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
 	m <- get.e0.mcmc(sim.dir, low.memory=TRUE)
-	traces <- get.e0.parameter.traces(m$mcmc.list, burnin=10, 
-					thinning.index=c(4, 41, 59))
+	traces <- get.e0.parameter.traces(m$mcmc.list, burnin=20, 
+					thinning.index=c(4, 21, 39))
 	stopifnot(nrow(traces)==3)
-	m.check <- get.e0.mcmc(sim.dir, low.memory=FALSE, burnin=10, chain.ids=c(1,3))
+	m.check <- get.e0.mcmc(sim.dir, low.memory=FALSE, burnin=20)
 	stopifnot(traces[1,'omega']==m.check$mcmc.list[[1]]$traces[4,'omega'])
-	# indices 41 and 59 in the collapsed traces correspond to indices 1 and 19, respectively, in chain 3
+	# indices 21 and 39 in the collapsed traces correspond to indices 1 and 19, respectively, in chain 2
 	stopifnot(all(traces[c(2,3),'omega']==m.check$mcmc.list[[2]]$traces[c(1,19),'omega']))
 	
-	traces <- get.e0.parameter.traces(m$mcmc.list, burnin=10, thin=8)
-	# original thin is 2, so here we thin additionally by 4 (60/4=15) 
-	stopifnot(nrow(traces)==15)
+	traces <- get.e0.parameter.traces(m$mcmc.list, burnin=20, thin=8)
+	# original thin is 2, so here we thin additionally by 4 (2*20/4=10) 
+	stopifnot(nrow(traces)==10)
 	stopifnot(traces[2,'z']==m.check$mcmc.list[[1]]$traces[5,'z']) #(4+1)
-	stopifnot(traces[14,'z']==m.check$mcmc.list[[2]]$traces[13,'z']) #(3*4 + 1)
+	stopifnot(traces[9,'z']==m.check$mcmc.list[[2]]$traces[13,'z']) #(3*4 + 1)
 	test.ok(test.name)
 }
 
@@ -289,5 +289,50 @@ test.run.mcmc.simulation.auto <- function() {
 	stopifnot(get.total.iterations(m$mcmc.list, 0) == 60)
 	test.ok(test.name)
 
+	unlink(sim.dir, recursive=TRUE)
+}
+
+test.estimate.mcmc.with.overwrites <- function() {
+	sim.dir <- tempfile()
+	test.name <- 'estimating MCMC with country overwrites'
+	start.test(test.name)
+	overwrites <- data.frame(country_code=c(562, 686), #Niger, Senegal (index 17, 18)
+							k.c.prior.up=c(5, 7),
+							Triangle_3.c.prior.low=c(NA, 0)
+						)
+	# run MCMC
+    m <- run.e0.mcmc(nr.chains=1, iter=50, thin=1, output.dir=sim.dir, 
+    				Triangle.c.prior.low=c(0, 0, -20, 0), country.overwrites=overwrites,
+    				seed=10)
+    
+    stopifnot((m$meta$country.bounds$k.c.prior.up[17] == 5) && (m$meta$country.bounds$k.c.prior.up[18] == 7) && 
+    			all(m$meta$country.bounds$k.c.prior.up[-c(17,18)]==10))
+    stopifnot((m$meta$country.bounds$Triangle_3.c.prior.low[18] == 0) &&  
+    			all(m$meta$country.bounds$Triangle_3.c.prior.low[-18]==-20))
+    #check traces		
+    traces.Niger <- get.e0.parameter.traces.cs(m$mcmc.list, get.country.object('Niger', m$meta), 
+    					par.names=c('Triangle.c', 'k.c'))
+	stopifnot(all(traces.Niger[,'k.c_c562'] <= 5) && any(traces.Niger[,'Triangle.c_3_c562'] < 0))
+	traces.Sen <- get.e0.parameter.traces.cs(m$mcmc.list, get.country.object('Senegal', m$meta), 
+    					par.names=c('Triangle.c', 'k.c'))
+	stopifnot(any(traces.Sen[,'k.c_c686'] > 5) && all(traces.Sen[,'k.c_c686'] < 7) && all(traces.Sen[,'Triangle.c_3_c686'] >= 0))
+	test.ok(test.name)
+	
+	test.name <- 'estimating MCMC for extra countries with country overwrites'
+	start.test(test.name)
+	overwrites <- data.frame(country_code=c(800, 900), #Uganda, World
+							k.c.prior.up=c(3, 8),
+							k.c.prior.low=c(2, NA))
+	m <- run.e0.mcmc.extra(sim.dir=sim.dir, countries=c(800,900), burnin=0, country.overwrites=overwrites)
+	Ug <- get.country.object('Uganda', m$meta)
+	Wrld <- get.country.object(900, m$meta)
+	stopifnot((m$meta$country.bounds$k.c.prior.up[Ug$index] == 3) && (m$meta$country.bounds$k.c.prior.up[18] == 7) && 
+    			(m$meta$country.bounds$k.c.prior.up[Wrld$index] == 8) && all(m$meta$country.bounds$k.c.prior.up[-c(17, 18, Ug$index,Wrld$index)]==10))
+    stopifnot((m$meta$country.bounds$k.c.prior.low[Ug$index] == 2) && all(m$meta$country.bounds$k.c.prior.low[-Ug$index]==0))
+    traces.Ug <- get.e0.parameter.traces.cs(m$mcmc.list, Ug, par.names=c('k.c'))
+	stopifnot(all(traces.Ug[,'k.c_c800'] <= 3) && all(traces.Ug[,'k.c_c800'] > 2))
+	traces.world <- get.e0.parameter.traces.cs(m$mcmc.list, Wrld, par.names=c('k.c'))
+	stopifnot(all(traces.world[,'k.c_c900'] <= 8))
+	test.ok(test.name)
 	unlink(sim.dir, recursive=TRUE)
 }

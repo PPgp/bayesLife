@@ -1,5 +1,5 @@
-\name{e0.coda.mcmc.list}
-\alias{e0.coda.mcmc.list}
+\name{e0.coda.list.mcmc}
+\alias{e0.coda.list.mcmc}
 \alias{coda.mcmc.bayesLife.mcmc}
 
 \title{
@@ -9,13 +9,12 @@ Convertion to coda's Objects
 The functions convert MCMC traces (simulated using \code{\link{run.e0.mcmc}}) into objects that can be used with the \pkg{coda} package.
 }
 \usage{
-e0.coda.mcmc.list(mcmc.list = NULL, country = NULL, chain.ids = NULL, 
+e0.coda.list.mcmc(mcmc.list = NULL, country = NULL, chain.ids = NULL, 
     sim.dir = file.path(getwd(), "bayesLife.output"), 
     par.names = e0.parameter.names(), 
     par.names.cs = e0.parameter.names.cs(), low.memory = FALSE, \dots)
     
-\method{coda.mcmc}{bayesLife.mcmc}(mcmc, country = NULL, 
-    par.names = e0.parameter.names(), 
+\method{coda.mcmc}{bayesLife.mcmc}(mcmc, country = NULL, par.names = e0.parameter.names(), 
     par.names.cs = e0.parameter.names.cs(), \dots)
 }
 
@@ -35,7 +34,7 @@ e0.coda.mcmc.list(mcmc.list = NULL, country = NULL, chain.ids = NULL,
 %%  ~~ If necessary, more details than the description above ~~
 %}
 \value{
-The function \code{coda.mcmc.list} returns an object of class \dQuote{mcmc.list}. The function \code{coda.mcmc} returns an object of class \dQuote{mcmc}, both defined in the \pkg{coda} package.
+The function \code{e0.coda.list.mcmc} returns an object of class \dQuote{mcmc.list}. The function \code{coda.mcmc} returns an object of class \dQuote{mcmc}, both defined in the \pkg{coda} package.
 }
 
 \author{
@@ -46,8 +45,8 @@ Hana Sevcikova
 \code{\link{e0.partraces.plot}} for plotting the MCMC traces and \code{\link{summary.bayesLife.mcmc.set}}.
 }
 \examples{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
-coda.list <- e0.coda.mcmc.list(sim.dir=sim.dir, country='France', burnin=30)
+sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
+coda.list <- e0.coda.list.mcmc(sim.dir=sim.dir, country="France", burnin=30)
 summary(coda.list)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

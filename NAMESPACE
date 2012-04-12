@@ -27,6 +27,8 @@ export(
 	create.thinned.e0.mcmc,
 	get.e0.prediction,
 	has.e0.prediction,
+	get.e0.jmale.prediction,
+	has.e0.jmale.prediction,
 	get.e0.convergence.all,
 	get.e0.convergence,
 	e0.GoF.dl,
@@ -37,7 +39,7 @@ export(
 	get.e0.parameter.traces,
 	get.e0.parameter.traces.cs,
 	get.e0.trajectories,
-	e0.coda.mcmc.list,
+	e0.coda.list.mcmc,
 	e0.DLcurve.plot.all,
 	e0.DLcurve.plot,
 	e0.get.dlcurves,
@@ -57,8 +59,8 @@ export(
 	e0.diagnose,
 	store.bayesLife.convergence,
 	store.bayesLife.prediction,
-	joint.male.estimate,
-	joint.male.predict,
+	e0.jmale.estimate,
+	e0.jmale.predict,
 	e0.gap.plot
 )
 
