@@ -259,10 +259,10 @@ Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
 
 logdensity.Triangle.k.z.c <- function(x, mean, sd, dlx, low, up, par.idx, p1, p2, omega, DLdata) {
 	logdens <- 0.0
-	res <- .C("dologdensityTrianglekz", x, mean, sd, low, up, par.idx, dlx, 
-				p1, p2, DLdata['e0',], ncol(DLdata), 
-				DLdata['dct',], omega*DLdata['loess',], logdens=logdens)
-
+	res <- .C("dologdensityTrianglekz", as.double(x), as.double(mean), as.double(sd), as.double(low), 
+				as.double(up), as.integer(par.idx), as.double(dlx), 
+				as.double(p1), as.double(p2), as.double(DLdata['e0',]), as.integer(ncol(DLdata)), 
+				as.double(DLdata['dct',]), as.double(omega*DLdata['loess',]), logdens=logdens)
 	return(res$logdens)	
 }
 

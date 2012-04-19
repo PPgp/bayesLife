@@ -74,8 +74,11 @@ void dologdensityTrianglekz(double *x, double *mu, double *sigma,
 			double *le, int *lidx, double *dct, double *loess_sd, double *logdens) {
 	double dl[*lidx], dens[*lidx], dnt[1];
 	double s;
-	int i;
-	dlpars[*par_idx-1] = *x;
+	int i, param_index;
+	param_index = *par_idx;
+	
+	if (param_index < 1) error("Wrong parameter index: %i", param_index);
+	dlpars[param_index-1] = *x;
 	doDL(dlpars, le, p1, p2, lidx, dl);
 	s = 0;
 	for (i=0; i< (*lidx); i++){

@@ -66,9 +66,9 @@ e0.trajectories.plot(pred, country="Japan", pi=c(80, 95))
 
 # plot multiple countries into one plot
 e0.trajectories.plot(pred, "Japan", col=rep("green", 5), nr.traj=0, pi=c(80), 
-				show.legend=FALSE, main="")
+        show.legend=FALSE, main="")
 e0.trajectories.plot(pred, "United States of America", col=rep("blue", 5),  
-				add=TRUE, nr.traj=0, pi=c(80), show.legend=FALSE)
+        add=TRUE, nr.traj=0, pi=c(80), show.legend=FALSE)
 legend("topleft", legend=c("Japan", "USA"), col=c("green", "blue"), lty=1, bty="n")
 }
 
