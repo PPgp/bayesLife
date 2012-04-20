@@ -547,8 +547,10 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries=NULL, my.e0.file = NULL,
 	#	new.meta[[name]] <- c(meta[[name]], Emeta[[name]][is.new])
 	#}
 	new.meta[['Tc.index']] <- update.Tc.index(meta$Tc.index, Emeta$Tc.index, id.replace, is.old)
-	#stop('')
 	new.meta[['regions']] <- update.regions(meta$regions, Emeta$regions, id.replace, is.new, is.old)
+	if(is.null(meta$country.bounds)) { # simulation was created with previous versions of bayesLife
+		meta$country.bounds <- .do.country.specific.ini(meta$nr.countries, meta)$country.bounds
+	}
 	new.meta[['country.bounds']] <- update.bounds(meta$country.bounds, Emeta$country.bounds, id.replace, is.new, is.old)
 
 	if(!is.null(Emeta$suppl.data$e0.matrix)) {
