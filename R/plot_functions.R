@@ -22,7 +22,8 @@ e0.trajectories.plot.all <- function(e0.pred,
 
 e0.gap.plot <- function(e0.pred, country, e0.pred2=NULL, pi=c(80, 95), nr.traj=0,
 								  xlim=NULL, ylim=NULL, type='b', 
-								  xlab='Year', ylab='Gap in life expectancy', main=NULL, ...
+								  xlab='Year', ylab='Gap in life expectancy', main=NULL, 
+								  show.legend=TRUE, ...
 								  ) {
 	if (missing(country)) {
 		stop('Argument "country" must be given.')
@@ -65,7 +66,7 @@ e0.gap.plot <- function(e0.pred, country, e0.pred2=NULL, pi=c(80, 95), nr.traj=0
 	if(is.null(ylim)) ylim <- ylim.loc
 	if(is.null(main)) main <- country$name
 	# plot historical data: observed
-	plot(x1, y1, type=type, xlim=xlim, ylim=ylim, ylab=ylab, xlab=xlab, main=main, 
+	plot(x1, y1, type=type, xlim=xlim, ylim=ylim, ylab=ylab, xlab=xlab, main=main, lwd=2,
 			panel.first = grid(), ...
 					)	
 	# plot trajectories
@@ -84,36 +85,55 @@ e0.gap.plot <- function(e0.pred, country, e0.pred2=NULL, pi=c(80, 95), nr.traj=0
 			lines(x2, cqp[[i]][2,], type='l', col='red', lty=lty[i], lwd=2)
 		}
 	}
-	legend <- c('median', paste('PI', pi))
-	col <- rep('red', length(lty)+1)
-	legend <- c(legend, 'observed gap')
-	col <- c(col, 'black')
-	lty <- c(lty, 1)
-	pch <- c(rep(-1, length(legend)-1), 1)
-	legend('topleft', legend=legend, lty=c(1,lty), bty='n', col=col, pch=pch)
+	if(show.legend) {
+		legend <- c('median', paste(pi, '% PI', sep=''))
+		col <- rep('red', length(lty)+1)
+		legend <- c(legend, 'observed gap')
+		col <- c(col, 'black')
+		lty <- c(lty, 1)
+		pch <- c(rep(-1, length(legend)-1), 1)
+		legend('topleft', legend=legend, lty=c(1,lty), bty='n', col=col, pch=pch, lwd=2)
+	}
 }
 
-e0.joint.sex.plot <- function(e0.pred, country, nlevels, years, 
-							xlim=NULL, ylim=NULL, xlab='Female e0', ylab='Male e0', main=NULL, ...) {
+e0.joint.plot <- function(e0.pred, country, pi=95, years, npoints=100,
+							xlim=NULL, ylim=NULL, xlab='Female life expectancy', ylab='Male life expectancy', main=NULL, ...) {
 	if(!has.e0.jmale.prediction(e0.pred)) 
 		stop('A male prediction does not exist for the given prediction object. Run e0.jmale.predict.')
-	years.idx <- sapply(years, bayesTFR:::get.prediction.year.index, e0.pred)
+	require(MASS)
+	years.idx <- sapply(years, bayesTFR:::get.prediction.year.index, pred=e0.pred)
+	e0M.pred <- get.e0.jmale.prediction(e0.pred)
 	trajFall <- get.e0.trajectories(e0.pred, country)[years.idx,]
 	trajMall <- get.e0.trajectories(e0M.pred, country)[years.idx,]
 	minxy <- min(trajFall, trajMall)
 	maxxy <- max(trajFall, trajMall)
 	cols <- rainbow(length(years.idx))
-	xlim <- if(is.null(xlim)) c(minx, maxx) else xlim
-	ylim <- if(is.null(xlim)) c(minx, maxx) else ylim
-	plot(c(minxy, maxxy), c(minxy, maxxy), type='n', xlab='Female e0', ylab='Male e0', xlim=xlim, ylim=ylim)
+	xlim <- if(is.null(xlim)) c(minxy, maxxy) else xlim
+	ylim <- if(is.null(xlim)) c(minxy, maxxy) else ylim
+	country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
+	if(is.null(main)) main <- country.obj$name
+	plot(c(minxy, maxxy), c(minxy, maxxy), type='n', xlab=xlab, ylab=ylab, 
+				xlim=xlim, ylim=ylim, main=main, panel.first = grid())
 	abline(0,1)
-for(iyear in 1:length(years.idx)) {
-	trajF <- trajFall[iyear,]
-	trajM <- trajMall[iyear,]
-	dens <- kde2d(trajF, trajM, n=100)
-	contour(dens, add=TRUE, col=cols[iyear], nlevels=3)
-}
-								
+
+	for(iyear in 1:length(years.idx)) {
+		trajF <- trajFall[iyear,]
+		trajM <- trajMall[iyear,]
+		dens <- kde2d(trajF, trajM, n=100)
+		for(i in 1:length(dens$x)) 
+			dens$z[i,dens$x[i]<dens$y] <- 0
+		cibounds <- quantile(dens$z, probs=pi/100)
+		if(npoints>0) {
+			sample.idx <- sample(1:length(trajF), npoints)
+			Fpoints <- trajF[sample.idx]
+			Mpoints <- trajM[sample.idx]
+			points(Fpoints, Mpoints, pch='.', col=cols[iyear])
+		}
+		contour(dens, levels=cibounds, drawlabels=FALSE, add=TRUE, col=cols[iyear], ...)
+	}
+	periods <- bayesTFR:::get.prediction.periods(e0.pred$mcmc.set$meta, max(years.idx))[years.idx]
+	legend('topleft', legend=periods, col=cols, bty='n', lty=1)
+				
 }
 
 e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALSE,
