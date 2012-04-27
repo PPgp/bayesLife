@@ -93,6 +93,29 @@ e0.gap.plot <- function(e0.pred, country, e0.pred2=NULL, pi=c(80, 95), nr.traj=0
 	legend('topleft', legend=legend, lty=c(1,lty), bty='n', col=col, pch=pch)
 }
 
+e0.joint.sex.plot <- function(e0.pred, country, nlevels, years, 
+							xlim=NULL, ylim=NULL, xlab='Female e0', ylab='Male e0', main=NULL, ...) {
+	if(!has.e0.jmale.prediction(e0.pred)) 
+		stop('A male prediction does not exist for the given prediction object. Run e0.jmale.predict.')
+	years.idx <- sapply(years, bayesTFR:::get.prediction.year.index, e0.pred)
+	trajFall <- get.e0.trajectories(e0.pred, country)[years.idx,]
+	trajMall <- get.e0.trajectories(e0M.pred, country)[years.idx,]
+	minxy <- min(trajFall, trajMall)
+	maxxy <- max(trajFall, trajMall)
+	cols <- rainbow(length(years.idx))
+	xlim <- if(is.null(xlim)) c(minx, maxx) else xlim
+	ylim <- if(is.null(xlim)) c(minx, maxx) else ylim
+	plot(c(minxy, maxxy), c(minxy, maxxy), type='n', xlab='Female e0', ylab='Male e0', xlim=xlim, ylim=ylim)
+	abline(0,1)
+for(iyear in 1:length(years.idx)) {
+	trajF <- trajFall[iyear,]
+	trajM <- trajMall[iyear,]
+	dens <- kde2d(trajF, trajM, n=100)
+	contour(dens, add=TRUE, col=cols[iyear], nlevels=3)
+}
+								
+}
+
 e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALSE,
 								  nr.traj=NULL, typical.trajectory=FALSE,
 								  xlim=NULL, ylim=NULL, type='b', 

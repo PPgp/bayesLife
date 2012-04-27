@@ -49,6 +49,8 @@ test.estimate.mcmc <- function() {
 	spred <- summary(pred)
 	stopifnot(spred$nr.traj == 20)
 	stopifnot(!is.element(903, pred$mcmc.set$regions$country_code))
+	stopifnot(all(dim(pred$joint.male$quantiles) == dim(pred$quantiles)))
+	stopifnot(dim(pred$joint.male$quantiles)[3] == 19)
 	npred <- dim(pred$e0.matrix.reconstructed)[2]
 	test.ok(test.name)
 	
@@ -61,6 +63,8 @@ test.estimate.mcmc <- function() {
 	stopifnot(dim(pred$e0.matrix.reconstructed)[2] == npred+1)
 	stopifnot(is.element(903, pred$mcmc.set$meta$regions$country_code))
 	stopifnot(!is.null(bayesTFR:::get.trajectories(pred, 903)$trajectories))
+	stopifnot(all(dim(pred$joint.male$quantiles) == dim(pred$quantiles)))
+	stopifnot(dim(pred$joint.male$quantiles)[1] == 161)
 	test.ok(test.name)
     
 	test.name <- 'shifting the median'

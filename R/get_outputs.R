@@ -294,7 +294,7 @@ get.thinned.e0.mcmc <- function(mcmc.set, thin=1, burnin=0) {
 }
 	
 create.thinned.e0.mcmc <- function(mcmc.set, thin=1, burnin=0, output.dir=NULL, verbose=TRUE) {
-	#Return a thinned mcmc.set object with burnin removed and all chanins collapsed into one
+	#Return a thinned mcmc.set object with burnin removed and all chains collapsed into one
 	mcthin <- max(sapply(mcmc.set$mcmc.list, function(x) x$thin))
 	thin <- max(c(thin, mcthin))
 	meta <- mcmc.set$meta
@@ -337,21 +337,37 @@ create.thinned.e0.mcmc <- function(mcmc.set, thin=1, burnin=0, output.dir=NULL, 
 											thinning.index=thin.index)
 		bayesTFR:::write.values.into.file.cindep(par, values, outdir.thin.mcmc)
 	}
-	if(verbose) cat('done.\nStoring country-specific parameters ...')
-	par.names.cs <- e0.parameter.names.cs()
-	for (country in 1:mcmc.set$meta$nr.countries){
-		country.obj <- get.country.object(country, mcmc.set$meta, index=TRUE)
-		for (par in par.names.cs) {
-			values <- get.e0.parameter.traces.cs(mcmc.set$mcmc.list, country.obj, par, 
-											burnin=burnin, thinning.index=thin.index)
-			bayesTFR:::write.values.into.file.cdep(par, values, outdir.thin.mcmc, country.code=country.obj$code)
-		}
-	}
+	if(verbose) cat('done.')
+	.store.country.specific.traces(mcmc.set, 1:mcmc.set$meta$nr.countries, burnin, thin.index, outdir=outdir.thin.mcmc, verbose=verbose)
+
 	#if (mcmc.set$meta$nr_countries > mcmc.set$meta$nr_countries_estimation) {
 	#	.update.thinned.extras(mcmc.set, (mcmc.set$meta$nr_countries_estimation+1):mcmc.set$meta$nr_countries,
 	#							burnin=burnin, nr.points=nr.points, dir=outdir.thin.mcmc, verbose=verbose)
 	#}
 	invisible(structure(list(meta=meta, mcmc.list=list(thinned.mcmc)), class='bayesLife.mcmc.set'))
+}
+
+create.thinned.e0.mcmc.extra <- function(mcmc.set, thinned.mcmc.set, countries, thin=1, burnin=0, verbose=TRUE) {
+	# if 'countries' is given, it is an index.
+	mcthin <- max(sapply(mcmc.set$mcmc.list, function(x) x$thin))
+	thin <- max(c(thin, mcthin))
+	total.iter <- get.stored.mcmc.length(mcmc.set$mcmc.list, burnin=burnin)
+	thin.index <- if(thin > mcthin) unique(round(seq(1, total.iter, by=thin/mcthin))) else 1:total.iter
+	outdir.thin.mcmc <- file.path(thinned.mcmc.set$meta$output.dir, thinned.mcmc.set$mcmc.list[[1]]$output.dir)
+	.store.country.specific.traces(mcmc.set, countries, burnin, thin.index, outdir=outdir.thin.mcmc, verbose=verbose)
+	invisible(get.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin))
+}
+.store.country.specific.traces <- function(mcmc.set, countries, burnin, thin.index, outdir, verbose=FALSE) {
+	if(verbose) cat('\nStoring country-specific parameters ...')
+	par.names.cs <- e0.parameter.names.cs()
+	for (country in countries){
+		country.obj <- get.country.object(country, mcmc.set$meta, index=TRUE)
+		for (par in par.names.cs) {
+			values <- get.e0.parameter.traces.cs(mcmc.set$mcmc.list, country.obj, par, 
+											burnin=burnin, thinning.index=thin.index)
+			bayesTFR:::write.values.into.file.cdep(par, values, outdir, country.code=country.obj$code)
+		}
+	}	
 }
 
 get.e0.trajectories <- function(e0.pred, country) 
