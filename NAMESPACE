@@ -61,7 +61,10 @@ export(
 	store.bayesLife.prediction,
 	e0.jmale.estimate,
 	e0.jmale.predict,
-	e0.gap.plot
+	e0.gap.plot,
+	e0.gap.plot.all,
+	e0.joint.plot,
+	e0.joint.plot.all
 )
 
 # register S3 methods

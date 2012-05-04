@@ -48,11 +48,14 @@ both.pred <- e0.jmale.predict(pred)
 e0.trajectories.plot(both.pred, 'Guatemala') # Female
 e0.trajectories.plot(get.e0.jmale.prediction(both.pred), 'Guatemala') # Male
 
-# Both projections in one plot
-e0.trajectories.plot(both.pred, 'Guatemala', both.sexes=TRUE,  pi=c(80))
+# Marginal distribution of the sex-specific projections
+e0.trajectories.plot(both.pred, 'Guatemala', both.sexes=TRUE,  pi=80)
 
 # Plotting the gaps
 e0.gap.plot(both.pred, 'Guatemala')
+
+# Joint distribution of the sex-specific projections
+e0.joint.plot(both.pred, 'Guatemala', pi=80, years=c(2013, 2043, 2093))
 
 unlink(sim.dir, recursive=TRUE)
 }

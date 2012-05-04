@@ -27,12 +27,12 @@ e0.trajectories.table(e0.pred, \dots)
 \arguments{
   \item{e0.pred}{Object of class \code{\link{bayesLife.prediction}}.}
   \item{country}{Name or numerical code of a country.}
-  \item{pi}{Probability interval. It can be a single number or an array. If \code{both.sexes} is \code{TRUE} the default value is 95.}
+  \item{pi}{Probability interval. It can be a single number or an array. If \code{both.sexes} is \code{TRUE} the default is 95.}
   \item{both.sexes}{Logical. If \code{TRUE} the distribution of both sexes is plotted into one graphics, provided the \code{e0.pred} is a female prediction and contains a joint male prediction as a result of running the function \code{\link{e0.jmale.predict}}.}
-  \item{nr.traj}{Number of trajectories to be plotted. If \code{NULL}, all trajectories are plotted, otherwise they are thinned evenly. If \code{both.sexes} is \code{TRUE} the default value is zero.}
+  \item{nr.traj}{Number of trajectories to be plotted. If \code{NULL}, all trajectories are plotted, otherwise they are thinned evenly. If \code{both.sexes} is \code{TRUE} the default is zero.}
   \item{typical.trajectory}{Logical. If \code{TRUE} one trajectory is shown that has the smallest distance to the median.}
   \item{xlim, ylim, type, xlab, ylab, main}{Graphical parameters passed to the \code{plot} function.}
-  \item{lwd, col, col2}{Vector of five elements giving the line width and color for: 1. observed data, 2. imputed missing data, 3. median, 4. quantiles, 5. trajectories. \code{col2} is only used if \code{both.sexes} is \code{TRUE}. In such a case, \code{col2} is used for female lines and \code{col} is used for male lines.}
+  \item{lwd, col, col2}{Vector of five elements giving the line width and color for: 1. observed data, 2. imputed missing data, 3. median, 4. quantiles, 5. trajectories. \code{col2} is only used if \code{both.sexes} is \code{TRUE}. In such a case, \code{col2} is used for female lines and \code{col} is used for male lines, which in this case defaults to \code{c('black', 'green', 'darkgreen', 'darkgreen', 'gray')}.}
   \item{show.legend}{Logical controlling whether the legend should be drawn.}
   \item{add}{Logical controlling whether the trajectories should be plotted into a new graphic device (\code{FALSE}) or into an existing device (\code{TRUE}). One can use this argument to plot trajectories from multiple countries into one graphics.}
   \item{\dots}{Additional graphical parameters. In addition, for \code{e0.trajectories.plot.all}, \code{\dots} 

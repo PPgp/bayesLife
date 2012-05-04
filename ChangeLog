@@ -1,3 +1,14 @@
+0.4-0
+-----
+Function for plotting joint distribution of female and male e0 added: e0.joint.plot.
+
+Functions added that create graphs for all countries for female-male gaps and the female-male joint distribution:
+e0.gap.plot.all, e0.joint.plot.all
+
+Prediction of joint female-male e0 is invoked automatically from the e0.predict and e0.predict.extra functions 
+(if the given mcmcs correspond to a female simulation).
+
+
 0.3-2 (04/12/2012)
 -----
 Some defaults of run.e0.mcmc changed (e.g. start.year was set 1873).

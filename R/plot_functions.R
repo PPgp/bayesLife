@@ -1,23 +1,30 @@
-e0.trajectories.plot.all <- function(e0.pred, 
-									output.dir=file.path(getwd(), 'e0trajectories'),
-									output.type="png", verbose=FALSE, ...) {
-	# plots e0 trajectories for all countries
+.do.plot.all <- function(meta, output.dir, func, output.type="png", 
+						file.prefix='e0plot', plot.type='e0 graph',
+						verbose=FALSE, ...) {
+	# processes plotting function func for all countries
 	if(!file.exists(output.dir)) dir.create(output.dir, recursive=TRUE)
-	all.countries <- country.names(e0.pred$mcmc.set$meta)
+	all.countries <- country.names(meta)
 	postfix <- output.type
 	if(output.type=='postscript') postfix <- 'ps'
 	for (country in all.countries) {
-		country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
+		country.obj <- get.country.object(country, meta)
 		if(verbose)
-			cat('Creating e0 graph for', country, '(', country.obj$code, ')\n')
+			cat('Creating', plot.type, 'for', country, '(', country.obj$code, ')\n')
 
 		do.call(output.type, list(file.path(output.dir, 
-										paste('e0plot_c', country.obj$code, '.', postfix, sep=''))))
-		e0.trajectories.plot(e0.pred, country=country.obj$code, ...)
+										paste(file.prefix,'_c', country.obj$code, '.', postfix, sep=''))))
+		do.call(func, list(country=country.obj$code, ...))
 		dev.off()
 	}
 	if(verbose)
-		cat('\nTrajectory plots stored into', output.dir, '\n')
+		cat('\nPlots stored into', output.dir, '\n')					
+}
+
+e0.gap.plot.all <- function(e0.pred, output.dir=file.path(getwd(), 'e0gaps'),
+							output.type="png", verbose=FALSE, ...) {
+	# plots e0 gaps for all countries
+	.do.plot.all(e0.pred$mcmc.set$meta, output.dir, e0.gap.plot, output.type=output.type, 
+		file.prefix='e0gap', plot.type='e0 gap graph', verbose=verbose, e0.pred=e0.pred, ...)
 }
 
 e0.gap.plot <- function(e0.pred, country, e0.pred2=NULL, pi=c(80, 95), nr.traj=0,
@@ -96,44 +103,86 @@ e0.gap.plot <- function(e0.pred, country, e0.pred2=NULL, pi=c(80, 95), nr.traj=0
 	}
 }
 
-e0.joint.plot <- function(e0.pred, country, pi=95, years, npoints=100,
-							xlim=NULL, ylim=NULL, xlab='Female life expectancy', ylab='Male life expectancy', main=NULL, ...) {
+e0.joint.plot.all <- function(e0.pred, output.dir=file.path(getwd(), 'e0joint'),
+							output.type="png", verbose=FALSE, ...) {
+	# plots e0 joint projections for all countries
+	.do.plot.all(e0.pred$mcmc.set$meta, output.dir, e0.joint.plot, output.type=output.type, 
+		file.prefix='e0jplot', plot.type='e0 joint F-M graph', verbose=verbose, e0.pred=e0.pred, ...)
+}
+
+e0.joint.plot <- function(e0.pred, country, pi=95, years, nr.points=500,
+							xlim=NULL, ylim=NULL, xlab='Female life expectancy', ylab='Male life expectancy', 
+							main=NULL, col=NULL, show.legend=TRUE, add=FALSE, ...) {
 	if(!has.e0.jmale.prediction(e0.pred)) 
 		stop('A male prediction does not exist for the given prediction object. Run e0.jmale.predict.')
-	require(MASS)
-	years.idx <- sapply(years, bayesTFR:::get.prediction.year.index, pred=e0.pred)
+	years.idx <- unlist(lapply(years, bayesTFR:::get.prediction.year.index, pred=e0.pred))
+	years.idx <- years.idx[years.idx > 1]
+	if(length(years.idx) <= 0) 
+		stop('Argument years must have values within the range [', 
+							pred$end.year - pred$nr.projections*5, ',', pred$end.year, '].')
+	if(length(years.idx) != length(years))
+		warning('Some years invalid. Valid range: [', pred$end.year - pred$nr.projections*5, ',', pred$end.year, '].')
+		
+	require(car)
+	
 	e0M.pred <- get.e0.jmale.prediction(e0.pred)
-	trajFall <- get.e0.trajectories(e0.pred, country)[years.idx,]
-	trajMall <- get.e0.trajectories(e0M.pred, country)[years.idx,]
-	minxy <- min(trajFall, trajMall)
-	maxxy <- max(trajFall, trajMall)
-	cols <- rainbow(length(years.idx))
-	xlim <- if(is.null(xlim)) c(minxy, maxxy) else xlim
-	ylim <- if(is.null(xlim)) c(minxy, maxxy) else ylim
-	country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
-	if(is.null(main)) main <- country.obj$name
-	plot(c(minxy, maxxy), c(minxy, maxxy), type='n', xlab=xlab, ylab=ylab, 
+	trajFall <- get.e0.trajectories(e0.pred, country)[years.idx,,drop=FALSE]
+	trajMall <- get.e0.trajectories(e0M.pred, country)[years.idx,,drop=FALSE]
+	nr.points <- min(nr.points, ncol(trajFall))
+	if(!add) {
+		minxy <- min(trajFall, trajMall)
+		maxxy <- max(trajFall, trajMall)
+		if(is.null(xlim)) xlim <- c(minxy, maxxy)
+		if(is.null(xlim)) ylim <- c(minxy, maxxy)
+		country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
+		if(is.null(main)) main <- country.obj$name
+		plot(c(minxy, maxxy), c(minxy, maxxy), type='n', xlab=xlab, ylab=ylab, 
 				xlim=xlim, ylim=ylim, main=main, panel.first = grid())
-	abline(0,1)
-
+		abline(0,1)
+	}
+	col <- if(is.null(col)) rainbow(length(years.idx)) else rep(col, length(years.idx))
 	for(iyear in 1:length(years.idx)) {
 		trajF <- trajFall[iyear,]
 		trajM <- trajMall[iyear,]
-		dens <- kde2d(trajF, trajM, n=100)
-		for(i in 1:length(dens$x)) 
-			dens$z[i,dens$x[i]<dens$y] <- 0
-		cibounds <- quantile(dens$z, probs=pi/100)
-		if(npoints>0) {
-			sample.idx <- sample(1:length(trajF), npoints)
+		#dens <- kde2d(trajF, trajM, n=100)
+		#for(i in 1:length(dens$x)) 
+		#	dens$z[i,dens$x[i]<dens$y] <- 0
+		#cibounds <- quantile(dens$z, probs=1-pi/100)
+		if(nr.points > 0) {
+			sample.idx <- if(nr.points < length(trajF)) sample(1:length(trajF), nr.points) else 1:nr.points
 			Fpoints <- trajF[sample.idx]
 			Mpoints <- trajM[sample.idx]
-			points(Fpoints, Mpoints, pch='.', col=cols[iyear])
+			points(Fpoints, Mpoints, pch='.', col=col[iyear])
 		}
-		contour(dens, levels=cibounds, drawlabels=FALSE, add=TRUE, col=cols[iyear], ...)
+		if(length(pi) > 0) {
+			ellips <- dataEllipse(trajF, trajM, levels=pi/100, draw=FALSE)
+			if(length(pi) == 1) {
+				ellips <- list(ellips)
+				names(ellips) <- as.character(pi/100)
+			}
+			for(ipi in 1:length(pi)) {
+				# hack: modify points above the x=y line
+				el <- ellips[[as.character(pi[ipi]/100)]]
+				above <- el[,'x'] < el[,'y']
+				el[above,'y']<- el[above,'x']
+				lines(el, col=col[iyear], ...)
+			}
+			#contour(dens, levels=cibounds, drawlabels=TRUE, labels=pi, add=TRUE, col=col[iyear], ...)
+		}
 	}
-	periods <- bayesTFR:::get.prediction.periods(e0.pred$mcmc.set$meta, max(years.idx))[years.idx]
-	legend('topleft', legend=periods, col=cols, bty='n', lty=1)
+	if(show.legend) {
+		periods <- bayesTFR:::get.prediction.periods(e0.pred$mcmc.set$meta, max(years.idx))[years.idx]
+		legend('topleft', legend=periods, col=col, bty='n', lty=1)
+	}
 				
+}
+
+e0.trajectories.plot.all <- function(e0.pred, 
+									output.dir=file.path(getwd(), 'e0trajectories'),
+									output.type="png", verbose=FALSE, ...) {
+										
+	# plots e0 trajectories for all countries
+	.do.plot.all(e0.pred$mcmc.set$meta, output.dir, e0.trajectories.plot, output.type=output.type, verbose=verbose, e0.pred=e0.pred, ...)
 }
 
 e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALSE,
@@ -168,6 +217,7 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 		lwd <- rep(lwd, 5)
 		lwd[(llwd+1):5] <- c(2,2,2,2,1)[(llwd+1):5]
 	}
+	missing.col <- missing(col)
 	if(length(col) < 5) {
 		lcol <- length(col)
 		col <- rep(col, 5)
@@ -194,6 +244,10 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 				lcol <- length(col2)
 				col2 <- rep(col2, 5)
 				col2[(lcol+1):5] <- c('gray39', 'greenyellow', 'hotpink', 'hotpink', 'gray')[(lcol+1):5]
+			}
+			if(missing.col) {
+				col <- c('black', 'green', 'darkgreen', 'darkgreen', 'gray')
+				plotcols <- list(col)
 			}
 			plotcols <- c(list(col2), plotcols)
 			if(missing(nr.traj)) nr.traj <- 0
@@ -346,25 +400,11 @@ e0.DLcurve.plot.all <- function (mcmc.list = NULL, sim.dir = NULL,
 					output.dir = file.path(getwd(), "DLcurves"), 
 					output.type="png",
 					burnin = NULL, verbose = FALSE,  ...) {
-	if(!file.exists(output.dir)) dir.create(output.dir, recursive=TRUE)
 	if(is.null(mcmc.list)) mcmc.list <- get.e0.mcmc(sim.dir=sim.dir, verbose=verbose, burnin=burnin)
 	mc <- get.mcmc.list(mcmc.list)
 	meta <- mc[[1]]$meta
-	postfix <- output.type
-	if(output.type=='postscript') postfix <- 'ps'
-
-    for (country in 1:meta$nr.countries) {
-        country.obj <- get.country.object(country, meta, index=TRUE)
-        if (verbose) 
-            cat("Creating DL graph for", country.obj$name, '(', country.obj$code, ')\n')
-        do.call(output.type, list(file.path(output.dir, 
-										paste('DLplot_c', country.obj$code, '.', postfix, sep=''))))
-        e0.DLcurve.plot(mcmc.list = mcmc.list, country = country.obj$code, 
-            burnin = burnin, ...)
-        dev.off()
-    }
-    if (verbose) 
-        cat("\nDL plots stored into", output.dir, "\n")
+	.do.plot.all(meta, output.dir, e0.DLcurve.plot, output.type=output.type, 
+		file.prefix='DLplot', plot.type='DL graph', verbose=verbose, mcmc.list = mcmc.list, burnin = burnin, ...)
 }
 
 e0.get.dlcurves <- function(x, mcmc.list, country.code, country.index, burnin, nr.curves, predictive.distr=FALSE) {

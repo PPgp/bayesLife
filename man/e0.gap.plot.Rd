@@ -1,16 +1,21 @@
 \name{e0.gap.plot}
 \alias{e0.gap.plot}
+\alias{e0.gap.plot.all}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Posterior Distribution of Gaps in Female and Male Life Expectancy
 }
 \description{
-The function plots the posterior distribution of the gaps between female and male life expectancy, modeled and predicted using the joint model described in Lalic (2011).
+The functions plot the posterior distribution of the gaps between female and male life expectancy, modeled and predicted using a model described in Lalic (2011). This can be done for one country (\code{e0.gap.plot}) or for all countries (\code{e0.gap.plot.all}).
 }
 \usage{
 e0.gap.plot(e0.pred, country, e0.pred2 = NULL, pi = c(80, 95), 
     nr.traj = 0, xlim = NULL, ylim = NULL, type = "b", 
-    xlab = "Year", ylab = "Gap in life expectancy", main = NULL, \dots)
+    xlab = "Year", ylab = "Gap in life expectancy", main = NULL, 
+    show.legend = TRUE, \dots)
+    
+e0.gap.plot.all(e0.pred, output.dir = file.path(getwd(), "e0gaps"),
+    output.type = "png", verbose = FALSE, \dots)
 }
 
 \arguments{
@@ -20,7 +25,12 @@ e0.gap.plot(e0.pred, country, e0.pred2 = NULL, pi = c(80, 95),
   \item{pi}{Probability interval. It can be a single number or an array.}
   \item{nr.traj}{Number of trajectories to be plotted.}
   \item{xlim, ylim, type, xlab, ylab, main}{Graphical parameters passed to the \code{plot} function.}
-  \item{\dots}{Additional graphical parameters.}
+  \item{show.legend}{Logical controlling whether the legend should be drawn.}
+  \item{output.dir}{Directory into which resulting graphs are stored.}
+  \item{output.type}{Type of the resulting files. It can be \dQuote{png}, \dQuote{pdf}, \dQuote{jpeg}, \dQuote{bmp}, \dQuote{tiff}, or \dQuote{postscript}.}
+  \item{verbose}{Logical switching log messages on and off.}
+  \item{\dots}{Additional graphical parameters. In addition, for \code{e0.gap.plot.all}, \code{\dots} 
+  	contains any of the arguments of  \code{e0.gap.plot}.}
 }
 %\details{
 %%  ~~ If necessary, more details than the description above ~~
@@ -37,7 +47,7 @@ Hana Sevcikova
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{e0.jmale.estimate}}, \code{\link{e0.jmale.predict}}, \code{\link{get.e0.jmale.prediction}}
+\code{\link{e0.joint.plot}}, \code{\link{e0.jmale.estimate}}, \code{\link{e0.jmale.predict}}, \code{\link{get.e0.jmale.prediction}}
 }
 \examples{
 # See example for e0.jmale.predict

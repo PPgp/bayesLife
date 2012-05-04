@@ -13,8 +13,8 @@ using a Bayesian hierarchical model and the United Nations demographic time seri
 \tabular{ll}{
 Package: \tab bayesLife\cr
 Type: \tab Package\cr
-Version: \tab 0.3-3\cr
-Date: \tab 2012-04-18\cr
+Version: \tab 0.4-0\cr
+Date: \tab 2012-05-03\cr
 Depends: \tab R (>= 2.9.0), bayesTFR\cr
 License: \tab GPL (>= 2)\cr
 URL: \tab \url{http://bayespop.csss.washington.edu}\cr
@@ -66,10 +66,11 @@ Lalic, N. (2011). Master's thesis at the Department of Statistics, University of
   \code{\link[bayesTFR:bayesTFR-package]{bayesTFR}}
 }
 \examples{
+\dontrun{
 sim.dir <- tempfile()
 m <- run.e0.mcmc(sex='F', nr.chains=2, iter=60, seed=1, thin=2, 
      output.dir=sim.dir, verbose=TRUE)
 pred <- e0.predict(m, burnin=30, verbose=TRUE)
 summary(pred, country="Canada")
-unlink(sim.dir, recursive=TRUE)
+unlink(sim.dir, recursive=TRUE)}
 }

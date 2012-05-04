@@ -51,7 +51,7 @@ e0.predict <- function(mcmc.set=NULL, end.year=2100, sim.dir=file.path(getwd(), 
 					replace.output=replace.output,  
 					nr.traj=nr.traj, thin=thin, burnin=burnin, save.as.ascii=save.as.ascii,
 					output.dir=output.dir, verbose=verbose)
-	if(predict.jmale) 
+	if(predict.jmale && mcmc.set$meta$sex == 'F') 
 		pred <- e0.jmale.predict(pred, ..., verbose=verbose)
 	invisible(pred)
 }

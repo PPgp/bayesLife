@@ -11,9 +11,9 @@ Using the posterior parameter samples simulated by \code{\link{run.e0.mcmc}} the
 \usage{
 e0.predict(mcmc.set = NULL, end.year = 2100, 
     sim.dir = file.path(getwd(), "bayesLife.output"), replace.output = FALSE, 
-    nr.traj = NULL, thin = NULL, burnin = 20000, use.diagnostics = FALSE,
-    save.as.ascii = 1000, output.dir = NULL, low.memory = TRUE, seed = NULL, 
-    verbose = TRUE)
+    predict.jmale = TRUE, nr.traj = NULL, thin = NULL, burnin = 20000, 
+    use.diagnostics = FALSE, save.as.ascii = 1000, output.dir = NULL, 
+    low.memory = TRUE, seed = NULL, verbose = TRUE, \dots)
 }
 
 \arguments{
@@ -22,6 +22,7 @@ e0.predict(mcmc.set = NULL, end.year = 2100,
   \item{end.year}{End year of the prediction.}
   \item{sim.dir}{Directory with the MCMC simulation results. It should equal to the \code{output.dir} argument in \code{\link{run.e0.mcmc}}.}
   \item{replace.output}{Logical. If \code{TRUE}, existing predictions in \code{output.dir} will be replaced by results of this run.}
+  \item{predict.jmale}{Logical controlling if a joint female-male prediciton should be performed. This is done only if the underlying mcmcs in \code{sim.dir} correspond to a female simulation. In such a case the \code{\link{e0.jmale.predict}} is invoked. Arguments to this function can be passed in \dots.}
   \item{nr.traj}{Number of trajectories to be generated. If \code{NULL}, the argument \code{thin} is taken to determine the number of trajectories. If both are \code{NULL}, the number of trajectories corresponds to the minimum of the size of the parameter sample and 2000.}
   \item{thin}{Thinning interval used for determining the number of trajectories. Only relevant, if \code{nr.traj} is \code{NULL}.}
   \item{burnin}{Number of iterations to be discarded from the beginning of the parameter traces.}
@@ -31,6 +32,7 @@ e0.predict(mcmc.set = NULL, end.year = 2100,
   \item{low.memory}{Logical indicating if the prediction should run in a low-memory mode. If it is \code{FALSE}, the whole traces of all parameters, including the burnin, are loaded into memory. Otherwise, burnins are discarded and parameters are loaded as they are needed and are not kept in the memory.}
   \item{seed}{Seed of the random number generator. If \code{NULL} no seed is set. It can be used to generate reproducible projections.}
   \item{verbose}{Logical switching log messages on and off.}
+  \item{\dots}{Additional arguments passed to the \code{\link{e0.jmale.predict}} function.}
 }
 \details{
 The trajectories are generated using the double logistic function (Chunn et al. 2010). Parameter samples  simulated via \code{\link{run.e0.mcmc}} are used from all chains, from which the given burnin was discarded. They are evenly thinned to match \code{nr.traj} or using the \code{thin} argument. Such thinned parameter traces, collapsed into one chain, if they do not already exist, are stored on disk into the sub-directory \file{\{thinned_mcmc_\emph{t}_\emph{b}} where \emph{t} is the value  of \code{thin} and \emph{b} the value of \code{burnin} (see \code{\link{create.thinned.e0.mcmc}}). 
@@ -47,12 +49,13 @@ The resulting prediction object is saved into \file{\{output.dir\}/predictions}.
 	\item{traj.mean.sd}{A \eqn{n \times 2 \times p}{n x 2 x p} array holding the mean of all trajectories in the first column and the standard deviation in the second column.
 		\eqn{n} and \eqn{p} are the number of countries and number of projections, respectively.}
 	\item{nr.traj}{Number of trajectories.}
-	%\item{trf_matrix_reconstructed}{Matrix containing imputed TFR values on spots where the original TFR %matrix has missing values, i.e. between the last observed data point and the present year. }
+	\item{e0.matrix.reconstructed}{Matrix containing imputed e0 values on spots where the original e0 matrix has missing values, i.e. between the last observed data point and the present year. }
 	\item{output.directory}{Directory where trajectories corresponding to this prediction are stored.}
 	\item{nr.projections}{Number of projections.}
 	\item{burnin}{Burnin used for this prediction.}
 	\item{end.year}{The end year of this prediction.}
 	\item{mcmc.set}{Object of class \code{\link{bayesLife.mcmc.set}} used for this prediction, i.e. the burned, thinned, and collapsed MCMC chain.}
+	\item{joint.male}{If \code{\link{e0.jmale.predict}} was invoked, this is an object of class \code{bayesLife.prediction} containing male projections. In addition to the components above, it contains elements \code{fit} (estimation results from \code{\link{e0.jmale.estimate}}) and \code{meta.changes} (components of \code{\link{bayesLife.mcmc.meta}} that differ from the female meta component).}
 }
 \references{
 J. L. Chunn, A. E. Raftery, P. Gerland (2010): Bayesian Probabilistic Projections of Life Expectancy for All Countries.  Working Paper nr. 105, Center for Statistics and the Social Sciences, University of Washington. \url{http://www.csss.washington.edu/Papers}
@@ -66,7 +69,7 @@ Hana Sevcikova, using code from Jennifer Chunn
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{run.e0.mcmc}}, \code{\link{create.thinned.e0.mcmc}}, \code{\link{convert.e0.trajectories}}, 
+\code{\link{run.e0.mcmc}}, \code{\link{e0.jmale.predict}}, \code{\link{create.thinned.e0.mcmc}}, \code{\link{convert.e0.trajectories}}, 
 \code{\link{get.e0.prediction}}, \code{\link{summary.bayesLife.prediction}}
 }
 \examples{
