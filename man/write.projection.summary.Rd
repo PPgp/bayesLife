@@ -32,13 +32,14 @@ The second file, called \file{projection_summary.csv}, also comma-separated tabl
 		  \item{\dQuote{TimeID}: }{time identifier, extracted from the \code{\link[bayesTFR]{UN_time}} dataset in the \pkg{bayesTFR} package;}
 		  \item{\dQuote{e0}: }{the life expectancy for this variant, location and time period.}
 }
+If the simulation directory contains joint male predictions, summary files for those are created as well. In such a case, if \code{output.dir} is given, separate subdirectories for female and male are created.
 }
 
 \author{
 Hana Sevcikova
 }
 \note{
-This function is automatically called from the \code{\link{e0.predict}} function, therefore in standard cases it will not be needed to call it directly.
+This function is automatically called from the \code{\link{e0.predict}} and \code{\link{e0.jmale.predict}} functions, therefore in standard cases it will not be needed to call it directly.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

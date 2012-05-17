@@ -1,3 +1,7 @@
+0.4.1 (05/17/2012)
+-----
+Projection summary files are now automatically created also for joint male projections.
+
 0.4-0 (05/03/2012)
 -----
 Function for plotting joint distribution of female and male e0 added: e0.joint.plot.

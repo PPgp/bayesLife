@@ -51,7 +51,7 @@ e0.predict <- function(mcmc.set=NULL, end.year=2100, sim.dir=file.path(getwd(), 
 					replace.output=replace.output,  
 					nr.traj=nr.traj, thin=thin, burnin=burnin, save.as.ascii=save.as.ascii,
 					output.dir=output.dir, verbose=verbose)
-	if(predict.jmale && mcmc.set$meta$sex == 'F') 
+	if(predict.jmale && mcmc.set$meta$sex == 'F')
 		pred <- e0.jmale.predict(pred, ..., verbose=verbose)
 	invisible(pred)
 }
@@ -307,9 +307,20 @@ write.e0.projection.summary <- function(dir=file.path(getwd(), 'bayesLife.output
 									 output.dir=NULL, revision=14) {
 # Writes two prediction summary files, one in a user-friendly format, one in a UN-format.
 	pred <- get.e0.prediction(sim.dir=dir)
-	if (is.null(output.dir)) output.dir <- pred$output.directory
-	if(!file.exists(output.dir)) dir.create(output.dir, recursive=TRUE)
-	bayesTFR:::do.write.projection.summary(pred, output.dir, revision=revision)
+	predsex <- pred$mcmc.set$meta$sex
+	preds <- list()
+	preds[[predsex]] <- pred
+	if(has.e0.jmale.prediction(pred)) preds[['M']] <- get.e0.jmale.prediction(pred)
+	for (sex in c('F', 'M')) {
+		if(is.null(preds[[sex]])) next
+		if (is.null(output.dir)) outdir <- preds[[sex]]$output.directory
+		else {
+			if(length(preds) > 1) outdir <- file.path(output.dir,sex)
+			else outdir <- output.dir
+		}
+		if(!file.exists(outdir)) dir.create(outdir, recursive=TRUE)
+		bayesTFR:::do.write.projection.summary(preds[[sex]], outdir, revision=revision)
+	}
 }
 		
 					
@@ -413,6 +424,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18), my.e0.fil
 								gap.lim=gap.lim, verbose=verbose)
 	save(bayesLife.prediction, file=prediction.file)
 	cat('\nPrediction stored into', joint.male$output.directory, '\n')
+	bayesTFR:::do.write.projection.summary(pred=bayesLife.prediction, output.dir=joint.male$output.directory)
 	invisible(bayesLife.prediction)
 }
 

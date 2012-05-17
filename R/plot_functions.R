@@ -119,9 +119,9 @@ e0.joint.plot <- function(e0.pred, country, pi=95, years, nr.points=500,
 	years.idx <- years.idx[years.idx > 1]
 	if(length(years.idx) <= 0) 
 		stop('Argument years must have values within the range [', 
-							pred$end.year - pred$nr.projections*5, ',', pred$end.year, '].')
+							e0.pred$end.year - e0.pred$nr.projections*5, ',', e0.pred$end.year, '].')
 	if(length(years.idx) != length(years))
-		warning('Some years invalid. Valid range: [', pred$end.year - pred$nr.projections*5, ',', pred$end.year, '].')
+		warning('Some years invalid. Valid range: [', e0.pred$end.year - e0.pred$nr.projections*5, ',', e0.pred$end.year, '].')
 		
 	require(car)
 	
