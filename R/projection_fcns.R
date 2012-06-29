@@ -198,9 +198,23 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
 
 	var.par.names.cs <- c('Triangle.c', 'k.c', 'z.c')
 	
+	country.counter <- 0
+	gui.options <- list(bDem.e0pred.ncountries.total=length(prediction.countries))
+	#########################################
 	for (country in prediction.countries){
 	#for (country in c(23)){
 	#########################################
+		if(getOption('bDem.e0pred', default=FALSE)) {
+			# This is to unblock the GUI, if the run is invoked from bayesDem
+			# and pass info about its status
+			# In such a case the gtk libraries are already loaded
+			country.counter <- country.counter + 1
+			gui.options$bDem.e0pred.ncountries.done <- country.counter
+			options(gui.options)
+			while(do.call('gtkEventsPending', list()))
+				do.call('gtkMainIteration', list())
+		}
+
 		country.obj <- get.country.object(country, mcmc.set$meta, index=TRUE)
 		if (verbose) {			
  			cat('e0 projection for country', country, country.obj$name, 

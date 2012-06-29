@@ -24,7 +24,14 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
 	for(iter in start.iter:niter) {
 		if(verbose.iter > 0 && (iter %% verbose.iter == 0))
 			cat('\nIteration:', iter, '--', date())
-				
+			
+		if(getOption('bDem.e0mcmc', default=FALSE)) {
+			# This is to unblock the GUI, if the run is invoked from bayesDem
+			# In such a case the gtk libraries are already loaded
+			while(do.call('gtkEventsPending', list()))
+				do.call('gtkMainIteration', list())
+		}
+	
 		# Update Triangle, k, z using Gibbs sampler
 		###########################################
 		sum.Trkz.c <- rowSums(mcenv$Triangle.c)
@@ -118,6 +125,12 @@ e0.mcmc.sampling.extra <- function(mcmc, mcmc.list, countries, posterior.sample,
 	for(iter in 1:niter) {
 		if(verbose.iter > 0 && (iter %% verbose.iter == 0))
 			cat('\nIteration:', iter, '--', date())
+		if(getOption('bDem.e0mcmcExtra', default=FALSE)) {
+			# This is to unblock the GUI, if the run is invoked from bayesDem
+			# In such a case the gtk libraries are already loaded
+			while(do.call('gtkEventsPending', list()))
+				do.call('gtkMainIteration', list())
+		}
 		# set hyperparameters for this iteration
         for (par in hyperparameter.names) {
         	if(is.null(dim(hyperparameters[[par]]))) {

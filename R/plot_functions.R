@@ -137,7 +137,7 @@ e0.joint.plot <- function(e0.pred, country, pi=95, years, nr.points=500,
 		country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
 		if(is.null(main)) main <- country.obj$name
 		plot(c(minxy, maxxy), c(minxy, maxxy), type='n', xlab=xlab, ylab=ylab, 
-				xlim=xlim, ylim=ylim, main=main, panel.first = grid())
+				xlim=xlim, ylim=ylim, main=main, panel.first = grid(), ...)
 		abline(0,1)
 	}
 	col <- if(is.null(col)) rainbow(length(years.idx)) else rep(col, length(years.idx))
@@ -165,7 +165,7 @@ e0.joint.plot <- function(e0.pred, country, pi=95, years, nr.points=500,
 				el <- ellips[[as.character(pi[ipi]/100)]]
 				above <- el[,'x'] < el[,'y']
 				el[above,'y']<- el[above,'x']
-				lines(el, col=col[iyear], ...)
+				lines(el, col=col[iyear])
 			}
 			#contour(dens, levels=cibounds, drawlabels=TRUE, labels=pi, add=TRUE, col=col[iyear], ...)
 		}
