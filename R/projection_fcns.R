@@ -171,6 +171,7 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
 	thinned.mcmc <- get.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin)
 	has.thinned.mcmc <- (!is.null(thinned.mcmc) && thinned.mcmc$meta$parent.iter == total.iter 
 							&& mcmc.set$meta$nr.countries == thinned.mcmc$meta$nr.countries)
+	unblock.gtk('bDem.e0pred')
 	if(has.thinned.mcmc){
 		 if(create.thinned.mcmc.extra) 
 		 	load.mcmc.set <- create.thinned.e0.mcmc.extra(mcmc.set, thinned.mcmc, countries=countries, 
@@ -199,7 +200,8 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
 	var.par.names.cs <- c('Triangle.c', 'k.c', 'z.c')
 	
 	country.counter <- 0
-	gui.options <- list(bDem.e0pred.ncountries.total=length(prediction.countries))
+	status.for.gui <- paste('out of', length(prediction.countries), 'countries.')
+	gui.options <- list()
 	#########################################
 	for (country in prediction.countries){
 	#for (country in c(23)){
@@ -209,10 +211,8 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
 			# and pass info about its status
 			# In such a case the gtk libraries are already loaded
 			country.counter <- country.counter + 1
-			gui.options$bDem.e0pred.ncountries.done <- country.counter
-			options(gui.options)
-			while(do.call('gtkEventsPending', list()))
-				do.call('gtkMainIteration', list())
+			gui.options$bDem.e0pred.status <- paste('finished', country.counter, status.for.gui)
+			unblock.gtk('bDem.e0pred', gui.options)
 		}
 
 		country.obj <- get.country.object(country, mcmc.set$meta, index=TRUE)
@@ -366,6 +366,7 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 								my.e0.file=NULL, verbose=FALSE) {
 	# Estimate coefficients for joint prediction of female and male e0
 	require(hett)
+	unblock.gtk('bDem.e0pred', list(bDem.e0pred.status='estimating joint male'))
 	if (is.null(countries.index)) countries.index <- 1:get.nr.countries.est(mcmc.set$meta)
 	e0f.data <- get.data.matrix(mcmc.set$meta)[,countries.index]
 	e0m.data <- get.wpp.e0.data.for.countries(mcmc.set$meta, sex='M', my.e0.file=my.e0.file,
@@ -478,6 +479,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18), my.e0.fil
 
 
 .do.jmale.predict <- function(e0.pred, joint.male, countries, gap.lim, verbose=FALSE) {
+	unblock.gtk('bDem.e0pred', list(bDem.e0pred.status='predicting joint male'))
 	bayesLife.prediction <- e0.pred
 	bayesLife.prediction$joint.male <- joint.male
 	meta <- e0.pred$mcmc.set$meta
