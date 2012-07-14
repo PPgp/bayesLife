@@ -1,24 +1,3 @@
-.do.plot.all <- function(meta, output.dir, func, output.type="png", 
-						file.prefix='e0plot', plot.type='e0 graph',
-						verbose=FALSE, ...) {
-	# processes plotting function func for all countries
-	if(!file.exists(output.dir)) dir.create(output.dir, recursive=TRUE)
-	all.countries <- country.names(meta)
-	postfix <- output.type
-	if(output.type=='postscript') postfix <- 'ps'
-	for (country in all.countries) {
-		country.obj <- get.country.object(country, meta)
-		if(verbose)
-			cat('Creating', plot.type, 'for', country, '(', country.obj$code, ')\n')
-
-		do.call(output.type, list(file.path(output.dir, 
-										paste(file.prefix,'_c', country.obj$code, '.', postfix, sep=''))))
-		do.call(func, list(country=country.obj$code, ...))
-		dev.off()
-	}
-	if(verbose)
-		cat('\nPlots stored into', output.dir, '\n')					
-}
 
 e0.gap.plot.all <- function(e0.pred, output.dir=file.path(getwd(), 'e0gaps'),
 							output.type="png", verbose=FALSE, ...) {
@@ -106,7 +85,7 @@ e0.gap.plot <- function(e0.pred, country, e0.pred2=NULL, pi=c(80, 95), nr.traj=0
 e0.joint.plot.all <- function(e0.pred, output.dir=file.path(getwd(), 'e0joint'),
 							output.type="png", verbose=FALSE, ...) {
 	# plots e0 joint projections for all countries
-	.do.plot.all(e0.pred$mcmc.set$meta, output.dir, e0.joint.plot, output.type=output.type, 
+	bayesTFR:::.do.plot.all(e0.pred$mcmc.set$meta, output.dir, e0.joint.plot, output.type=output.type, 
 		file.prefix='e0jplot', plot.type='e0 joint F-M graph', verbose=verbose, e0.pred=e0.pred, ...)
 }
 
@@ -182,7 +161,8 @@ e0.trajectories.plot.all <- function(e0.pred,
 									output.type="png", verbose=FALSE, ...) {
 										
 	# plots e0 trajectories for all countries
-	.do.plot.all(e0.pred$mcmc.set$meta, output.dir, e0.trajectories.plot, output.type=output.type, verbose=verbose, e0.pred=e0.pred, ...)
+	bayesTFR:::.do.plot.all(e0.pred$mcmc.set$meta, output.dir, e0.trajectories.plot, output.type=output.type, 
+		file.prefix='e0plot', plot.type='e0 graph', verbose=verbose, e0.pred=e0.pred, ...)
 }
 
 e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALSE,
@@ -403,7 +383,7 @@ e0.DLcurve.plot.all <- function (mcmc.list = NULL, sim.dir = NULL,
 	if(is.null(mcmc.list)) mcmc.list <- get.e0.mcmc(sim.dir=sim.dir, verbose=verbose, burnin=burnin)
 	mc <- get.mcmc.list(mcmc.list)
 	meta <- mc[[1]]$meta
-	.do.plot.all(meta, output.dir, e0.DLcurve.plot, output.type=output.type, 
+	bayesTFR:::.do.plot.all(meta, output.dir, e0.DLcurve.plot, output.type=output.type, 
 		file.prefix='DLplot', plot.type='DL graph', verbose=verbose, mcmc.list = mcmc.list, burnin = burnin, ...)
 }
 
