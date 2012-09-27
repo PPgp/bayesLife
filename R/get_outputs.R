@@ -370,10 +370,35 @@ create.thinned.e0.mcmc.extra <- function(mcmc.set, thinned.mcmc.set, countries, 
 	}	
 }
 
-get.e0.trajectories <- function(e0.pred, country) 
+get.e0.trajectories <- function(e0.pred, country) {
+	# country can be a name; returns only trajectories
 	return(bayesTFR:::get.tfr.trajectories(e0.pred, country=country))
-	
-	
+}
+
+get.e0.trajectories.object <- function(e0.pred, country, nr.traj=NULL, typical.trajectory=FALSE, pi=NULL, ...) {
+	# here country must be a code; returns also indices
+	if(is.list(e0.pred) && class(e0.pred[[1]]) == 'bayesLife.prediction' && class(e0.pred[[2]]) == 'bayesLife.prediction'){
+		traj1 <- bayesTFR:::get.trajectories(e0.pred[[1]], country, nr.traj=NULL, ...) # we want all trajectories
+		traj2 <- bayesTFR:::get.trajectories(e0.pred[[2]], country, nr.traj=NULL, ...)
+		traj.res <- traj1$trajectories - (traj1$trajectories - traj2$trajectories)/2.
+		if(typical.trajectory) 
+			traj.idx <- bayesTFR:::get.typical.trajectory.index(traj.res)
+		else {
+			thintraj <- bayesTFR:::get.thinning.index(nr.traj, dim(traj.res)[2]) 
+			traj.idx <- thintraj$index
+		}
+		cqp <- list()
+		if(!is.null(pi)) {
+			for(i in 1:length(pi)) {
+				al <- (1-pi[i]/100)/2
+				cqp[[i]] <- apply(traj.res, 1, quantile, c(al, 1-al), na.rm = TRUE)
+			}
+		}
+		return(list(trajectories=traj.res, index=traj.idx, median=apply(traj.res, 1, median, na.rm=TRUE), quantiles=cqp))
+	}
+	return(bayesTFR:::get.trajectories(e0.pred, country, nr.traj=nr.traj, typical.trajectory=typical.trajectory, ...))
+}
+
 get.nr.countries.bayesLife.mcmc.meta <- function(meta, ...) return (meta$nr.countries)
 get.nr.countries.est.bayesLife.mcmc.meta <- function(meta, ...) return (meta$nr.countries.estimation)
 

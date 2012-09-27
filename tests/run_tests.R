@@ -10,4 +10,6 @@ test.plot.density()
 test.get.parameter.traces()
 test.plot.map()
 
-#test.run.mcmc.simulation.auto()
+test.plot.all()
+test.estimate.mcmc.with.overwrites()
+test.run.mcmc.simulation.auto()

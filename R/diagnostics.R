@@ -19,13 +19,12 @@ e0.diagnose <- function(sim.dir, thin=120, burnin=20000, express=FALSE,
 	
 }
 
-e0.GoF.dl <- function(sim.dir, pi=c(80,90,95), burnin=20000, verbose=TRUE) {
+e0.dl.coverage <- function(sim.dir, pi=c(80,90,95), burnin=20000, verbose=TRUE) {
 	if(has.e0.prediction(sim.dir=sim.dir)) {
 		pred <- get.e0.prediction(sim.dir=sim.dir)
 		mcmc.set <- pred$mcmc.set
 		burnin = 0 # because the prediction mcmc.set is already burned and collapsed
 	} else mcmc.set <- get.e0.mcmc(sim.dir)
-	#return(bayesTFR:::.doGoF.dl(mcmc.set, pi=pi, type='e0', burnin=burnin, verbose=verbose))
 	return(.do.e0GoF.dl(mcmc.set, pi=pi, burnin=burnin, verbose=verbose))
 }
 
@@ -96,7 +95,7 @@ e0.DLisDecrement <- function() {
 	total.mse <- total.mse/sum(counter)
 	pi.names <- paste(pi, '%', sep='')
 	names(total.GoF) <- pi.names
-	names(total.mse) <- 'MSE'
+	names(total.mse) <- 'RMSE'
 	rowsum.counter <- rowSums(counter)
 	for(row in 1:nrow(time.GoF)) {
 		time.GoF[row,] <- time.GoF[row,]/rowsum.counter
@@ -114,7 +113,7 @@ e0.DLisDecrement <- function() {
 	country.GoF[is.nan(country.GoF)] <- NA
 	country.mse[is.nan(country.mse)] <- NA
 	if(verbose) cat('Done.\n')
-	return(list(total.gof=total.GoF, time.gof=time.GoF, country.gof=country.GoF,
-				total.mse=total.mse, time.mse=time.mse, country.mse=country.mse,
+	return(list(total.coverage=total.GoF, time.coverage=time.GoF, country.coverage=country.GoF,
+				total.rmse=sqrt(total.mse), time.rmse=sqrt(time.mse), country.rmse=sqrt(country.mse),
 				n=counter))
 }

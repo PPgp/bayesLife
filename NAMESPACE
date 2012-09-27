@@ -31,7 +31,7 @@ export(
 	has.e0.jmale.prediction,
 	get.e0.convergence.all,
 	get.e0.convergence,
-	e0.GoF.dl,
+	e0.dl.coverage,
 	e0.parameter.names.extended,
 	e0.parameter.names.cs.extended,
 	e0.parameter.names,

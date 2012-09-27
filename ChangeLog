@@ -1,3 +1,14 @@
+0.4-2
+-----
+Function e0.GoF.dl renamed to e0.dl.coverage. Its MSE output changed to RMSE.
+
+Internal changes in *.plot.all functions. 
+
+e0.trajectories.table can return numbers for both sexes at once (added argument both.sexes).
+
+In e0.trajectories.plot and e0.trajectories.table, added an option of outputting average female-male e0. Set both.sexes='A'.
+
+
 0.4.1 (05/17/2012)
 -----
 Projection summary files are now automatically created also for joint male projections.

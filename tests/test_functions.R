@@ -203,6 +203,25 @@ test.e0trajectories <- function() {
 	test.ok(test.name)
 }
 
+test.plot.all <- function() {
+	test.name <- 'plotting e0 trajectories and DL curves for all countries'
+	start.test(test.name)
+	sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
+	pred <- get.e0.prediction(sim.dir=sim.dir)
+	mc <- get.e0.mcmc(sim.dir)
+	dir <- tempfile()
+	dir.create(dir)
+	e0.trajectories.plot.all(pred, output.dir=dir, main='XXX trajs')
+	trajf <- length(list.files(dir, pattern='png$', full.names=FALSE))
+	e0.DLcurve.plot.all(mc, output.dir=dir, main='DL XXX', output.type='jpeg')
+	dlf <- length(list.files(dir, pattern='jpeg$', full.names=FALSE))
+	unlink(dir, recursive=TRUE)
+	stopifnot(trajf == get.nr.countries(mc$meta))
+	stopifnot(dlf == get.nr.countries(mc$meta))
+	test.ok(test.name)
+}
+
+
 test.plot.density <- function() {
 	test.name <- 'plotting parameter density'
 	start.test(test.name)
@@ -224,7 +243,7 @@ test.plot.map <- function() {
 	sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
 	pred <- get.e0.prediction(sim.dir=sim.dir)
 	filename <- tempfile()
-	e0.map(pred, projection.year=2098, device='png', device.args=list(filename=filename))
+	e0.map(pred, year=2098, device='png', device.args=list(filename=filename))
 	dev.off()
 	size <- file.info(filename)['size']
 	unlink(filename)
@@ -236,7 +255,7 @@ test.plot.map <- function() {
 	sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
 	pred <- get.e0.prediction(sim.dir=sim.dir)
 	filename <- tempfile()
-	e0.map(pred, projection.year=1974, device='png', device.args=list(filename=filename))
+	e0.map(pred, year=1974, device='png', device.args=list(filename=filename))
 	dev.off()
 	size <- file.info(filename)['size']
 	unlink(filename)
@@ -302,7 +321,8 @@ test.estimate.mcmc.with.overwrites <- function() {
 	start.test(test.name)
 	overwrites <- data.frame(country_code=c(562, 686), #Niger, Senegal (index 17, 18)
 							k.c.prior.up=c(5, 7),
-							Triangle_3.c.prior.low=c(NA, 0)
+							Triangle_3.c.prior.low=c(NA, 0),
+							Triangle_3.c.prior.up=c(0, NA)
 						)
 	# run MCMC
     m <- run.e0.mcmc(nr.chains=1, iter=50, thin=1, output.dir=sim.dir, 
@@ -316,7 +336,7 @@ test.estimate.mcmc.with.overwrites <- function() {
     #check traces		
     traces.Niger <- get.e0.parameter.traces.cs(m$mcmc.list, get.country.object('Niger', m$meta), 
     					par.names=c('Triangle.c', 'k.c'))
-	stopifnot(all(traces.Niger[,'k.c_c562'] <= 5) && any(traces.Niger[,'Triangle.c_3_c562'] < 0))
+	stopifnot(all(traces.Niger[,'k.c_c562'] <= 5) && all(traces.Niger[,'Triangle.c_3_c562'] <= 0))
 	traces.Sen <- get.e0.parameter.traces.cs(m$mcmc.list, get.country.object('Senegal', m$meta), 
     					par.names=c('Triangle.c', 'k.c'))
 	stopifnot(any(traces.Sen[,'k.c_c686'] > 5) && all(traces.Sen[,'k.c_c686'] < 7) && all(traces.Sen[,'Triangle.c_3_c686'] >= 0))

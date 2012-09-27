@@ -7,7 +7,7 @@
 World Map of the Life Expectancy 
 }
 \description{
-Generates a world map of the life expectancy for given projection period and quantile.
+Generates a world map of the life expectancy for given quantile and projection or estimation period.
 }
 \usage{
 e0.map(pred, \dots)
@@ -29,15 +29,15 @@ e0.map.gvis(pred, \dots)
  \item{e0.range}{Range of the life expectancy to be displayed. It is of the form \code{c(}\var{e0.min}, \var{e0.max}\code{)}.
  By default, the whole range is considered. Note that countries with values outside of the given range will appear white.}
   \item{nr.cats}{Number of color categories.}
-  \item{same.scale}{Logical controlling if maps for all projection years of this prediction object should be on the same color scale.}
+  \item{same.scale}{Logical controlling if maps for all years of this prediction object should be on the same color scale.}
    \item{quantile}{Quantile for which the map should be generated. It must be equal to one of the values in \code{dimnames(pred$quantiles[[2]])}, i.e. 0, 0.025, 0.05, 0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9, 0.95, 0.975, 1. Value 0.5 corresponds to the median.}
   \item{file.prefix}{Prefix for file names.}
-  \item{\dots}{In \code{e0.map}, \dots are all arguments that can be passed to \code{\link[bayesTFR]{tfr.map}}, such as \code{quantile}, \code{projection.year}, \code{projection.index}, \code{par.name}, \code{adjusted}, \code{device}, \code{main}, and \code{device.args}. In \code{e0.map.gvis}, \dots are all arguments that can be passed to \code{\link[bayesTFR]{tfr.map.gvis}}. In addition, the first three functions accept
+  \item{\dots}{In \code{e0.map}, \dots are all arguments that can be passed to \code{\link[bayesTFR]{tfr.map}}, such as \code{quantile}, \code{year}, \code{projection.index}, \code{par.name}, \code{adjusted}, \code{device}, \code{main}, \code{device.args}, and \code{data.args}. In \code{e0.map.gvis}, \dots are all arguments that can be passed to \code{\link[bayesTFR]{tfr.map.gvis}}. In addition, the first three functions accept
 arguments passed to the \code{\link[rworldmap]{mapCountryData}} function of the \pkg{rworldmap} package.
 }
 }
 \details{
-\code{e0.map} creates a single map for a given projection period and quantile. \code{e0.map.all} generates a sequence of maps, namely one for each projection period. If the package \pkg{fields} is installed, a color bar legend at the botom of the map is created.
+\code{e0.map} creates a single map for the given time period and quantile. \code{e0.map.all} generates a sequence of maps, namely one for each projection period. If the package \pkg{fields} is installed, a color bar legend at the botom of the map is created.
 
 Function \code{get.e0.map.parameters} can be used in combination with \code{e0.map}. (Note that \code{get.e0.map.parameters} is called from inside of \code{e0.map.all}.) It sets breakpoints for the color scheme using quantiles of a fitted gamma distribution.
 
@@ -59,6 +59,7 @@ By default, both \code{e0.map} and \code{e0.map.gvis} produce maps of life expec
 Hana Sevcikova, Adrian Raftery
 }
 
+\seealso{\code{\link[bayesTFR]{tfr.map}}}
 
 \examples{
 \dontrun{
@@ -70,7 +71,7 @@ e0.map(pred)
 params <- get.e0.map.parameters(pred)
 do.call('e0.map', params)
 # Another projection year on the same scale
-do.call('e0.map', c(list(projection.year=2043), params))
+do.call('e0.map', c(list(year=2043), params))
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
