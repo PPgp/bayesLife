@@ -1,6 +1,6 @@
 0.4-2
 -----
-Function e0.GoF.dl renamed to e0.dl.coverage. Its MSE output changed to RMSE.
+Function e0.GoF.dl renamed to e0.dl.coverage. Its MSE output changed to RMSE. Added MAE and cumm.CDF.
 
 Internal changes in *.plot.all functions. 
 

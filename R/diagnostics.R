@@ -50,10 +50,11 @@ e0.DLisDecrement <- function() {
 	total.GoF <- rep(0, length(pi))
 	time.GoF <- matrix(0, nrow=length(pi), ncol=T.total-1)
 	country.GoF <- matrix(0, nrow=length(pi), ncol=max(countries.index))
-	total.mse <- 0
-	time.mse <- rep(0, T.total-1)
-	country.mse <- rep(0, max(countries.index))
+	total.mse <- total.mae <- 0
+	time.mse <- time.mae <- rep(0, T.total-1)
+	country.mse <- country.mae <- rep(0, max(countries.index))
 	counter <- matrix(0, ncol=max(countries.index), nrow=T.total-1)
+	pred.cdf <- matrix(NA, ncol=max(countries.index), nrow=T.total-1)
 	if(verbose) cat('\nAssessing goodness of fit for country ')
 	for(icountry in countries.index) {
 		if(verbose) cat(icountry, ', ')
@@ -83,12 +84,20 @@ e0.DLisDecrement <- function() {
         		time.GoF[i,valid.time.all[itime]] <- time.GoF[i,valid.time.all[itime]] + (observed[itime] >= dlpi[1,itime] & observed[itime] <= dlpi[2,itime])
         	}
         }
+        for(itime in 1:length(valid.time.all)) {
+        	rankdistr <- rank(c(dlc[,itime], observed[itime]))
+        	pred.cdf[valid.time.all[itime], icountry] <- rankdistr[nrow(dlc)+1]/(nrow(dlc)+1)
+		}
+        dlmean <- apply(dlc, 2, mean)
         dlmedian <- apply(dlc, 2, median)
-        country.mse[icountry] <- sum((observed-dlmedian)^2)
+        country.mse[icountry] <- sum((observed-dlmean)^2)
+        country.mae[icountry] <- sum(abs(observed-dlmedian))
         total.mse <- total.mse + country.mse[icountry]
-        for(itime in 1:length(valid.time.all))
-        	time.mse[valid.time.all[itime]] <- time.mse[valid.time.all[itime]] + (observed[itime] - dlmedian[itime])^2
-        
+        total.mae <- total.mae + country.mae[icountry]
+        for(itime in 1:length(valid.time.all)) {
+        	time.mse[valid.time.all[itime]] <- time.mse[valid.time.all[itime]] + (observed[itime] - dlmean[itime])^2
+        	time.mae[valid.time.all[itime]] <- time.mae[valid.time.all[itime]] + abs(observed[itime] - dlmedian[itime])
+        }
 	}
 	if(verbose) cat('\n')	
 	total.GoF <- total.GoF/sum(counter)
@@ -96,24 +105,31 @@ e0.DLisDecrement <- function() {
 	pi.names <- paste(pi, '%', sep='')
 	names(total.GoF) <- pi.names
 	names(total.mse) <- 'RMSE'
+	names(total.mae) <- 'MAE'
 	rowsum.counter <- rowSums(counter)
 	for(row in 1:nrow(time.GoF)) {
 		time.GoF[row,] <- time.GoF[row,]/rowsum.counter
 	}
 	time.mse <- time.mse/rowsum.counter
+	time.mae <- time.mae/rowsum.counter
 	dimnames(time.GoF) <- list(pi.names, T.names)
 	names(time.mse) <- T.names
+	names(time.mae) <- T.names
 	colsum.counter <- colSums(counter)
 	for(row in 1:nrow(country.GoF)) {
 		country.GoF[row,] <- country.GoF[row,]/colsum.counter
 	}
 	country.mse <- country.mse/colsum.counter
+	country.mae <- country.mae/colsum.counter
 	dimnames(country.GoF) <- list(pi.names, meta$regions$country_code[1:max(countries.index)])
 	names(country.mse) <- meta$regions$country_code[1:max(countries.index)]
+	names(country.mae) <- meta$regions$country_code[1:max(countries.index)]
 	country.GoF[is.nan(country.GoF)] <- NA
 	country.mse[is.nan(country.mse)] <- NA
+	country.mae[is.nan(country.mae)] <- NA
 	if(verbose) cat('Done.\n')
 	return(list(total.coverage=total.GoF, time.coverage=time.GoF, country.coverage=country.GoF,
 				total.rmse=sqrt(total.mse), time.rmse=sqrt(time.mse), country.rmse=sqrt(country.mse),
-				n=counter))
+				total.mae=total.mae, time.mae=time.mae, country.mae=country.mae,
+				pred.cdf=pred.cdf, n=counter))
 }
