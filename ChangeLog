@@ -1,5 +1,9 @@
-0.4-2
+0.5-0 (10/11/2012)
 -----
+Option old.ages.constant.gap added to e0.jmale.predict. If True the gap for older ages stays constant.
+
+Bug in e0.jmale.predict fixed (related to writing out results).
+
 Function e0.GoF.dl renamed to e0.dl.coverage. Its MSE output changed to RMSE. Added MAE and cumm.CDF.
 
 Internal changes in *.plot.all functions. 

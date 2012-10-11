@@ -9,13 +9,14 @@ Prediction of the joint female-male model of life expectancy, as described in La
 }
 \usage{
 e0.jmale.predict(e0.pred, estimates = NULL, gap.lim = c(0, 18), 
-    my.e0.file = NULL, verbose = TRUE, \dots)
+    old.ages.constant.gap=TRUE, my.e0.file = NULL, verbose = TRUE, \dots)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{e0.pred}{Object of class \code{\link{bayesLife.prediction}} containing female projections of life expectancy.}
   \item{estimates}{List of the same structure as returned by \code{\link{e0.jmale.estimate}}, containing the model estimation results. If it is not given, the \code{\link{e0.jmale.estimate}} function is invoked.}
   \item{gap.lim}{Vector of length two giving the minimum and maximum bounds for the female-male life expectancy gaps.}
+  \item{old.ages.constant.gap}{Logical. If \code{TRUE} the coefficient of the second equation (see \code{\link{e0.jmale.estimate}}) is set to one.}
   \item{my.e0.file}{File name containing user-specified male time series for one or more countries. The function replaces the corresponding country data from the UN WPP file by values in this file. Only columns are replaced that match column names of the WPP file.}
   \item{verbose}{Logical switching log messages on and off.}
   \item{\dots}{Further arguments passed to \code{\link{e0.jmale.estimate}}.}
@@ -44,7 +45,7 @@ Hana Sevcikova
 sim.dir <- tempfile()
 m <- run.e0.mcmc(sex='F', nr.chains=1, iter=30, thin=1, output.dir=sim.dir)
 pred <- e0.predict(m, burnin=15, verbose=FALSE, save.as.ascii=0)
-both.pred <- e0.jmale.predict(pred)
+both.pred <- e0.jmale.predict(pred, old.ages.constant.gap=FALSE)
 e0.trajectories.plot(both.pred, 'Guatemala') # Female
 e0.trajectories.plot(get.e0.jmale.prediction(both.pred), 'Guatemala') # Male
 

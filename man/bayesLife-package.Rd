@@ -13,8 +13,8 @@ using a Bayesian hierarchical model and the United Nations demographic time seri
 \tabular{ll}{
 Package: \tab bayesLife\cr
 Type: \tab Package\cr
-Version: \tab 0.4-1\cr
-Date: \tab 2012-05-17\cr
+Version: \tab 0.5-0\cr
+Date: \tab 2012-10-11\cr
 Depends: \tab R (>= 2.9.0), bayesTFR\cr
 License: \tab GPL (>= 2)\cr
 URL: \tab \url{http://bayespop.csss.washington.edu}\cr
@@ -38,7 +38,7 @@ A number of functions analyzing results are included in the package:
 \item \link{summary.bayesLife.mcmc.set}: Summary function for the MCMC results.
 \item \link{summary.bayesLife.prediction}: Summary function for the prediction results.
 }
-For MCMC diagnostics, function \link{e0.coda.list.mcmc} creates an object of type \dQuote{mcmc.list} that can be used with the \pkg{coda} package.  Furthermore, function \link{e0.diagnose} analyzes the MCMCs using the Raftery diagnostics implemented in the \pkg{coda} package and gives information about parameters that did not converge. Function \link{e0.GoF.dl} computes a goodness of fit of the double logistic function.
+For MCMC diagnostics, function \link{e0.coda.list.mcmc} creates an object of type \dQuote{mcmc.list} that can be used with the \pkg{coda} package.  Furthermore, function \link{e0.diagnose} analyzes the MCMCs using the Raftery diagnostics implemented in the \pkg{coda} package and gives information about parameters that did not converge. Function \link{e0.dl.coverage} computes a goodness of fit of the double logistic function.
 
 Existing simulation results can be accessed using the \link{get.e0.mcmc} function.  An existing prediction can be accessed via \link{get.e0.prediction}.
 

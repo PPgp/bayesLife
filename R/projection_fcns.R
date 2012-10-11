@@ -409,7 +409,7 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 				))
 }
 
-e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18), my.e0.file=NULL, verbose=TRUE, ...) {
+e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18), old.ages.constant.gap=TRUE, my.e0.file=NULL, verbose=TRUE, ...) {
 	# Predicting male e0 from female predictions. estimates is the result of 
 	# the e0.jmale.estimate function. If it is NULL, the estimation is performed 
 	# using the ... arguments
@@ -420,6 +420,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18), my.e0.fil
 	if(is.null(estimates)) 
 		estimates <- e0.jmale.estimate(e0.pred$mcmc.set, verbose=verbose, ...)
 
+	if(old.ages.constant.gap) estimates$eq2$coefficients['Gprev'] <- 1
 	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, verbose=verbose)
 	e0m.data <- e0mwpp$e0.matrix
 	meta.changes <- list(sex='M', e0.matrix=e0m.data, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
@@ -439,7 +440,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18), my.e0.fil
 								gap.lim=gap.lim, verbose=verbose)
 	save(bayesLife.prediction, file=prediction.file)
 	cat('\nPrediction stored into', joint.male$output.directory, '\n')
-	bayesTFR:::do.write.projection.summary(pred=bayesLife.prediction, output.dir=joint.male$output.directory)
+	bayesTFR:::do.write.projection.summary(pred=get.e0.jmale.prediction(bayesLife.prediction), output.dir=joint.male$output.directory)
 	invisible(bayesLife.prediction)
 }
 

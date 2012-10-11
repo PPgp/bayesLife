@@ -21,7 +21,8 @@ e0.trajectories.plot.all(e0.pred,
     output.dir = file.path(getwd(), 'e0trajectories'),
     output.type = "png", verbose = FALSE, \dots)
 	
-e0.trajectories.table(e0.pred, \dots)
+e0.trajectories.table(e0.pred, country, pi = c(80, 95), 
+    both.sexes = FALSE, \dots)
 }
 
 \arguments{
