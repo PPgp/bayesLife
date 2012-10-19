@@ -29,7 +29,7 @@ get.wpp.e0.data <- function(sex='M', start.year=1950, present.year=2010, wpp.yea
 	if (verbose) 
 		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')
 
-	LEXmatrixsuppl.regions <- .get.suppl.matrix.and.regions(un.object, LEXmatrix.regions, loc_data, 
+	LEXmatrixsuppl.regions <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, LEXmatrix.regions, loc_data, 
 									start.year, present.year)
 	if(!is.null(un.object$suppl.data.object) && verbose) 
 		cat('Dimension of the supplemental e0 matrix:', dim(LEXmatrixsuppl.regions$obs_matrix), '\n')
@@ -38,38 +38,8 @@ get.wpp.e0.data <- function(sex='M', start.year=1950, present.year=2010, wpp.yea
 				e0.matrix.all=LEXmatrix.regions$obs_matrix_all, 
 				regions=LEXmatrix.regions$regions, 
 				nr.countries.estimation=nr_countries_estimation,
-				suppl.data=list(
-					e0.matrix=if(!is.null(LEXmatrixsuppl.regions)) LEXmatrixsuppl.regions$obs_matrix else NULL,
-					regions=if(!is.null(LEXmatrixsuppl.regions)) LEXmatrixsuppl.regions$regions else NULL,
-					index.to.all.countries=if(!is.null(LEXmatrixsuppl.regions)) 
-									LEXmatrixsuppl.regions$all.countries.index else NULL,
-					index.from.all.countries=if(!is.null(LEXmatrixsuppl.regions)) 
-									LEXmatrixsuppl.regions$index.from.all.countries else NULL)
+				suppl.data=bayesTFR:::.get.suppl.data.list(LEXmatrixsuppl.regions, matrix.name='e0.matrix')
 				))
-}
-
-.get.suppl.matrix.and.regions <- function(un.object, LEXmatrix.regions, loc_data, start.year, present.year) {
-	LEXmatrixsuppl.regions <- NULL
-	if(is.null(un.object$suppl.data.object)) return(NULL)
-	suppl.data <- un.object$suppl.data.object$data
-	include <- which(is.element(suppl.data[,'country_code'], LEXmatrix.regions$regions$country_code))
-	if(length(include) > 0)
-		LEXmatrixsuppl.regions <- bayesTFR:::get.observed.time.matrix.and.regions(
-							suppl.data[include,], loc_data, 
-							start.year=start.year, 
-							present.year=present.year)
-	if(!is.null(LEXmatrixsuppl.regions)) {
-		LEXmatrixsuppl.regions$all.countries.index <- c()
-		index.from.all <- rep(NA, length(LEXmatrix.regions$regions$country_code))
-		for(i in 1:length(suppl.data[include,'country_code'])) {
-			incl.idx <- which(is.element(LEXmatrix.regions$regions$country_code,
-												suppl.data[include,'country_code'][i]))
-			LEXmatrixsuppl.regions$all.countries.index <- c(LEXmatrixsuppl.regions$all.countries.index, incl.idx)
-			index.from.all[incl.idx] <- i
-		}
-		LEXmatrixsuppl.regions$index.from.all.countries <- index.from.all
-	}			
-	return(LEXmatrixsuppl.regions)
 }
 
 
@@ -97,13 +67,9 @@ set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, verbose=FALS
 						  nr.countries.estimation=extra.wpp$nr_countries_estimation,
 						  is_processed = extra.wpp$is_processed)
 		locations <- bayesTFR:::read.UNlocations(data$data, wpp.year=meta$wpp.year, package='bayesLife', verbose=verbose)
-		suppl.wpp <- .get.suppl.matrix.and.regions(un.object, extra.wpp, locations$loc_data, 
+		suppl.wpp <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, extra.wpp, locations$loc_data, 
 									meta$start.year, meta$present.year)
-		extra.wpp$suppl.data=list(
-			e0.matrix=if(!is.null(suppl.wpp)) suppl.wpp$obs_matrix else NULL,
-			regions=if(!is.null(suppl.wpp)) suppl.wpp$regions else NULL,
-			index.to.all.countries=if(!is.null(suppl.wpp)) suppl.wpp$all.countries.index else NULL,
-			index.from.all.countries=if(!is.null(suppl.wpp)) suppl.wpp$index.from.all.countries else NULL)
+		extra.wpp$suppl.data <- bayesTFR:::.get.suppl.data.list(suppl.wpp, matrix.name='e0.matrix')
 	}
 	return(extra.wpp)
 }
@@ -135,7 +101,7 @@ get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, verbos
 							present.year=meta$present.year)
 	if (verbose) 
 		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')
-	LEXmatrixsuppl.regions <- .get.suppl.matrix.and.regions(un.object, LEXmatrix.regions, loc_data, 
+	LEXmatrixsuppl.regions <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, LEXmatrix.regions, loc_data, 
 									meta$start.year, meta$present.year)
 	if(!is.null(un.object$suppl.data.object) && verbose) 
 		cat('Dimension of the supplemental e0 matrix:', dim(LEXmatrixsuppl.regions$obs_matrix), '\n')
@@ -144,12 +110,6 @@ get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, verbos
 				e0.matrix.all=LEXmatrix.regions$obs_matrix_all, 
 				regions=LEXmatrix.regions$regions, 
 				nr.countries.estimation=nrow(data_incl),
-				suppl.data=list(
-					e0.matrix=if(!is.null(LEXmatrixsuppl.regions)) LEXmatrixsuppl.regions$obs_matrix else NULL,
-					regions=if(!is.null(LEXmatrixsuppl.regions)) LEXmatrixsuppl.regions$regions else NULL,
-					index.to.all.countries=if(!is.null(LEXmatrixsuppl.regions)) 
-									LEXmatrixsuppl.regions$all.countries.index else NULL,
-					index.from.all.countries=if(!is.null(LEXmatrixsuppl.regions)) 
-									LEXmatrixsuppl.regions$index.from.all.countries else NULL)
+				suppl.data=bayesTFR:::.get.suppl.data.list(LEXmatrixsuppl.regions, matrix.name='e0.matrix')
 				))
 }
