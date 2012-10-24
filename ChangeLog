@@ -1,3 +1,9 @@
+0.5-1 (10/20/2012)
+-----
+Argument old.ages.constant.gap renamed to constant.gap.eq2 and moved from e0.jmale.predict to e0.jmale.estimate.
+
+Argument min.e0.eq2.pred added to e0.jmale.predict controlling the age when the second phase of the model kicks in.
+
 0.5-0 (10/11/2012)
 -----
 Option old.ages.constant.gap added to e0.jmale.predict. If True the gap for older ages stays constant.
