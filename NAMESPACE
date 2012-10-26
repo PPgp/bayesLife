@@ -96,6 +96,7 @@ S3method(get.data.matrix, bayesLife.mcmc.meta)
 S3method(get.countries.index, bayesLife.mcmc.meta)
 
 S3method(get.data.imputed, bayesLife.prediction)
+S3method(get.data.imputed.for.country, bayesLife.prediction)
 S3method(get.projection.summary.header, bayesLife.prediction)
 S3method(get.UN.variant.names, bayesLife.prediction)
 S3method(get.friendly.variant.names, bayesLife.prediction)

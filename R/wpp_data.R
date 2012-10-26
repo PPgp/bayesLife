@@ -49,7 +49,7 @@ read.UNe0 <- function(sex, wpp.year, my.e0.file=NULL, ...) {
 	data <- bayesTFR:::do.read.un.file(un.file.name, wpp.year, my.file=my.e0.file, ...)
 	suppl.data<- NULL
 	if(file.exists(un.suppl.file.name)) 
-		suppl.data <- bayesTFR:::do.read.un.file(un.suppl.file.name, wpp.year, ...)
+		suppl.data <- bayesTFR:::do.read.un.file(un.suppl.file.name, wpp.year, my.file=my.e0.file, ...)
 	return(list(data.object=data, suppl.data.object=suppl.data))
 }
 

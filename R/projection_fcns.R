@@ -343,7 +343,11 @@ get.traj.ascii.header.bayesLife.mcmc.meta <- function(meta, ...)
 	
 get.data.imputed.bayesLife.prediction <- function(pred, ...)
 	return(get.e0.reconstructed(pred$e0.matrix.reconstructed, pred$mcmc.set$meta))
-
+	
+get.data.imputed.for.country.bayesLife.prediction <- function(pred, country.index, ...)
+	return(bayesTFR:::get.observed.with.supplemental(country.index, pred$e0.matrix.reconstructed, 
+					pred$mcmc.set$meta$suppl.data, 'e0.matrix.all'))
+	
 get.e0.reconstructed <- function(data, meta) {
 	return(if(is.null(data)) meta$e0.matrix.all else data)
 }

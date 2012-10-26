@@ -556,7 +556,7 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries=NULL, my.e0.file = NULL,
 	if(!is.null(Emeta$suppl.data$e0.matrix)) {
 		suppl.id.replace <- meta$suppl.data$index.from.all.countries[id.replace]
 		suppl.id.replace <- suppl.id.replace[!is.na(suppl.id.replace)]
-		suppl.is.old <- which(is.old)[which(is.element(id.replace, suppl.id.replace))]
+		suppl.is.old <- which(is.old)[which(is.element(meta$suppl.data$index.from.all.countries[id.replace], suppl.id.replace))]
 		suppl.old <- Emeta$suppl.data$index.from.all.countries[suppl.is.old]
 		suppl.is.new <- which(is.new & !is.na(Emeta$suppl.data$index.from.all.countries))
 		suppl.new <- Emeta$suppl.data$index.from.all.countries[suppl.is.new]
@@ -571,12 +571,14 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries=NULL, my.e0.file = NULL,
 		new.meta$suppl.data$regions <- update.regions(meta$suppl.data$regions, Emeta$suppl.data$regions, 
 												suppl.id.replace, suppl.new, suppl.old)
 		n.new <- ncol(new.meta$suppl.data$e0.matrix) - ncol(meta$suppl.data$e0.matrix)
+		new.meta$suppl.data$index.from.all.countries <- meta$suppl.data$index.from.all.countries
+		new.meta$suppl.data$index.to.all.countries <- meta$suppl.data$index.to.all.countries
+		new.meta$suppl.data$nr.countries <- ncol(new.meta$suppl.data$e0.matrix)
 		if (n.new > 0) {
-			new.meta$suppl.data$nr.countries <- ncol(new.meta$suppl.data$e0.matrix)
-			new.meta$suppl.data$index.from.all.countries <- c(meta$suppl.data$index.from.all.countries, rep(NA, sum(is.new)))
+			new.meta$suppl.data$index.from.all.countries <- c(new.meta$suppl.data$index.from.all.countries, rep(NA, sum(is.new)))
 			new.meta$suppl.data$index.from.all.countries[meta$nr.countries + suppl.is.new] <- seq(meta$suppl.data$nr.countries + 1, 
 												length=n.new)
-			new.meta$suppl.data$index.to.all.countries <- c(meta$suppl.data$index.to.all.countries, 
+			new.meta$suppl.data$index.to.all.countries <- c(new.meta$suppl.data$index.to.all.countries, 
 											seq(meta$nr.countries+1, new.meta$nr.countries)[suppl.is.new])
 		}
 	}
