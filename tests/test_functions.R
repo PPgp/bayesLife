@@ -52,6 +52,8 @@ test.estimate.mcmc <- function() {
 	stopifnot(all(dim(pred$joint.male$quantiles) == dim(pred$quantiles)))
 	stopifnot(dim(pred$joint.male$quantiles)[3] == 19)
 	npred <- dim(pred$e0.matrix.reconstructed)[2]
+	t <- e0.trajectories.table(pred, "Australia", pi=80, both.sexes=TRUE)
+	stopifnot(all(dim(t) == c(30, 3)))
 	test.ok(test.name)
 	
 	# run MCMC for another aggregation

@@ -414,7 +414,7 @@ e0.trajectories.table <- function(e0.pred, country, pi=c(80, 95), both.sexes=FAL
 					data.matrix <- fdata - (fdata - mdata)/2.
 					country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
 					traj.object <- get.e0.trajectories.object(list(e0.pred, mpred), country.obj$code, pi=pi)
-					return(bayesTFR:::.get.trajectories.table(e0.pred, country.obj, data.matrix, pi, 
+					return(bayesTFR:::.get.trajectories.table(e0.pred, country.obj, data.matrix[,country.obj$index], pi, 
 								pred.median=traj.object$median, cqp=traj.object$quantiles, half.child.variant=FALSE))
 				}
 			}
