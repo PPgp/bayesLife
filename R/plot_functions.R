@@ -313,13 +313,12 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 		if(length(pi) > 0) {
 			for (i in 1:length(pi)) {
 				if(do.average) cqp[[i]] <- trajectories$quantiles[[i]]
-				else {
+				else
 					cqp[[i]] <- bayesTFR:::get.traj.quantiles(e0pred, country$index, 
 								country$code, trajectories=trajectories$trajectories, pi=pi[i])
-					if (!add && !is.null(cqp[[i]]) && is.null(ylim))
+				if (!add && !is.null(cqp[[i]]) && is.null(ylim))
 						ylim.loc <- c(min(ylim.loc[1], cqp[[i]], na.rm=TRUE), 
 						  		max(ylim.loc[2], cqp[[i]], na.rm=TRUE))
-				}
 			}
 		}
 		if (!add) {
@@ -348,7 +347,7 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 		}
 	
 		# plot trajectories
-		if(!is.null(trajectories$trajectories)) { 
+		if(!is.null(trajectories$trajectories) && length(trajectories$index) > 0) { 
 			for (i in 1:length(trajectories$index)) {
 				lines(plot.data[[ipred]]$pred.x, trajectories$trajectories[,trajectories$index[i]], type='l', 
 					col=this.col[5], lwd=lwd[5])

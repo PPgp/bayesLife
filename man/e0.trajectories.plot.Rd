@@ -29,7 +29,7 @@ e0.trajectories.table(e0.pred, country, pi = c(80, 95),
   \item{e0.pred}{Object of class \code{\link{bayesLife.prediction}}.}
   \item{country}{Name or numerical code of a country.}
   \item{pi}{Probability interval. It can be a single number or an array. If \code{both.sexes} is \code{TRUE} the default is 95.}
-  \item{both.sexes}{Logical. If \code{TRUE} the distribution of both sexes is plotted into one graphics, provided the \code{e0.pred} is a female prediction and contains a joint male prediction as a result of running the function \code{\link{e0.jmale.predict}}.}
+  \item{both.sexes}{Logical or the character \dQuote{A}. If \code{TRUE} the distribution of both sexes is plotted into one graphics (or tabulated), provided the \code{e0.pred} is a female prediction and contains a joint male prediction as a result of running the function \code{\link{e0.jmale.predict}}. For \dQuote{A} it plots/tabulates the distribution of the average life expectancy over both sexes.}
   \item{nr.traj}{Number of trajectories to be plotted. If \code{NULL}, all trajectories are plotted, otherwise they are thinned evenly. If \code{both.sexes} is \code{TRUE} the default is zero.}
   \item{typical.trajectory}{Logical. If \code{TRUE} one trajectory is shown that has the smallest distance to the median.}
   \item{xlim, ylim, type, xlab, ylab, main}{Graphical parameters passed to the \code{plot} function.}
