@@ -498,10 +498,12 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries=NULL, my.e0.file = NULL,
 	update.Tc.index <- function(Tci, eTci, id.replace, is.old) {
 		nTci <- Tci
 		j <- length(Tci) + 1
+		old.counter <- 1
 		for (i in 1:length(eTci)) {
-			if (is.old[i])
-				nTci[[id.replace[i]]] <- eTci[[i]]
-			else {
+			if (is.old[i]) {
+				nTci[[id.replace[old.counter]]] <- eTci[[i]]
+				old.counter <- old.counter + 1
+			} else {
 				nTci[[j]] <- eTci[[i]]
 				j <- j+1
 			}

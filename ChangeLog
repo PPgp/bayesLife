@@ -1,3 +1,7 @@
+0.5-2 (11/30/2012)
+-----
+Minor bug fixes.
+
 0.5-1 (10/20/2012)
 -----
 Argument old.ages.constant.gap renamed to constant.gap.eq2 and moved from e0.jmale.predict to e0.jmale.estimate.
