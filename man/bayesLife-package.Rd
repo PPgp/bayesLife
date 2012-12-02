@@ -58,7 +58,9 @@ Maintainer: Hana Sevcikova <hanas@uw.edu>
 \references{
 J. L. Chunn, A. E. Raftery, P. Gerland (2010): Bayesian Probabilistic Projections of Life Expectancy for All Countries.  Working Paper nr. 105, Center for Statistics and the Social Sciences, University of Washington. \url{http://www.csss.washington.edu/Papers}
 
-Lalic, N. (2011). Master's thesis at the Department of Statistics, University of Washington.
+A. E. Raftery,  N. Li, H. Sevcikova , P. Gerland, G. K. Heilig (2012). Bayesian probabilistic population projections for all countries. Proceedings of the National Academy of Sciences 109:13915-13921.
+
+%Lalic, N. (2011). Master's thesis at the Department of Statistics, University of Washington.
 }
 
 \keyword{ package }

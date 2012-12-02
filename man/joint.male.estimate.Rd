@@ -5,7 +5,7 @@
 Estimation of the Joint Female-Male Model
 }
 \description{
-The function estimates the joint female-male model of life expectancy, as described in Lalic (2011). It consist of two equations with t-distributed errors, see Details below.
+The function estimates the joint female-male model of life expectancy, as described in Raftery et al. (2012) and Lalic (2011). It consist of two equations with t-distributed errors, see Details below.
 }
 \usage{
 e0.jmale.estimate(mcmc.set, countries.index = NULL, 
@@ -20,13 +20,13 @@ e0.jmale.estimate(mcmc.set, countries.index = NULL,
   \item{estDof.eq1, estDof.eq2}{Logical, controlling whether the degrees of freedom of the first and second  equation, respectively, should be estimated. If it is \code{FALSE} the degrees of freedom are set using the arguments \code{start.eq1} and \code{start.eq2}, respectively.}
   \item{start.eq1, start.eq2}{Argument \code{start} of the \code{\link[hett]{tlm}} function of the \pkg{hett} package, which is applied to the first and second equation of the model, respectively. It is a list of possibly four named components, ("beta", "lambda", "dof", "omega"), for the location, scale, degrees of freedom parameters and random scale effects respectively. If \code{estDof.eq1} (\code{estDof.eq2}) is \code{FALSE}, the "dof" component must be given.
 }
- \item{min.e0.eq2}{Minimum female life expectancy of records included in the estimation of the second equation.}
- \item{constant.gap.eq2}{Logical. If \code{TRUE} the coefficient of the second equation is set to one and the standard deviation is estimated under a assumption of normal distribution.}
+ \item{min.e0.eq2}{Minimum female life expectancy of records included in the estimation of the second equation (parameter \eqn{M} in Details below).}
+ \item{constant.gap.eq2}{Logical. If \code{TRUE} the coefficient of the second equation (\eqn{\gamma_1}) is set to one and the standard deviation is estimated under the assumption of normal distribution.}
  \item{my.e0.file}{File name containing user-specified male time series for one or more countries. The function replaces the corresponding country data from the UN WPP file by values in this file. Only columns are replaced that match column names of the WPP file.}
  \item{verbose}{Logical switching log messages on and off. If \code{TRUE} summary results from the \code{\link[hett]{tlm}} function of both equations are shown.}
 }
 \details{
-The joint female-male life expectancy model is a model for estimating gaps \eqn{G} between female and male life expectancy as described in Lalic (2011). It consists of two parts: \cr
+The joint female-male life expectancy model is a model for estimating gaps \eqn{G} between female and male life expectancy. It consists of two parts, see Equation (1) in Raftery et  al. (2012): \cr
 1. If \eqn{l_{c,t} \leq M}{l_(c,t) <= M}, then 
 \deqn{
 	G_{c,t+1} = \beta_0 + \beta_1 l_{c,1953} + \beta_2 G_{c,t} + \beta_3 l_{c,t} + \beta_4 (l_{c,t}-75)_+ + \epsilon_{c,t}
@@ -45,7 +45,7 @@ where \eqn{\epsilon_{c,t}}{epsilon_(c,t)} is iid \eqn{t(\mu=0, \sigma_2^2, \nu_2
 
 Here, \eqn{t} is the time and \eqn{c} is the country index. \eqn{G_{c,t}}{G_(c,t)} is the gap for country \eqn{c} at time \eqn{t} and \eqn{l_{c,t}}{l_(c,t)} is the female life expectancy for country \eqn{c} at time \eqn{t}. \eqn{M} is the highest observed female life expectancy.
 
-Using the \code{\link[hett]{tlm}} function of the \pkg{hett} package, the function  estimates the coefficients \eqn{\beta_i}{beta_i} (\eqn{i=1,\dots,4}) and \eqn{\gamma_1}{gamma_1}, as well as paramteres \eqn{\sigma_j}{sigma_j} (\eqn{j=1,2}) and optionally the degrees of freedom \eqn{\nu_j}{nu_j} (\eqn{j=1,2}). If \code{constant.gap.eq2} is \code{TRUE}, \eqn{\gamma_1}{gamma_1} is set to 1 and \eqn{\epsilon_{c,t}}{epsilon_(c,t)} is iid \eqn{N(\mu=0, \sigma_2^2}{N(mu=0, sigma_2^2)}.
+Using the \code{\link[hett]{tlm}} function of the \pkg{hett} package, the function  estimates the coefficients \eqn{\beta_i}{beta_i} (\eqn{i=1,\dots,4}) and \eqn{\gamma_1}{gamma_1}, as well as paramteres \eqn{\sigma_j}{sigma_j} (\eqn{j=1,2}) and optionally the degrees of freedom \eqn{\nu_j}{nu_j} (\eqn{j=1,2}). If \code{constant.gap.eq2} is \code{TRUE}, \eqn{\gamma_1}{gamma_1} is set to 1 and \eqn{\epsilon_{c,t}}{epsilon_(c,t)} is iid \eqn{N(\mu=0, \sigma_2^2)}{N(mu=0, sigma_2^2)}.
 
 The \code{mcmc.set} object should be a \code{\link{bayesLife.mcmc.set}} object obtained from a simulation of a female life expectancy. Note that since only the observed data and no MCMC results are used in this estimation, the \code{mcmc.set} object can be obtained from a toy simulation such as in the example below. The function extracts observed data from this object and treats them as \eqn{l_{c,t}}. For the male historical time series, the function takes the male UN WPP data  from the same WPP year as the female data (\link{UN2010e0}) and possibly partly replaces it by any user-specified data given in \code{my.e0.file}. For the first equation above, all records are used. For the second equation, only records with female life expectancy that are larger or equal \code{min.e0.eq2} are used.
 }
@@ -54,9 +54,10 @@ List with the components, \code{eq1} and \code{eq2}, each containing estimation 
     \item{coefficients}{Estimated coefficients \eqn{\beta_i}{beta_i}.}
     \item{sigma}{Parameter \eqn{\sigma_j}{sigma_j}.}
     \item{dof}{Degrees of freedom \eqn{\nu_j}{nu_j}. If \code{estDof.eq1} (\code{estDof.eq2}) is \code{TRUE} this parameter is estimated, otherwise it is set to the value of \code{start.eq1$dof} (\code{start.eq2$dof}).}
-    \item{fit}{Object returned by the \code{\link[hett]{tlm}} function.}
 }
 \references{
+A. E. Raftery,  N. Li, H. Sevcikova , P. Gerland, G. K. Heilig (2012). Bayesian probabilistic population projections for all countries. Proceedings of the National Academy of Sciences 109:13915-13921.	
+	
 Lalic, N. (2011). Master's thesis at the Department of Statistics, University of Washington. 
 }
 \author{
