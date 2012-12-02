@@ -113,15 +113,15 @@ e0.predict.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 	} else {
 		# save updated prediction
 		bayesLife.prediction <- pred
-		prediction.file <- file.path(pred$output.dir, 'prediction.rda')
+		prediction.file <- file.path(pred$output.directory, 'prediction.rda')
 		save(bayesLife.prediction, file=prediction.file)
 	}
 	# convert trajectories and create summary files
-	bayesTFR:::do.convert.trajectories(pred=bayesLife.prediction, n=save.as.ascii, output.dir=pred$output.dir, 
+	bayesTFR:::do.convert.trajectories(pred=bayesLife.prediction, n=save.as.ascii, output.dir=pred$output.directory, 
 							verbose=verbose)
-	do.write.projection.summary(pred=bayesLife.prediction, output.dir=pred$output.dir)
+	bayesTFR:::do.write.projection.summary(pred=bayesLife.prediction, output.dir=pred$output.directory)
 	
-	cat('\nPrediction stored into', pred$output.dir, '\n')
+	cat('\nPrediction stored into', pred$output.directory, '\n')
 	invisible(bayesLife.prediction)
 }
 
