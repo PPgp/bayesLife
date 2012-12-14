@@ -29,7 +29,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=100000,
 						 country.overwrites = NULL,
 						 #Triangle.c.width = c(5, 5, 5, 5), k.c.width=0.5, z.c.width=0.06,
 						 nu=4, dl.p1=9, dl.p2=9, sumTriangle.lim = c(30, 110), constant.variance=FALSE,
-                         seed = NULL, parallel=FALSE, nr.nodes=nr.chains,
+                         seed = NULL, parallel=FALSE, nr.nodes=nr.chains, compression.type='None',
                          auto.conf = list(max.loops=5, iter=100000, iter.incr=20000, nr.chains=3, thin=120, burnin=20000),
 						 verbose=FALSE, verbose.iter = 10, ...) {
 						 	
@@ -107,7 +107,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=100000,
                                         country.overwrites=country.overwrites, 
                                         nu=nu, dl.p1=dl.p1, dl.p2=dl.p2, sumTriangle.lim=sumTriangle.lim, 
                                         constant.variance=constant.variance,
-                                        buffer.size=buffer.size, 
+                                        buffer.size=buffer.size, compression.type=compression.type, 
                                         auto.conf=auto.conf, verbose=verbose)
     store.bayesLife.meta.object(bayesLife.mcmc.meta, output.dir)
     
@@ -330,7 +330,7 @@ init.nodes.e0 <- function() {
 }
 
 .do.part.e0.mcmc.meta.ini <- function(data, meta) {
-	data(loess_sd)
+	data('loess_sd')
 	nr_countries <- ncol(data$e0.matrix)
     #T_end_c <- rep(NA, nr_countries)
     Tc.index <- list()
@@ -464,7 +464,8 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter=100,
 						lambda.k=lambda.k.ini, lambda.z=lambda.z.ini, omega=omega.ini,
         				output.dir=paste('mc', chain.id, sep=''), finished.iter=1, length = 1,
         				iter=iter, id=chain.id, traces=0,
-        				traces.burnin=0, rng.state = .Random.seed, 
+        				traces.burnin=0, rng.state = .Random.seed,
+        				compression.type=mcmc.meta$compression.type,
         				meta = mcmc.meta), class='bayesLife.mcmc')
     samplpars <- mcmc.meta$country.bounds
     mcmc[['Triangle.c']] <- matrix(0, ncol=nr_countries, nrow=4)

@@ -14,12 +14,12 @@ test.get.wpp.data <- function(wpp.year=2008) {
 	test.ok(test.name)
 }
 
-test.estimate.mcmc <- function() {
+test.estimate.mcmc <- function(compression='None') {
 	sim.dir <- tempfile()
     # run MCMC
     test.name <- 'estimating MCMC'
 	start.test(test.name)
-    m <- run.e0.mcmc(nr.chains=1, iter=10, thin=1, output.dir=sim.dir)
+    m <- run.e0.mcmc(nr.chains=1, iter=10, thin=1, output.dir=sim.dir, buffer=5, compression.type=compression)
     stopifnot(m$mcmc.list[[1]]$finished.iter == 10)
 	stopifnot(get.total.iterations(m$mcmc.list, 0) == 10)
 	test.ok(test.name)
@@ -102,12 +102,12 @@ test.estimate.mcmc <- function() {
 }
 
 
-test.estimate.mcmc.with.suppl.data <- function() {
+test.estimate.mcmc.with.suppl.data <- function(compression='None') {
 	sim.dir <- tempfile()
     # run MCMC
     test.name <- 'estimating MCMC using supplemental data'
 	start.test(test.name)
-    m <- run.e0.mcmc(nr.chains=1, iter=30, thin=1, output.dir=sim.dir, start.year=1750, seed=1)
+    m <- run.e0.mcmc(nr.chains=1, iter=30, thin=1, output.dir=sim.dir, start.year=1750, seed=1, buffer=10, compression.type=compression)
     stopifnot(length(m$meta$suppl.data$regions$country_code) == 29)
 	stopifnot(all(dim(m$meta$suppl.data$e0.matrix) == c(40, 29)))
 	test.ok(test.name)
@@ -161,11 +161,12 @@ test.existing.simulation <- function() {
 	start.test(test.name)
 	pred <- get.e0.prediction(sim.dir)
 	s <- summary(pred, country='Japan')
-	stopifnot(s$nr.traj == 30)
+	stopifnot(s$nr.traj == 26)
 	stopifnot(all(dim(s$projections)==c(19,11)))
-	mb <- get.thinned.e0.mcmc(m, thin=2, burnin=30)
-	s <- summary(mb, meta.only=TRUE)
-	stopifnot(s$iters == 30)
+	# comment out if thinned mcmcs are not included in the package
+	#mb <- get.thinned.e0.mcmc(m, thin=2, burnin=30)
+	#s <- summary(mb, meta.only=TRUE)
+	#stopifnot(s$iters == 30)
 	test.ok(test.name)
 }
 
@@ -298,12 +299,12 @@ test.get.parameter.traces <- function() {
 	test.ok(test.name)
 }
 
-test.run.mcmc.simulation.auto <- function() {
+test.run.mcmc.simulation.auto <- function(compression='None') {
 	sim.dir <- tempfile()
 	# run MCMC
 	test.name <- 'running auto MCMC'
 	start.test(test.name)
-	m <- run.e0.mcmc(iter='auto', output.dir=sim.dir, thin=1,
+	m <- run.e0.mcmc(iter='auto', output.dir=sim.dir, thin=1, compression.type=compression,
 					auto.conf=list(iter=10, iter.incr=5, max.loops=3, nr.chains=2, thin=1, burnin=5))
 	stopifnot(get.total.iterations(m$mcmc.list, 0) == 40)
 	test.ok(test.name)

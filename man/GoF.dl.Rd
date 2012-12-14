@@ -37,13 +37,14 @@ To see the fit visually per country, use \code{\link{e0.DLcurve.plot}(\dots, pre
 \code{\link{e0.DLcurve.plot}}
 }
 \examples{
+\dontrun{
 sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
 e0 <- get.e0.mcmc(sim.dir)
 # Note that this simulation is a toy example and thus has not converged.
 gof <- e0.dl.coverage(sim.dir)
 gof$country.coverage
 e0.DLcurve.plot(e0, country=608, predictive.distr=TRUE, pi=c(80, 90, 95))
-}
+}}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{ htest }

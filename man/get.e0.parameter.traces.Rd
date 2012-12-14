@@ -40,16 +40,15 @@ Hana Sevcikova
 }
 
 \examples{
+\dontrun{
 sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
 m <- get.e0.mcmc(sim.dir)
 e0.values <- get.e0.parameter.traces(m$mcmc.list, burnin=10, par.names="z")
-\dontrun{
-hist(e0.values, main=colnames(e0.values))}
+hist(e0.values, main=colnames(e0.values))
 
 e0.values.cs <- get.e0.parameter.traces.cs(m$mcmc.list, 
                     get.country.object("Canada", meta=m$meta),
                     burnin=10, par.names="z.c")
-\dontrun{
 hist(e0.values.cs, main=colnames(e0.values.cs))}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

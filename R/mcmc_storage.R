@@ -48,7 +48,8 @@ store.e0.mcmc <- local({
 			for(par in par.names) { # write country-independent parameters
 				if (is.null(buffer[[par]])) next
                 values <- if (counter == 1) t(buffer[[par]][1:counter,]) else buffer[[par]][1:counter,]
-                bayesTFR:::write.values.into.file.cindep(par, values, output.dir, mode=open)
+                bayesTFR:::write.values.into.file.cindep(par, values, output.dir, mode=open, 
+												compression.type=mcmc$compression.type)
             }
             country.index <- 1: mcmc$meta$nr.countries        
 		} else country.index <- countries
@@ -57,10 +58,10 @@ store.e0.mcmc <- local({
             for (country in country.index){
             	values <- if (counter == 1) t(buffer.cs[[par]][[country]][1:counter,]) 
             				else values <- buffer.cs[[par]][[country]][1:counter,]
-            #parname <- sub('.c', '', par)
             parname <- par
 			bayesTFR:::write.values.into.file.cdep(parname, values, output.dir, 
-            		get.country.object(country, meta=mcmc$meta, index=TRUE)$code, mode=open)
+            		get.country.object(country, meta=mcmc$meta, index=TRUE)$code, mode=open, 
+											compression.type=mcmc$compression.type)
             }
         }
         resmc <- as.list(mcmc)

@@ -13,9 +13,9 @@ using a Bayesian hierarchical model and the United Nations demographic time seri
 \tabular{ll}{
 Package: \tab bayesLife\cr
 Type: \tab Package\cr
-Version: \tab 0.5-2\cr
-Date: \tab 2012-11-30\cr
-Depends: \tab R (>= 2.9.0), bayesTFR\cr
+Version: \tab 0.6-0\cr
+Date: \tab 2012-12-14\cr
+Depends: \tab R (>= 2.14.2), bayesTFR\cr
 License: \tab GPL (>= 2)\cr
 URL: \tab \url{http://bayespop.csss.washington.edu}\cr
 }
@@ -72,7 +72,10 @@ A. E. Raftery,  N. Li, H. Sevcikova , P. Gerland, G. K. Heilig (2012). Bayesian 
 sim.dir <- tempfile()
 m <- run.e0.mcmc(sex='F', nr.chains=2, iter=60, seed=1, thin=2, 
      output.dir=sim.dir, verbose=TRUE)
-pred <- e0.predict(m, burnin=30, verbose=TRUE)
+pred <- e0.predict(m, burnin=35, verbose=TRUE)
 summary(pred, country="Canada")
 unlink(sim.dir, recursive=TRUE)}
 }
+% exact commands to create data in ex-data directory
+% m <- run.e0.mcmc(sex='F', nr.chains=2, iter=60, seed=1, thin=2, verbose=TRUE, compression.type='bz', start.year=1950)
+% pred <- e0.predict(m, burnin=35, verbose=TRUE, predict.jmale=FALSE) 

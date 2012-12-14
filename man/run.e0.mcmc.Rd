@@ -40,7 +40,7 @@ run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 100000,
     Triangle.c.width = c(4, 6, 3, 4), k.c.width = 1, z.c.width = 0.2, 
     country.overwrites = NULL, nu = 4, dl.p1 = 9, dl.p2 = 9, 
     sumTriangle.lim = c(30, 110), constant.variance = FALSE, seed = NULL, 
-    parallel = FALSE, nr.nodes = nr.chains, 
+    parallel = FALSE, nr.nodes = nr.chains, compression.type = 'None',
     auto.conf = list(max.loops=5, iter=100000, iter.incr=20000, 
         nr.chains=3, thin=120, burnin=20000),
     verbose = FALSE, verbose.iter = 10, \dots)
@@ -102,6 +102,7 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{seed}{Seed of the random number generator. If \code{NULL} no seed is set. It can be used to generate reproducible results.}
   \item{parallel}{Logical determining if the simulation should run multiple chains in parallel. If it is \code{TRUE}, the package \pkg{\link[snowFT]{snowFT}} is required.}
   \item{nr.nodes}{Relevant only if \code{parallel} is \code{TRUE}. It gives the number of nodes for running the simulation in parallel. By default it equals to the number of chains.}
+  \item{compression.type}{One of \sQuote{None}, \sQuote{gz}, \sQuote{xz}, \sQuote{bz}, determining type of a compression of the MCMC files.}
     \item{auto.conf}{List containing a configuration for an \sQuote{automatic} run (see description of argument \code{iter}). Item \code{iter} gives the number of iterations in the first chunk of the MCMC simulation; item \code{iter.incr} gives the number of iterations in the following chunks; \code{nr.chains} gives the number of chains in all chunks of the MCMC simulation; items \code{thin} and \code{burnin} are used in the convergence diagnostics following each chunk; \code{max.loops} controls the maximum number of chunks. All items must be integer values. This argument is only used if the function argument \code{iter} is set to \sQuote{auto}.}
   \item{verbose}{Logical switching log messages on and off.}
   \item{verbose.iter}{Integer determining how often (in number of iterations) log messages are outputted during the estimation.}
@@ -109,7 +110,7 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{chain.ids}{Array of chain identifiers that should be resumed. If it is \code{NULL}, all existing chains in \code{output.dir} are resumed.}
 }
 \details{
-	The function \code{run.e0.mcmc} creates an object of class \code{\link{bayesLife.mcmc.meta}} and stores it in \code{output.dir}.  It launches \code{nr.chains} MCMCs, either sequentially or in parallel.  Parameter traces of each chain are stored (as ASCII files) in a subdirectory of \code{output.dir}, called \code{mc}\emph{x} where \emph{x} is the identifier of that chain.  There is one file per parameter, named after the parameter with the suffix \dQuote{.txt}.  Country-specific parameters have the suffix \code{_country}\emph{c} where \emph{c} is the country code.  In addition to the trace files, each \code{mc}\emph{x} directory contains the object \code{\link{bayesLife.mcmc}} in binary format.  All chain-specific files  are written into disk after the first, last and each \code{buffer.size}-th (thinned) iteration.
+	The function \code{run.e0.mcmc} creates an object of class \code{\link{bayesLife.mcmc.meta}} and stores it in \code{output.dir}.  It launches \code{nr.chains} MCMCs, either sequentially or in parallel.  Parameter traces of each chain are stored as (possibly compressed) ASCII files in a subdirectory of \code{output.dir}, called \code{mc}\emph{x} where \emph{x} is the identifier of that chain.  There is one file per parameter, named after the parameter with the suffix \dQuote{.txt}, possibly followed by a compression suffix if \code{compression.type} is given.  Country-specific parameters have the suffix \code{_country}\emph{c} where \emph{c} is the country code.  In addition to the trace files, each \code{mc}\emph{x} directory contains the object \code{\link{bayesLife.mcmc}} in binary format.  All chain-specific files  are written into disk after the first, last and each \code{buffer.size}-th (thinned) iteration.
 	
 Using the function \code{continue.e0.mcmc} one can continue simulating an existing MCMCs by \code{iter} iterations for either all or selected chains.
 

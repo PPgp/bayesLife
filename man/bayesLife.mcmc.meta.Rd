@@ -11,15 +11,15 @@ It contains information that is common to all chains. It is a part of a \code{\l
 
 
 \value{
-	A \code{bayesLife.mcmc.meta} object contains components \code{sex, nr.chains, 
-		start.year, present.year, wpp.year, buffer.size, my.e0.file, a, delta, tau,}\cr
-		\code{Triangle.ini, k.ini, z.ini, omega.ini, lambda.ini, lambda.k.ini,}\cr 
-		\code{lambda.z.ini, Triangle.ini.low, 
-		Triangle.ini.up, k.ini.low, k.ini.up, z.ini.low, z.ini.up, lambda.ini.low, lambda.ini.up, 
-		lambda.k.ini.low, lambda.k.ini.up, lambda.z.ini.low, lambda.z.ini.up, omega.ini.low, omega.ini.up,
-		Triangle.c.ini.norm, k.c.ini.norm, z.c.ini.norm, Triangle.c.prior.low, Triangle.c.prior.up,
-		k.c.prior.low, k.c.prior.up, z.c.prior.low, z.c.prior.up,
-		Triangle.c.width, k.c.width, z.c.width, nu, dl.p1, dl.p2, sumTriangle.lim, auto.conf}. 
+	A \code{bayesLife.mcmc.meta} object contains components \code{sex}, \code{nr.chains}, 
+		\code{start.year}, \code{present.year}, \code{wpp.year}, \code{buffer.size}, \code{my.e0.file}, \code{a}, \code{delta}, \code{tau},
+		\code{Triangle.ini}, \code{k.ini}, \code{z.ini}, \code{omega.ini}, \code{lambda.ini}, \code{lambda.k.ini},
+		\code{lambda.z.ini}, \code{Triangle.ini.low}, 
+		\code{Triangle.ini.up}, \code{k.ini.low}, \code{k.ini.up}, \code{z.ini.low}, \code{z.ini.up}, \code{lambda.ini.low}, \code{lambda.ini.up}, 
+		\code{lambda.k.ini.low}, \code{lambda.k.ini.up}, \code{lambda.z.ini.low}, \code{lambda.z.ini.up}, \code{omega.ini.low}, \code{omega.ini.up},
+		\code{Triangle.c.ini.norm}, \code{k.c.ini.norm}, \code{z.c.ini.norm}, \code{Triangle.c.prior.low}, \code{Triangle.c.prior.up},
+		\code{k.c.prior.low}, \code{k.c.prior.up}, \code{z.c.prior.low}, \code{z.c.prior.up},
+		\code{Triangle.c.width}, \code{k.c.width}, \code{z.c.width}, \code{nu}, \code{dl.p1}, \code{dl.p2}, \code{sumTriangle.lim}, \code{auto.conf}. 
 		Their meaning and value are the same as the input arguments 
 			to the \code{\link{run.e0.mcmc}} function. Furthermore, it contains components:
 	\item{e0.matrix.all}{A \eqn{q \times n}{q x n} matrix with the United Nations life expectancy estimates. \eqn{q} is number of years, \eqn{n} is number of countries (see \code{nr.countries} below). The first \eqn{n_e} columns correspond to countries included in the MCMC estimation (see \code{nr.countries.estimation} below), where \eqn{n_e <= n}. The order of the countries corresponds to the order of countries in the element \code{regions}, see below.}

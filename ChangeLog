@@ -1,3 +1,9 @@
+0.6-0 (12/14/2012)
+-----
+Added support of compressed MCMC files.
+
+Example data made smaller.
+
 0.5-2 (11/30/2012)
 -----
 Minor bug fixes.

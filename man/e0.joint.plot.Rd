@@ -9,9 +9,9 @@ Joint Posterior Distribution of Female and Male Life Expectancy
 The functions plot the joint posterior distribution of female and male life expectancy, modeled and predicted using the joint model described in Lalic (2011). This can be done for one country (\code{e0.joint.plot}) or for all countries (\code{e0.joint.plot.all}).}
 
 \usage{
-e0.joint.plot(e0.pred, country, pi = 95, years, nr.points = 500, xlim = NULL, ylim = NULL, 
-    xlab = "Female life expectancy", ylab = "Male life expectancy", main = NULL, 
-    col = NULL, show.legend = TRUE, add = FALSE, \dots)
+e0.joint.plot(e0.pred, country, pi = 95, years, nr.points = 500, xlim = NULL, 
+    ylim = NULL, xlab = "Female life expectancy", ylab = "Male life expectancy", 
+    main = NULL, col = NULL, show.legend = TRUE, add = FALSE, \dots)
     
 e0.joint.plot.all(e0.pred, output.dir = file.path(getwd(), "e0joint"),
     output.type = "png", verbose = FALSE, \dots)

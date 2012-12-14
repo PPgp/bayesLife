@@ -71,10 +71,11 @@ Hana Sevcikova
 \code{\link{e0.jmale.predict}}
 }
 \examples{
+\dontrun{
 sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
 m <- get.e0.mcmc(sim.dir)
 fit <- e0.jmale.estimate(m, verbose=TRUE)
-}
+}}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{ models }

@@ -44,6 +44,7 @@ Hana Sevcikova
 \code{\link{e0.jmale.estimate}}, \code{\link{get.e0.jmale.prediction}}, \code{\link{e0.predict}}, \code{\link{e0.gap.plot}}
 }
 \examples{
+\dontrun{
 sim.dir <- tempfile()
 m <- run.e0.mcmc(sex='F', nr.chains=1, iter=30, thin=1, output.dir=sim.dir)
 pred <- e0.predict(m, burnin=15, verbose=FALSE, save.as.ascii=0)
@@ -61,7 +62,7 @@ e0.gap.plot(both.pred, 'Guatemala')
 e0.joint.plot(both.pred, 'Guatemala', pi=80, years=c(2013, 2043, 2093))
 
 unlink(sim.dir, recursive=TRUE)
-}
+}}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{ models }

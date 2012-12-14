@@ -1,12 +1,12 @@
 Package: bayesLife
 Type: Package
 Title: Bayesian Projection of Life Expectancy
-Version:0.5-2
-Date: 2012-11-30
+Version:0.6-0
+Date: 2012-12-14
 Author: Hana Sevcikova, Adrian Raftery; original WinBugs code written by Jennifer Chunn 
 Maintainer: Hana Sevcikova <hanas@uw.edu>
 Description: Making probabilistic projections of life expectancy for all countries of the world, using a Bayesian hierarchical model.
-Depends: bayesTFR (>= 2.0-0)
+Depends: bayesTFR (>= 2.1-0)
 Suggests: hett, car, rworldmap, fields, snowFT
 License: GPL (>= 2)
 URL: http://bayespop.csss.washington.edu

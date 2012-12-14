@@ -59,7 +59,7 @@ Hana Sevcikova
 }
 
 \examples{
-
+\dontrun{
 sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
 pred <- get.e0.prediction(sim.dir)
 e0.trajectories.table(pred, country="Japan", pi=c(80, 95))
@@ -71,7 +71,7 @@ e0.trajectories.plot(pred, "Japan", col=rep("green", 5), nr.traj=0, pi=c(80),
 e0.trajectories.plot(pred, "United States of America", col=rep("blue", 5),  
         add=TRUE, nr.traj=0, pi=c(80), show.legend=FALSE)
 legend("topleft", legend=c("Japan", "USA"), col=c("green", "blue"), lty=1, bty="n")
-}
+}}
 
 \keyword{ hplot }
 
