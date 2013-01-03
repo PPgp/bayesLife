@@ -1,7 +1,7 @@
-.First.lib <- function (lib, pkg) {
+.onLoad <- function (lib, pkg) {
     library.dynam("bayesLife", pkg, lib)
 }
 
-.Last.lib <- function (libpath) {
+.onUnload <- function (libpath) {
   library.dynam.unload("bayesLife", libpath)
 }

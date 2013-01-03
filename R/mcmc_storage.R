@@ -1,3 +1,4 @@
+if(getRversion() >= "2.15.1") utils::globalVariables("counter")
 
 store.e0.mcmc <- local({
 	# Writes parameter values into ascii files - one file per parameter and country (if country-specific)

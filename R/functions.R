@@ -1,4 +1,4 @@
-
+if(getRversion() >= "2.15.1") utils::globalVariables("loess.sd")
 
 
 g.dl6<-function(x,l, p1, p2){
