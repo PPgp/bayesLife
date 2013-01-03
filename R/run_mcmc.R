@@ -52,12 +52,10 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=100000,
 		iter <- auto.conf$iter
 		nr.chains <- auto.conf$nr.chains
 		auto.run <- TRUE		
-	}
-
-                
+	}      
 	if (verbose) {
-		cat('\nStarting bayesian prediction of life expectancy.\n')
-		cat('======================================\n')
+		cat('\nStarting Bayesian Hierarchical Model for Life Expectancy.\n')
+		cat('=========================================================\n')
 		cat('Initialize simulation -', nr.chains, 'chain(s) in total.\n')
 	}
 	if(!is.null(seed)) set.seed(seed)

@@ -9,7 +9,7 @@ get.e0.mcmc <- function(sim.dir=file.path(getwd(), 'bayesLife.output'), chain.id
 		return(NULL)
 	}
 	load(file=mcmc.file.path)
-	bayesLife.mcmc.meta$output.dir <- sim.dir
+	bayesLife.mcmc.meta$output.dir <- normalizePath(sim.dir)
 	if (is.null(chain.ids)) {
 		mc.dirs.short <- list.files(sim.dir, pattern='^mc[0-9]+', full.names=FALSE)
 		chain.ids <- as.integer(substring(mc.dirs.short, 3))
