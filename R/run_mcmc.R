@@ -34,7 +34,9 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=100000,
 						 verbose=FALSE, verbose.iter = 10, ...) {
 						 	
 	get.init.values.between.low.and.up <- function(low, up)
-		ifelse(rep(nr.chains==1, nr.chains), (low+up)/2, seq(low, to=up, length=nr.chains))
+		ifelse(rep(nr.chains==1, nr.chains), (low+up)/2, #seq(low, to=up, length=nr.chains)
+			runif(nr.chains, low, up)
+		)
 		
 	if(file.exists(output.dir)) {
 		if(length(list.files(output.dir)) > 0 & !replace.output)
