@@ -110,6 +110,12 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
 		
 		# Update lambdas using MH-algorithm
 		###########################################
+		for (i in 1:6) {
+			if(recompute.par.integral[i]) {
+				wpar.integral.to.mC[i] <- compute.par.integral.to.mC(i,mcenv=mcenv, meta=meta, lambdas.sqrt, C)
+				recompute.par.integral[i] <- FALSE
+			}
+		}
 		laccepted <- lambdas.update(mcenv, wpar.integral.to.mC, C)
 		recompute.par.integral <- recompute.par.integral | laccepted
 		
@@ -252,23 +258,41 @@ get.DLdata.for.estimation <- function(meta, countries) {
 	return(DLdata=DLdata)	
 }
 
-slice.sampling <- function(x0, fun, width,  ..., low, up) {
+slice.sampling <- function(x0, fun, width,  ..., low, up, maxit=50) {
+	# Slightly modified version of 
+	# http://www.cs.toronto.edu/~radford/ftp/slice-R-prog (Radford M. Neal, 17 March 2008)
 	gx0 <- fun(x0, ..., low=low, up=up)
 	z <- gx0 - rexp(1) # slice S={x: z < gx0}
-	u <- runif(2)
-	L <- max(x0 - width*u[1], low)
-	R <- min(L + width, up)
+	L <- x0 - runif(1, 0, width)
+	R <- L + width # should guarantee that x0 is in [L,R], even with roundoff
+	#print(c(L,R,z))
+	# Expand the interval until its ends are outside the slice, or until
+	# the limit on steps is reached.
+	J <- floor(runif(1,0,maxit))
+    K <- (maxit-1) - J
+    while (J>0 && L > low && fun(L,  ..., low=low, up=up)>z) {
+      L <- L - width
+      J <- J - 1
+    }
+    while (K>0 && R < up && fun(R,  ..., low=low, up=up)>z) {
+      R <- R + width
+      K <- K - 1
+    }
+    #print(c(maxit - K - J, z, L, R))
+	# Shrink interval to lower and upper bounds.
+	if (L<low) L <- low
+  	if (R>up) R <- up
+ 
+	# Sample from the interval, shrinking it on each rejection.
 	i<-1
-	maxit <- 50
-	while (TRUE) {
-		u <- runif(1)
-		x1 <- L + u*(R-L)
-		if(z < fun(x1,  ..., low=low, up=up)) return(x1)
+	while(i<=maxit) {
+		x1 <- runif(1,L,R)
+		if(z <= fun(x1,  ..., low=low, up=up)) return(x1)
 		if (x1 < x0) L <- x1
 		else R <- x1
 		i <- i+1
-		if(i>maxit) stop('Problem in slice sampling')
 	}
+	stop('Problem in slice sampling')
 }
 
 Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
@@ -287,6 +311,7 @@ Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
 	ntries <- 1
 	while(ntries <= 50) {
 		for (i in 1:4) {
+			#print(c('Delta', i))
 			Triangle.prop[i] <- slice.sampling(mcmc$Triangle.c[i, country],
 										logdensity.Triangle.k.z.c, mcmc$meta$Triangle.c.width[i], 
 										mean=mcmc$Triangle[i], 
@@ -303,6 +328,7 @@ Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
 		ntries <- ntries + 1
 	}
 	mcmc$Triangle.c[, country] <- Triangle.prop
+	#print('k')
 	mcmc$k.c[country] <- slice.sampling(mcmc$k.c[country],
 										logdensity.Triangle.k.z.c, mcmc$meta$k.c.width, mean=mcmc$k, 
 										sd=1/sqrt(mcmc$lambda.k), dlx=dlx,
@@ -311,7 +337,7 @@ Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
 										par.idx=5, p1=mcmc$meta$dl.p1, p2=mcmc$meta$dl.p2, 
 										omega=mcmc$omega, DLdata=DLdata[[country]])
 	dlx[5] <- mcmc$k.c[country]
-
+	#print('z')
 	mcmc$z.c[country] <- slice.sampling(mcmc$z.c[country],
 										logdensity.Triangle.k.z.c, mcmc$meta$z.c.width, mean=mcmc$z, 
 										sd=1/sqrt(mcmc$lambda.z), dlx=dlx,
