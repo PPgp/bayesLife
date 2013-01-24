@@ -112,9 +112,9 @@ get.e0.convergence <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 					' and thin=', thin, ' does not exist.')
 		return(NULL)
 	}
-	bayesTFR.convergence <- local({load(file.name)
-				  					bayesTFR.convergence})
-	return(bayesTFR.convergence)
+	bayesLife.convergence <- local({load(file.name)
+				  					bayesLife.convergence})
+	return(bayesLife.convergence)
 }
 
 get.e0.parameter.traces <- function(mcmc.list, par.names=e0.parameter.names(), burnin=0,
