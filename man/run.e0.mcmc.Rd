@@ -23,10 +23,10 @@ run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 100000,
     z.ini = NULL, lambda.ini = list(NULL, NULL, NULL, NULL), 
     lambda.k.ini = NULL, lambda.z.ini = NULL, omega.ini = NULL, 
     Triangle.ini.low = c(10, 30, 0.1, 10), Triangle.ini.up = c(30, 50, 10, 30), 
-    k.ini.low = 1, k.ini.up = 5, z.ini.low = 1e-04, z.ini.up = 1.1, 
-    lambda.ini.low = c(1e-04, 1e-04, 1e-04, 1e-04), 
+    k.ini.low = 3, k.ini.up = 5, z.ini.low = 1e-04, z.ini.up = 1.1, 
+    lambda.ini.low = c(0.01, 0.01, 0.01, 0.01), 
     lambda.ini.up = c(0.1, 0.1, 0.1, 0.1), 
-    lambda.k.ini.low = 0.1, lambda.k.ini.up = 1, 
+    lambda.k.ini.low = 0.3, lambda.k.ini.up = 1, 
     lambda.z.ini.low = 1, lambda.z.ini.up = 40, 
     omega.ini.low = 0.1, omega.ini.up = 5, 
     Triangle.prior.low=c(0, 0, -20, 0), Triangle.prior.up=c(100, 100, 100, 100),
@@ -37,13 +37,12 @@ run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 100000,
     z.c.ini.norm = c(round(z.ini.low + (z.ini.up - z.ini.low)/2, 2), 0.2), 
     Triangle.c.prior.low = c(0, 0, -20, 0), Triangle.c.prior.up = c(100, 100, 100, 100),
     k.c.prior.low = 0, k.c.prior.up = 10, z.c.prior.low = 0, z.c.prior.up = 1.15,
-    Triangle.c.width = c(4, 6, 3, 4), k.c.width = 1, z.c.width = 0.2, 
     country.overwrites = NULL, nu = 4, dl.p1 = 9, dl.p2 = 9, 
     sumTriangle.lim = c(30, 110), constant.variance = FALSE, seed = NULL, 
     parallel = FALSE, nr.nodes = nr.chains, compression.type = 'None',
     auto.conf = list(max.loops=5, iter=100000, iter.incr=20000, 
         nr.chains=3, thin=120, burnin=20000),
-    verbose = FALSE, verbose.iter = 10, \dots)
+    verbose = FALSE, verbose.iter = 100, \dots)
     
 continue.e0.mcmc(iter, chain.ids = NULL, 
     output.dir = file.path(getwd(), "bayesLife.output"), 
@@ -92,8 +91,6 @@ continue.e0.mcmc(iter, chain.ids = NULL,
     \item{Triangle.c.prior.low, Triangle.c.prior.up}{A vector of length four. They are the lower and upper bounds for the prior (truncated normal) distribution of country-specific \eqn{\Delta_1^c}{Triangle_1_c}, \dots, \eqn{\Delta_4^c}{Triangle_4_c}.}
     \item{k.c.prior.low, k.c.prior.up}{Single value giving the lower and upper bounds for the prior (truncated normal) distribution  of country-specific \eqn{k^c}. }
     \item{z.c.prior.low, z.c.prior.up}{Single value giving the lower and upper bounds for the prior (truncated normal) distribution  of country-specific \eqn{z^c}.}
-  \item{Triangle.c.width}{Width for slice sampling used when updating the country-specific parameters \eqn{\Delta_i^c}{Triangle_i_c} with \eqn{i=1,\dots,4}.}
-  \item{k.c.width, z.c.width}{Width for slice sampling used when updating the country-specific parameters \eqn{k^c} (\eqn{z^c}).}
   \item{country.overwrites}{This argument allows to overwrite some of the prior parameters for specific countries. If it is not \code{NULL} it should be a data frame with an obligatory column \sQuote{country_code}. Each row then corresponds to one country. Other columns can be \sQuote{k.c.prior.low}, \sQuote{k.c.prior.up}, \sQuote{z.c.prior.low}, \sQuote{z.c.prior.up}, \sQuote{Triangle_\eqn{x}.c.prior.low} and \sQuote{Triangle_\eqn{x}.c.prior.up} where \eqn{x} can be an integer from 1 to 4.}
   \item{nu}{The shape parameter of the Gamma distributions of all \eqn{\lambda}{lambda} parameters is \code{nu/2}.}
   \item{dl.p1, dl.p2}{Values of the parameters \eqn{p_1} and \eqn{p_2} of the double logistic function.}
