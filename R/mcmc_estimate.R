@@ -7,7 +7,7 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
 	C <- meta$nr.countries
 	mcmc$thin <- thin
 	
-	delta.sq <- mcmc$meta$delta^2
+	delta.sq <- meta$delta^2
 	#dlf <- matrix(NA, nrow=T, ncol=C)
 	#psi.shape <- (sum(meta$T.end.c-1)-1)/2.
  
@@ -55,10 +55,7 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
 									low=meta$Triangle.prior.low[i], high=meta$Triangle.prior.up[i])
 				accept.prob <- ((par.integral(Triangle.prop[i], lambdas.sqrt[i], 
 								low=meta$Triangle.c.prior.low[i], up=meta$Triangle.c.prior.up[i]))^(-C))/wpar.integral.to.mC[i]
-				rn <- runif(1)
-				#print(c(i, rn, accept.prob, ntries))
-				#if(i==3) stop('')
-				if (rn >= accept.prob) { # not accepted
+				if (runif(1) >= accept.prob) { # not accepted
 					Triangle.prop[i] <- mcenv$Triangle[i] # replace the proposal by the old value
                     recompute.par.integral[i] <- FALSE
                     #cat('\nnot accepted Delta ', i, ' iter ', iter)
@@ -74,7 +71,7 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
 		k.prop <- rnorm.trunc(mean=Tr.mean[5], sd=Tr.sd[5], low=meta$k.prior.low, high=meta$k.prior.up)
 		accept.prob <- ((par.integral(k.prop, lambdas.sqrt[5], 
 								low=meta$k.c.prior.low, up=meta$k.c.prior.up))^(-C))/wpar.integral.to.mC[5]
-		if (runif(1) < accept.prob) {
+		if (accept.prob >= 1 || runif(1) < accept.prob) {
         	mcenv$k <- k.prop
 			recompute.par.integral[5] <- TRUE
 		} #else {
@@ -83,16 +80,20 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
 		#}
 
 		# z is truncated normal in [0,1.15]
-		z.prop <- rnorm.trunc(mean=Tr.mean[6], sd=Tr.sd[6], low=meta$z.prior.low, high=meta$z.prior.up)
-		accept.prob <- ((par.integral(z.prop, lambdas.sqrt[6], 
-								low=meta$z.c.prior.low, up=meta$z.c.prior.up))^(-C))/wpar.integral.to.mC[6]
-		if (runif(1) < accept.prob) {
-        	mcenv$z <- z.prop
-			recompute.par.integral[6] <- TRUE
-		} #else {
-			#cat('\nnot accepted z iter ', iter)
-			#recompute.par.integral[6] <- FALSE
-		#}
+		mcenv$z <- slice.sampling(mcmc$z, logdensity.Triangle.k.z, mcmc$meta$z.c.width, 
+								low=meta$z.prior.low, up=meta$z.prior.up,
+								alpha=meta$a[6], delta=meta$delta[6], par.c=mcenv$z.c, sd=1/lambdas.sqrt[6], 
+								c.low=meta$z.c.prior.low, c.up=meta$z.c.prior.up)
+		# z.prop <- rnorm.trunc(mean=Tr.mean[6], sd=Tr.sd[6], low=meta$z.prior.low, high=meta$z.prior.up)
+		# accept.prob <- ((par.integral(z.prop, lambdas.sqrt[6], 
+								# low=meta$z.c.prior.low, up=meta$z.c.prior.up))^(-C))/wpar.integral.to.mC[6]
+		# if (accept.prob >= 1 || runif(1) < accept.prob) {
+        	# mcenv$z <- z.prop
+			# recompute.par.integral[6] <- TRUE
+		# } #else {
+			# #cat('\nnot accepted z iter ', iter)
+			# #recompute.par.integral[6] <- FALSE
+		# #}
 		sum.term.for.omega <- 0
 		# Update Triangle.c, k.c and z.c using slice sampling
 		###########################################
@@ -364,30 +365,59 @@ lambdas.update <- function(mcmc, wpar.integral.to.mC, C) {
 	for(i in 1:4) {
 		prop <- proposal.lambda(mcmc$meta$nu, tau.sq[i], mcmc$Triangle[i], mcmc$Triangle.c[i,], 
 								mcmc$meta$nr.countries)
+		# lpx0 <- logdensity.lambda(mcmc$lambda[i], mcmc, mcmc$meta$Triangle.prior.low[i],
+					# mcmc$meta$Triangle.prior.up[i], mcmc$Triangle[i], mcmc$Triangle.c[i,], tau.sq[i])
+		# lpx1 <- logdensity.lambda(prop, mcmc, mcmc$meta$Triangle.prior.low[i],
+					# mcmc$meta$Triangle.prior.up[i], mcmc$Triangle[i], mcmc$Triangle.c[i,], tau.sq[i])
+		# prob_accept <- exp(lpx1 - lpx0)
+
 		prob_accept <- ((par.integral(mcmc$Triangle[i], sqrt(prop), 
 							low=mcmc$meta$Triangle.c.prior.low[i], up=mcmc$meta$Triangle.c.prior.up[i]))^(-C))/wpar.integral.to.mC[i]
-		if (runif(1) < prob_accept){
+		if (prob_accept >= 1 || runif(1) < prob_accept){
 			mcmc$lambda[i] <- prop
 			accepted[i] <- TRUE
 		}
 	}
 	# update lambda.k 
 	prop <- proposal.lambda(mcmc$meta$nu, tau.sq[5], mcmc$k, mcmc$k.c, mcmc$meta$nr.countries)
+	#lpx0 <- logdensity.lambda(mcmc$lambda.k, mcmc, mcmc$meta$k.prior.low, mcmc$meta$k.prior.up, 
+	#					mcmc$k, mcmc$k.c, tau.sq[5])
+	#lpx1 <- logdensity.lambda(prop, mcmc, mcmc$meta$k.prior.low, mcmc$meta$k.prior.up, mcmc$k, mcmc$k.c, tau.sq[5])
+	#prob_accept <- min(exp(lpx1 - lpx0), 1)
 	prob_accept <- ((par.integral(mcmc$k, sqrt(prop), 
 						low=mcmc$meta$k.c.prior.low, up=mcmc$meta$k.c.prior.up))^(-C))/wpar.integral.to.mC[5]
-	if (runif(1) < prob_accept) {
+	if (prob_accept >= 1 || runif(1) < prob_accept) {
 		mcmc$lambda.k <- prop
 		accepted[5] <- TRUE
 	}
 	# update lambda.z
-	prop <- proposal.lambda(mcmc$meta$nu, tau.sq[6], mcmc$z, mcmc$z.c, mcmc$meta$nr.countries)
-	prob_accept <- ((par.integral(mcmc$z, sqrt(prop), 
-						low=mcmc$meta$z.c.prior.low, up=mcmc$meta$z.c.prior.up))^(-C))/wpar.integral.to.mC[6]
-	if (runif(1) < prob_accept)	{
-		mcmc$lambda.z <- prop
-		accepted[6] <- TRUE
-	}
+	mcmc$lambda.z <- slice.sampling(mcmc$lambda.z, logdensity.lambda, 10, 
+								mcmc=mcmc, low=0, up=Inf, c.low=mcmc$meta$z.prior.low, c.up=mcmc$meta$z.prior.up,
+								Triangle=mcmc$z, Triangle.c=mcmc$z.c, tau.sq=tau.sq[6])
+	#prop <- proposal.lambda(mcmc$meta$nu, tau.sq[6], mcmc$z, mcmc$z.c, mcmc$meta$nr.countries)
+	#lpx0 <- logdensity.lambda(mcmc$lambda.z, mcmc, mcmc$meta$z.prior.low, mcmc$meta$z.prior.up, mcmc$z, mcmc$z.c, tau.sq[6])
+	#lpx1 <- logdensity.lambda(prop, mcmc, mcmc$meta$z.prior.low, mcmc$meta$z.prior.up, mcmc$z, mcmc$z.c, tau.sq[6])
+	#prob_accept <- exp(lpx1 - lpx0)
+
+	#prob_accept <- ((par.integral(mcmc$z, sqrt(prop), 
+	#					low=mcmc$meta$z.c.prior.low, up=mcmc$meta$z.c.prior.up))^(-C))/wpar.integral.to.mC[6]
+	#if (prob_accept >= 1 || runif(1) < prob_accept)	{
+	#	mcmc$lambda.z <- prop
+	#	accepted[6] <- TRUE
+	#}
 	return(accepted)
+}
+
+logdensity.Triangle.k.z <- function(par, low, up, alpha, delta, par.c, sd, c.low, c.up) {
+	return(log(max(dnorm.trunc(par, alpha, delta, low, up), .Machine$double.xmin)) + sum(log(pmax(dnorm.trunc(par.c, par, sd, c.low, c.up),
+				.Machine$double.xmin))))
+}
+
+logdensity.lambda <- function(lambda, mcmc, c.low, c.up, Triangle, Triangle.c, tau.sq, ...) {
+	nu <- mcmc$meta$nu
+	return(log(dgamma(lambda, nu/2, rate=tau.sq)) + 
+			sum(log(pmax(dnorm.trunc(Triangle.c, mean=Triangle, sd=1/sqrt(lambda), c.low, c.up), 
+				.Machine$double.xmin))))
 }
 
 proposal.lambda <- function(nu, tau.sq, Triangle, Triangle.c, C) {
