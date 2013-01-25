@@ -259,7 +259,7 @@ get.DLdata.for.estimation <- function(meta, countries) {
 	return(DLdata=DLdata)	
 }
 
-slice.sampling <- function(x0, fun, width,  ..., low, up, maxit=50, debug=FALSE) {
+slice.sampling <- function(x0, fun, width,  ..., low, up, maxit=50) {
 	# Slightly modified version of 
 	# http://www.cs.toronto.edu/~radford/ftp/slice-R-prog (Radford M. Neal, 17 March 2008)
 	gx0 <- fun(x0, ..., low=low, up=up)
@@ -283,13 +283,13 @@ slice.sampling <- function(x0, fun, width,  ..., low, up, maxit=50, debug=FALSE)
 	# Shrink interval to lower and upper bounds.
 	if (L<low) L <- low
   	if (R>up) R <- up
- 	if(debug) print(c('Slice sampling begin:', L, R, z, x0))
+ 	#if(debug) print(c('Slice sampling begin:', L, R, z, x0))
 	# Sample from the interval, shrinking it on each rejection.
 	i<-1
 	while(i<=maxit) {
 		x1 <- runif(1,L,R)
 		if(z <= fun(x1,  ..., low=low, up=up)) {
-			if(debug) print(c('Slice sampling end:', L, R, x1))
+			#if(debug) print(c('Slice sampling end:', L, R, x1))
 			return(x1)
 		}
 		if (x1 < x0) L <- x1
@@ -361,7 +361,7 @@ logdensity.Triangle.k.z.c <- function(x, mean, sd, dlx, low, up, par.idx, p1, p2
 	return(res$logdens)	
 }
 
-lambdas.update <- function(mcmc, wpar.integral.to.mC, C, debug=FALSE) {
+lambdas.update <- function(mcmc, wpar.integral.to.mC, C) {
 	# Update lambdas using MH-algorithm
 	tau.sq <- mcmc$meta$tau^2
 	accepted <- rep(FALSE, 6)
@@ -396,7 +396,7 @@ lambdas.update <- function(mcmc, wpar.integral.to.mC, C, debug=FALSE) {
 	# update lambda.z
 	mcmc$lambda.z <- slice.sampling(mcmc$lambda.z, logdensity.lambda, 10, 
 								mcmc=mcmc, low=0, up=Inf, c.low=mcmc$meta$z.c.prior.low, c.up=mcmc$meta$z.c.prior.up,
-								Triangle=mcmc$z, Triangle.c=mcmc$z.c, tau.sq=tau.sq[6], debug=debug)
+								Triangle=mcmc$z, Triangle.c=mcmc$z.c, tau.sq=tau.sq[6])
 	#prop <- proposal.lambda(mcmc$meta$nu, tau.sq[6], mcmc$z, mcmc$z.c, mcmc$meta$nr.countries)
 	#lpx0 <- logdensity.lambda(mcmc$lambda.z, mcmc, mcmc$meta$z.prior.low, mcmc$meta$z.prior.up, mcmc$z, mcmc$z.c, tau.sq[6])
 	#lpx1 <- logdensity.lambda(prop, mcmc, mcmc$meta$z.prior.low, mcmc$meta$z.prior.up, mcmc$z, mcmc$z.c, tau.sq[6])
