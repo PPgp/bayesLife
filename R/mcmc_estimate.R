@@ -80,7 +80,7 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
 		#}
 
 		# z is truncated normal in [0,1.15]
-		mcenv$z <- slice.sampling(mcmc$z, logdensity.Triangle.k.z, mcmc$meta$z.c.width, 
+		mcenv$z <- slice.sampling(mcenv$z, logdensity.Triangle.k.z, meta$z.c.width, 
 								low=meta$z.prior.low, up=meta$z.prior.up,
 								alpha=meta$a[6], delta=meta$delta[6], par.c=mcenv$z.c, sd=1/lambdas.sqrt[6], 
 								c.low=meta$z.c.prior.low, c.up=meta$z.c.prior.up)
@@ -259,7 +259,7 @@ get.DLdata.for.estimation <- function(meta, countries) {
 	return(DLdata=DLdata)	
 }
 
-slice.sampling <- function(x0, fun, width,  ..., low, up, maxit=50) {
+slice.sampling <- function(x0, fun, width,  ..., low, up, maxit=50, debug=FALSE) {
 	# Slightly modified version of 
 	# http://www.cs.toronto.edu/~radford/ftp/slice-R-prog (Radford M. Neal, 17 March 2008)
 	gx0 <- fun(x0, ..., low=low, up=up)
@@ -283,12 +283,15 @@ slice.sampling <- function(x0, fun, width,  ..., low, up, maxit=50) {
 	# Shrink interval to lower and upper bounds.
 	if (L<low) L <- low
   	if (R>up) R <- up
- 
+ 	if(debug) print(c('Slice sampling begin:', L, R, z, x0))
 	# Sample from the interval, shrinking it on each rejection.
 	i<-1
 	while(i<=maxit) {
 		x1 <- runif(1,L,R)
-		if(z <= fun(x1,  ..., low=low, up=up)) return(x1)
+		if(z <= fun(x1,  ..., low=low, up=up)) {
+			if(debug) print(c('Slice sampling end:', L, R, x1))
+			return(x1)
+		}
 		if (x1 < x0) L <- x1
 		else R <- x1
 		i <- i+1
@@ -358,7 +361,7 @@ logdensity.Triangle.k.z.c <- function(x, mean, sd, dlx, low, up, par.idx, p1, p2
 	return(res$logdens)	
 }
 
-lambdas.update <- function(mcmc, wpar.integral.to.mC, C) {
+lambdas.update <- function(mcmc, wpar.integral.to.mC, C, debug=FALSE) {
 	# Update lambdas using MH-algorithm
 	tau.sq <- mcmc$meta$tau^2
 	accepted <- rep(FALSE, 6)
@@ -392,8 +395,8 @@ lambdas.update <- function(mcmc, wpar.integral.to.mC, C) {
 	}
 	# update lambda.z
 	mcmc$lambda.z <- slice.sampling(mcmc$lambda.z, logdensity.lambda, 10, 
-								mcmc=mcmc, low=0, up=Inf, c.low=mcmc$meta$z.prior.low, c.up=mcmc$meta$z.prior.up,
-								Triangle=mcmc$z, Triangle.c=mcmc$z.c, tau.sq=tau.sq[6])
+								mcmc=mcmc, low=0, up=Inf, c.low=mcmc$meta$z.c.prior.low, c.up=mcmc$meta$z.c.prior.up,
+								Triangle=mcmc$z, Triangle.c=mcmc$z.c, tau.sq=tau.sq[6], debug=debug)
 	#prop <- proposal.lambda(mcmc$meta$nu, tau.sq[6], mcmc$z, mcmc$z.c, mcmc$meta$nr.countries)
 	#lpx0 <- logdensity.lambda(mcmc$lambda.z, mcmc, mcmc$meta$z.prior.low, mcmc$meta$z.prior.up, mcmc$z, mcmc$z.c, tau.sq[6])
 	#lpx1 <- logdensity.lambda(prop, mcmc, mcmc$meta$z.prior.low, mcmc$meta$z.prior.up, mcmc$z, mcmc$z.c, tau.sq[6])
