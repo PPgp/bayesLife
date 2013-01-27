@@ -1,17 +1,10 @@
 e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.iter=10) {
 	if (!is.null(mcmc$rng.state)) .Random.seed <- mcmc$rng.state
 	niter <- mcmc$iter
-	meta <- mcmc$meta
-	#lex.mtx <- meta$e0.matrix
-	T <- nrow(meta$e0.matrix) - 1
-	C <- meta$nr.countries
-	mcmc$thin <- thin
-	
-	delta.sq <- meta$delta^2
-	#dlf <- matrix(NA, nrow=T, ncol=C)
-	#psi.shape <- (sum(meta$T.end.c-1)-1)/2.
- 
-	
+	T <- nrow(mcmc$meta$e0.matrix) - 1
+	C <- mcmc$meta$nr.countries
+	mcmc$thin <- thin	
+	delta.sq <- mcmc$meta$delta^2	
 	if (start.iter > niter) return(mcmc)
 	
 	mcenv <- new.env() # Create an environment for the mcmc stuff in order to avoid 
@@ -20,13 +13,7 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
     Triangle.prop <- rep(0,4)
     
     set.slice.sampling.width(mcenv)
-    # slice sampling widths
-    mcenv$meta$Triangle.c.width <- c(10, 10, 10, 10)
-    mcenv$meta$k.c.width <- 2
-    mcenv$meta$z.c.width <- 1
-    mcenv$meta$z.width <- 1
-    mcenv$meta$lambda.z.width <- 10
-    mcenv$meta$omega.width <- 1
+    meta <- mcenv$meta
     
     dlf <- list()
     DLdata <- get.DLdata.for.estimation(meta, 1:C)
@@ -193,7 +180,7 @@ e0.mcmc.sampling.extra <- function(mcmc, mcmc.list, countries, posterior.sample,
 						# copying of the mcmc list 
 	for (item in names(mcmc)) mcenv[[item]] <- mcmc[[item]]
 	updated.var.names <- c('Triangle.c', 'k.c', 'z.c')
-	DLdata <- get.DLdata.for.estimation(mcmc$meta, countries)
+	DLdata <- get.DLdata.for.estimation(mcenv$meta, countries)
 	set.slice.sampling.width(mcenv)
 	
 	for(iter in 1:niter) {
