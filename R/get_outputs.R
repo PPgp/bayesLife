@@ -104,7 +104,7 @@ get.e0.convergence.all <- function(sim.dir=file.path(getwd(), 'bayesLife.output'
 }
 
 get.e0.convergence <- function(sim.dir=file.path(getwd(), 'bayesLife.output'), 
-									thin=120, burnin=20000) {
+									thin=225, burnin=10000) {
 	file.name <- file.path(sim.dir, 'diagnostics', paste('bayesLife.convergence_', 
 							thin, '_', burnin, '.rda', sep=''))
 	if(!file.exists(file.name)){
@@ -230,8 +230,6 @@ summary.bayesLife.mcmc.set <- function(object, country=NULL, chain.id=NULL,
 	
 	cat('\nMCMC parameters estimated for', object$meta$nr.countries, 'countries.')
 	cat('\nHyperparameters estimated using', object$meta$nr.countries.estimation, 'countries.')
-	
-	
 	cat('\n')
 	if(meta.only) {
 		get.iter <- function(x) x$finished.iter

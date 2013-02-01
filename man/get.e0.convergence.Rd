@@ -10,7 +10,7 @@ The functions load objects of class \code{\link{bayesLife.convergence}} from dis
 }
 \usage{
 get.e0.convergence(sim.dir = file.path(getwd(), "bayesLife.output"), 
-    thin = 120, burnin = 20000)
+    thin = 225, burnin = 10000)
 	
 get.e0.convergence.all(sim.dir = file.path(getwd(), "bayesLife.output"))
 }

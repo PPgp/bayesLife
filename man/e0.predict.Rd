@@ -11,7 +11,7 @@ Using the posterior parameter samples simulated by \code{\link{run.e0.mcmc}} the
 \usage{
 e0.predict(mcmc.set = NULL, end.year = 2100, 
     sim.dir = file.path(getwd(), "bayesLife.output"), replace.output = FALSE, 
-    predict.jmale = TRUE, nr.traj = NULL, thin = NULL, burnin = 20000, 
+    predict.jmale = TRUE, nr.traj = NULL, thin = NULL, burnin = 10000, 
     use.diagnostics = FALSE, save.as.ascii = 1000, output.dir = NULL, 
     low.memory = TRUE, seed = NULL, verbose = TRUE, \dots)
 }

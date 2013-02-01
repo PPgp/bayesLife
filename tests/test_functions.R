@@ -154,7 +154,7 @@ test.existing.simulation <- function() {
 	#summary(m)
 	#summary(e0.mcmc(m, 1), par.names.cs=NULL)
 	stopifnot(bayesTFR:::get.total.iterations(m$mcmc.list) == 120)
-	stopifnot(bayesTFR:::get.stored.mcmc.length(m$mcmc.list, burnin=30) == 30)
+	stopifnot(bayesTFR:::get.stored.mcmc.length(m$mcmc.list, burnin=31) == 30)
 	test.ok(test.name)
 	
 	test.name <- 'retrieving projection results'
@@ -283,15 +283,15 @@ test.get.parameter.traces <- function() {
 	start.test(test.name)
 	sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
 	m <- get.e0.mcmc(sim.dir, low.memory=TRUE)
-	traces <- get.e0.parameter.traces(m$mcmc.list, burnin=20, 
+	traces <- get.e0.parameter.traces(m$mcmc.list, burnin=21, 
 					thinning.index=c(4, 21, 39))
 	stopifnot(nrow(traces)==3)
-	m.check <- get.e0.mcmc(sim.dir, low.memory=FALSE, burnin=20)
+	m.check <- get.e0.mcmc(sim.dir, low.memory=FALSE, burnin=21)
 	stopifnot(traces[1,'omega']==m.check$mcmc.list[[1]]$traces[4,'omega'])
 	# indices 21 and 39 in the collapsed traces correspond to indices 1 and 19, respectively, in chain 2
 	stopifnot(all(traces[c(2,3),'omega']==m.check$mcmc.list[[2]]$traces[c(1,19),'omega']))
 	
-	traces <- get.e0.parameter.traces(m$mcmc.list, burnin=20, thin=8)
+	traces <- get.e0.parameter.traces(m$mcmc.list, burnin=21, thin=8)
 	# original thin is 2, so here we thin additionally by 4 (2*20/4=10) 
 	stopifnot(nrow(traces)==10)
 	stopifnot(traces[2,'z']==m.check$mcmc.list[[1]]$traces[5,'z']) #(4+1)

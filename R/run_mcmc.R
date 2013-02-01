@@ -1,4 +1,4 @@
-run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=100000, 
+run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000, 
 							output.dir=file.path(getwd(), 'bayesLife.output'), 
                          thin=10, replace.output=FALSE,
                          start.year=1873, present.year=2010, wpp.year=2010,
@@ -28,7 +28,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=100000,
 						 country.overwrites = NULL,
 						 nu=4, dl.p1=9, dl.p2=9, sumTriangle.lim = c(30, 110), constant.variance=FALSE,
                          seed = NULL, parallel=FALSE, nr.nodes=nr.chains, compression.type='None',
-                         auto.conf = list(max.loops=5, iter=100000, iter.incr=20000, nr.chains=3, thin=120, burnin=20000),
+                         auto.conf = list(max.loops=5, iter=160000, iter.incr=20000, nr.chains=3, thin=225, burnin=10000),
 						 verbose=FALSE, verbose.iter = 100, ...) {
 						 	
 	get.init.values.between.low.and.up <- function(low, up)
@@ -605,7 +605,7 @@ e0.mcmc.ini.extra <- function(mcmc, countries, index.replace=NULL) {
 		mcmc$z.c[index.replace] <- pmin(pmax(rnorm(nreplace, mcmc$meta$z.c.ini.norm[1], 
 							sd=mcmc$meta$z.c.ini.norm[2]), mcmc$meta$z.c.prior.low), mcmc$meta$z.c.prior.up)
 	}
-	
+	samplpars <- mcmc$meta$country.bounds
 	if(nr.countries.extra > nreplace) {
 		nextra <- nr.countries.extra-nreplace
 		eidx <- (ncol(mcmc$Triangle.c)+1):(ncol(mcmc$Triangle.c)+nextra)
@@ -613,11 +613,12 @@ e0.mcmc.ini.extra <- function(mcmc, countries, index.replace=NULL) {
 		for (i in 1:4)		
 			mcmc$Triangle.c[i,eidx] <- pmin(pmax(rnorm(nextra, mean=mcmc$meta$Triangle.c.ini.norm[[1]][i], 
 										sd=mcmc$meta$Triangle.c.ini.norm[[2]][i]),
-										mcmc$meta$Triangle.c.prior.low[i]), mcmc$meta$Triangle.c.prior.up[i])
+										samplpars[[paste('Triangle_', i, '.c.prior.low', sep='')]][eidx]), 
+										samplpars[[paste('Triangle_', i, '.c.prior.up', sep='')]][eidx])
 		mcmc$k.c <- c(mcmc$k.c, pmin(pmax(rnorm(nextra, mcmc$meta$k.c.ini.norm[1], 
-							sd=mcmc$meta$k.c.ini.norm[2]), mcmc$meta$k.c.prior.low), mcmc$meta$k.c.prior.up))
+							sd=mcmc$meta$k.c.ini.norm[2]), samplpars$k.c.prior.low[eidx]), samplpars$k.c.prior.up[eidx]))
 		mcmc$z.c <- c(mcmc$z.c, pmin(pmax(rnorm(nextra, mcmc$meta$z.c.ini.norm[1], 
-							sd=mcmc$meta$z.c.ini.norm[2]), mcmc$meta$z.c.prior.low), mcmc$meta$z.c.prior.up))
+							sd=mcmc$meta$z.c.ini.norm[2]), samplpars$z.c.prior.low[eidx]), samplpars$z.c.prior.up[eidx]))
 	}
 	return(mcmc)
 }

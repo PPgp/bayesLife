@@ -11,7 +11,7 @@ e0.proj.le.SDPropToLoess<-function(x,l.start,kap,n.proj=11, p1=9, p2=9, const.va
 }
 
 e0.predict <- function(mcmc.set=NULL, end.year=2100, sim.dir=file.path(getwd(), 'bayesLife.output'),
-                       replace.output=FALSE, predict.jmale = TRUE, nr.traj = NULL, thin=NULL, burnin=20000, 
+                       replace.output=FALSE, predict.jmale = TRUE, nr.traj = NULL, thin=NULL, burnin=10000, 
                        use.diagnostics=FALSE, save.as.ascii=1000,
                        output.dir = NULL, low.memory=TRUE, seed=NULL, verbose=TRUE, ...){
 	if(!is.null(mcmc.set)) {

@@ -10,7 +10,7 @@ return(bayesTFR:::tfr.raftery.diag(mcmc=mcmc, sim.dir=sim.dir, burnin=burnin,
 						country.sampling.prop=country.sampling.prop, verbose=verbose, ...))
 }
 
-e0.diagnose <- function(sim.dir, thin=120, burnin=20000, express=FALSE, 
+e0.diagnose <- function(sim.dir, thin=225, burnin=10000, express=FALSE, 
 						country.sampling.prop=NULL, keep.thin.mcmc=FALSE, verbose=TRUE) {
 	invisible(bayesTFR:::.do.diagnose(type='e0', class.name='bayesLife.convergence', 
 							sim.dir=sim.dir, thin=thin, burnin=burnin, express=express,
@@ -19,7 +19,7 @@ e0.diagnose <- function(sim.dir, thin=120, burnin=20000, express=FALSE,
 	
 }
 
-e0.dl.coverage <- function(sim.dir, pi=c(80,90,95), burnin=20000, verbose=TRUE) {
+e0.dl.coverage <- function(sim.dir, pi=c(80,90,95), burnin=10000, verbose=TRUE) {
 	if(has.e0.prediction(sim.dir=sim.dir)) {
 		pred <- get.e0.prediction(sim.dir=sim.dir)
 		mcmc.set <- pred$mcmc.set

@@ -10,7 +10,7 @@ Running Markov Chain Monte Carlo for Parameters of Life Expectancy
 Runs (or continues running) MCMCs for simulating the life expectancy for all countries of the world, using a Bayesian hierarchical model.
 }
 \usage{
-run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 100000, 
+run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 160000, 
     output.dir = file.path(getwd(), "bayesLife.output"), 
     thin = 10, replace.output = FALSE, 
     start.year = 1873, present.year = 2010, wpp.year = 2010, 
@@ -40,8 +40,8 @@ run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 100000,
     country.overwrites = NULL, nu = 4, dl.p1 = 9, dl.p2 = 9, 
     sumTriangle.lim = c(30, 110), constant.variance = FALSE, seed = NULL, 
     parallel = FALSE, nr.nodes = nr.chains, compression.type = 'None',
-    auto.conf = list(max.loops=5, iter=100000, iter.incr=20000, 
-        nr.chains=3, thin=120, burnin=20000),
+    auto.conf = list(max.loops=5, iter=160000, iter.incr=20000, 
+        nr.chains=3, thin=225, burnin=10000),
     verbose = FALSE, verbose.iter = 100, \dots)
     
 continue.e0.mcmc(iter, chain.ids = NULL, 

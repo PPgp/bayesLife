@@ -7,7 +7,7 @@ Goodness of Fit of the Double Logistic Function
 The function computes coverage, i.e. the ratio of observed data fitted within the given probability intervals of the predictive posterior distribution of the double logistic function, as well as the root mean square error of the simulation.
 }
 \usage{
-e0.dl.coverage(sim.dir, pi = c(80, 90, 95), burnin = 20000, verbose = TRUE)
+e0.dl.coverage(sim.dir, pi = c(80, 90, 95), burnin = 10000, verbose = TRUE)
 }
 
 \arguments{
