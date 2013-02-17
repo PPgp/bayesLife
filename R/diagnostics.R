@@ -102,6 +102,7 @@ e0.DLisDecrement <- function() {
 	if(verbose) cat('\n')	
 	total.GoF <- total.GoF/sum(counter)
 	total.mse <- total.mse/sum(counter)
+	total.mae <- total.mae/sum(counter)
 	pi.names <- paste(pi, '%', sep='')
 	names(total.GoF) <- pi.names
 	names(total.mse) <- 'RMSE'
