@@ -1,3 +1,7 @@
+1.0-1 (2/16/2013)
+-----
+In e0.dl.coverage - MAE corrected.
+
 1.0-0 (1/31/2013)
 -----
 Truncation in the full conditionals of the world parameters corrected. Estimation now via Metropolis-Hastings.
