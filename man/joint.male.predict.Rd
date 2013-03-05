@@ -9,7 +9,8 @@ Prediction of the joint female-male model of life expectancy, as described in Ra
 }
 \usage{
 e0.jmale.predict(e0.pred, estimates = NULL, gap.lim = c(0, 18), 
-    min.e0.eq2.pred = 80, my.e0.file = NULL, verbose = TRUE, \dots)
+    min.e0.eq2.pred = 80, my.e0.file = NULL, 
+    save.as.ascii = 1000, verbose = TRUE, \dots)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -18,6 +19,7 @@ e0.jmale.predict(e0.pred, estimates = NULL, gap.lim = c(0, 18),
   \item{gap.lim}{Vector of length two giving the minimum and maximum bounds for the female-male life expectancy gaps.}
  \item{min.e0.eq2.pred}{Minimum female life expectancy for male projections handled by the second equation (parameter \eqn{M} in Equation (1) in Raftery et al. (2012)).}
   \item{my.e0.file}{File name containing user-specified male time series for one or more countries. The function replaces the corresponding country data from the UN WPP file by values in this file. Only columns are replaced that match column names of the WPP file.}
+  \item{save.as.ascii}{Either a number determining how many trajectories should be converted into an ASCII file, or \dQuote{all} in which case all trajectories are converted. It should be set to 0, if no conversion is desired.}
   \item{verbose}{Logical switching log messages on and off.}
   \item{\dots}{Further arguments passed to \code{\link{e0.jmale.estimate}}.}
 }

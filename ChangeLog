@@ -1,3 +1,7 @@
+1.0-2 (3/5/2013)
+-----
+Change due to change in bayesTFR, function for writing projection summaries - columns added. 
+
 1.0-1 (2/16/2013)
 -----
 In e0.dl.coverage - MAE corrected.

@@ -98,6 +98,11 @@ test.estimate.mcmc <- function(compression='None') {
 	stopifnot(all(mod.projs[4:6, c(1,3:dim(projs)[2])]==projs[4:6, c(1,3:dim(projs)[2])]+shift))
 	stopifnot(all(mod.projs[c(1:3,7:19), c(1,3:dim(projs)[2])]==projs[c(1:3,7:19), c(1,3:dim(projs)[2])]))
 	test.ok(test.name)
+	
+	test.name <- 'converting trajectories'
+	start.test(test.name)
+	convert.e0.trajectories(sim.dir, n=10)
+	test.ok(test.name)
 	unlink(sim.dir, recursive=TRUE)
 }
 

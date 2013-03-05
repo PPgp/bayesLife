@@ -52,7 +52,7 @@ e0.predict <- function(mcmc.set=NULL, end.year=2100, sim.dir=file.path(getwd(), 
 					nr.traj=nr.traj, thin=thin, burnin=burnin, save.as.ascii=save.as.ascii,
 					output.dir=output.dir, verbose=verbose)
 	if(predict.jmale && mcmc.set$meta$sex == 'F')
-		pred <- e0.jmale.predict(pred, ..., verbose=verbose)
+		pred <- e0.jmale.predict(pred, ..., save.as.ascii=save.as.ascii, verbose=verbose)
 	invisible(pred)
 }
 
@@ -110,6 +110,8 @@ e0.predict.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 	
 	if (has.e0.jmale.prediction(pred)) {
 		bayesLife.prediction <- .do.e0.jmale.predict.extra(pred, countries.idx, idx.other.countries, idx.pred.others, ..., verbose=verbose)
+		bayesTFR:::do.convert.trajectories(pred=get.e0.jmale.prediction(bayesLife.prediction), n=save.as.ascii, 
+										output.dir=bayesLife.prediction$joint.male$output.directory, verbose=verbose)
 	} else {
 		# save updated prediction
 		bayesLife.prediction <- pred
@@ -119,7 +121,7 @@ e0.predict.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 	# convert trajectories and create summary files
 	bayesTFR:::do.convert.trajectories(pred=bayesLife.prediction, n=save.as.ascii, output.dir=pred$output.directory, 
 							verbose=verbose)
-	bayesTFR:::do.write.projection.summary(pred=bayesLife.prediction, output.dir=pred$output.directory)
+	do.write.e0.projection.summary(bayesLife.prediction, output.dir=pred$output.directory)
 	
 	cat('\nPrediction stored into', pred$output.directory, '\n')
 	invisible(bayesLife.prediction)
@@ -284,7 +286,7 @@ make.e0.prediction <- function(mcmc.set, end.year=2100, replace.output=FALSE,
 		bayesTFR:::do.convert.trajectories(pred=bayesLife.prediction, n=save.as.ascii, output.dir=outdir, 
 										verbose=verbose)
 		if(write.summary.files)
-			bayesTFR:::do.write.projection.summary(pred=bayesLife.prediction, output.dir=outdir)
+			do.write.e0.projection.summary(bayesLife.prediction, output.dir=outdir)
 	
 		cat('\nPrediction stored into', outdir, '\n')
 	}
@@ -298,28 +300,19 @@ remove.e0.traces <- function(mcmc.set) {
 }
 
 get.projection.summary.header.bayesLife.prediction <- function(pred, ...) 
-		return (list(revision='RevID', variant='VarID', country='LocID', year='TimeID', tfr='e0'))
+		return (list(revision='RevID', variant='VarID', country='LocID', year='TimeID', indicator='IndicatorID', sex='SexID', tfr='Value'))
 		
 get.UN.variant.names.bayesLife.prediction <- function(pred, ...) 
 		return(c('BHM median', 'BHM80 lower',  'BHM80 upper', 'BHM95 lower',  'BHM95 upper', 'Constant mortality'))
 	
 get.friendly.variant.names.bayesLife.prediction <- function(pred, ...)
 	return(c('median', 'lower 80', 'upper 80', 'lower 95', 'upper 95', 'constant'))	
+
 convert.e0.trajectories <- function(dir=file.path(getwd(), 'bayesLife.output'), 
 								 n=1000, output.dir=NULL, 
 								 verbose=FALSE) {
 	# Converts all trajectory rda files into UN ascii, selecting n trajectories by equal spacing.
 	if(n <= 0) return()
-	pred <- get.e0.prediction(sim.dir=dir)
-	if (is.null(output.dir)) output.dir <- pred$output.directory
-	if(!file.exists(output.dir)) dir.create(output.dir, recursive=TRUE)
-	cat('Converting trajectories from', dir, '\n')
-	bayesTFR:::do.convert.trajectories(pred=pred, n=n, output.dir=output.dir, verbose=verbose)
-}
-
-write.e0.projection.summary <- function(dir=file.path(getwd(), 'bayesLife.output'), 
-									 output.dir=NULL, revision=14) {
-# Writes two prediction summary files, one in a user-friendly format, one in a UN-format.
 	pred <- get.e0.prediction(sim.dir=dir)
 	predsex <- pred$mcmc.set$meta$sex
 	preds <- list()
@@ -333,11 +326,36 @@ write.e0.projection.summary <- function(dir=file.path(getwd(), 'bayesLife.output
 			else outdir <- output.dir
 		}
 		if(!file.exists(outdir)) dir.create(outdir, recursive=TRUE)
-		bayesTFR:::do.write.projection.summary(preds[[sex]], outdir, revision=revision)
+		cat('Converting ', list(M='Male', F='Female')[[sex]], ' trajectories from', dir, '\n')
+		bayesTFR:::do.convert.trajectories(pred=preds[[sex]], n=n, output.dir=outdir, verbose=verbose)
+	}
+}
+
+write.e0.projection.summary <- function(dir=file.path(getwd(), 'bayesLife.output'), 
+									 output.dir=NULL, revision=14) {
+# Writes four prediction summary files, one in a user-friendly format, one in a UN-format, one for each sex.
+	pred <- get.e0.prediction(sim.dir=dir)
+	predsex <- pred$mcmc.set$meta$sex
+	preds <- list()
+	preds[[predsex]] <- pred
+	if(has.e0.jmale.prediction(pred)) preds[['M']] <- get.e0.jmale.prediction(pred)
+	for (sex in c('F', 'M')) {
+		if(is.null(preds[[sex]])) next
+		if (is.null(output.dir)) outdir <- preds[[sex]]$output.directory
+		else {
+			if(length(preds) > 1) outdir <- file.path(output.dir,sex)
+			else outdir <- output.dir
+		}
+		if(!file.exists(outdir)) dir.create(outdir, recursive=TRUE)
+		do.write.e0.projection.summary(preds[[sex]], outdir, sex=sex, revision=revision)
 	}
 }
 		
-					
+do.write.e0.projection.summary <- function(pred, output.dir, sex=NULL, revision=14) {
+	if (is.null(sex)) sex <- pred$mcmc.set$meta$sex
+	bayesTFR:::do.write.projection.summary(pred, output.dir, revision=revision, indicator.id=10, sex.id=c(M=1,F=2)[sex])
+}
+				
 get.traj.ascii.header.bayesLife.mcmc.meta <- function(meta, ...) 
 	return (list(country_code='LocID', period='Period', year='Year', trajectory='Trajectory', tfr='e0'))
 	
@@ -421,7 +439,7 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 }
 
 e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim.eq2=c(3,9),	
-								min.e0.eq2.pred=80, my.e0.file=NULL, verbose=TRUE, ...) {
+								min.e0.eq2.pred=80, my.e0.file=NULL, save.as.ascii=1000, verbose=TRUE, ...) {
 	# Predicting male e0 from female predictions. estimates is the result of 
 	# the e0.jmale.estimate function. If it is NULL, the estimation is performed 
 	# using the ... arguments
@@ -454,7 +472,9 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 								eq2.age.start=min.e0.eq2.pred, verbose=verbose)
 	save(bayesLife.prediction, file=prediction.file)
 	cat('\nPrediction stored into', joint.male$output.directory, '\n')
-	bayesTFR:::do.write.projection.summary(pred=get.e0.jmale.prediction(bayesLife.prediction), output.dir=joint.male$output.directory)
+	bayesTFR:::do.convert.trajectories(pred=get.e0.jmale.prediction(bayesLife.prediction), n=save.as.ascii, 
+										output.dir=joint.male$output.directory, verbose=verbose)
+	do.write.e0.projection.summary(get.e0.jmale.prediction(bayesLife.prediction), output.dir=joint.male$output.directory, sex='M')
 	invisible(bayesLife.prediction)
 }
 
