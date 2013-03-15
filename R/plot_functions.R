@@ -16,8 +16,8 @@ e0.gap.plot <- function(e0.pred, country, e0.pred2=NULL, pi=c(80, 95), nr.traj=0
 	}
 	country <- get.country.object(country, e0.pred$mcmc.set$meta)
 	if(is.null(e0.pred2)) e0.pred2 <- get.e0.jmale.prediction(e0.pred)
-	e0.mtx <- e0.pred$e0.matrix.reconstructed
-	e0.mtx2 <- e0.pred2$e0.matrix.reconstructed
+	e0.mtx <- e0.pred$e0.matrix.reconstructed[1:e0.pred$present.year.index,]
+	e0.mtx2 <- e0.pred2$e0.matrix.reconstructed[1:e0.pred$present.year.index,]
 	T <- nrow(e0.mtx)
 	x1 <- as.integer(rownames(e0.mtx))
 	x2 <- as.numeric(dimnames(e0.pred$quantiles)[[3]])
@@ -249,33 +249,26 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 	for(ipred in 1:length(pred)) {
 		e0pred <- pred[[ipred]]
 		meta <- e0pred$mcmc.set$meta
-	
 		e0.mtx <- meta$e0.matrix
+		e0.observed <- get.observed.e0(country$index, meta, 'e0.matrix.all', 'e0.matrix')
+		suppl.T <- length(e0.observed) - dim(e0.mtx)[1]
+		if(!is.null(meta$T.end.c)) Tc <- meta$T.end.c[country$index]
+		else Tc <- meta$Tc.index[[country$index]][length(meta$Tc.index[[country$index]])] + suppl.T
+		T_end_c <- min(Tc, e0pred$present.year.index.all)
 		e0.matrix.reconstructed <- get.e0.reconstructed(e0pred$e0.matrix.reconstructed, meta)
-	
-		x1 <- as.integer(rownames(e0.matrix.reconstructed))
-		x2 <- as.numeric(dimnames(e0pred$quantiles)[[3]])
-
-		if(!is.null(meta$T.end.c)) lpart1 <- meta$T.end.c[country$index]
-		else lpart1 <- meta$Tc.index[[country$index]][length(meta$Tc.index[[country$index]])]
-	
-	
-		y1.part1 <- e0.mtx[1:lpart1,country$index]
+		y1.part1 <- e0.observed[1:T_end_c]
+		y1.part1 <- y1.part1[!is.na(y1.part1)]
+		lpart1 <- length(y1.part1)
 		y1.part2 <- NULL
-		lpart2 <- nrow(e0.mtx) - lpart1
-		if (lpart2 > 0) # imputed values
-			y1.part2 <- e0.matrix.reconstructed[
-				(lpart1+1):nrow(e0.matrix.reconstructed),country$index]
+		lpart2 <- min(dim(e0.mtx)[1], e0pred$present.year.index) - T_end_c + suppl.T
+		if (lpart2 > 0) { # imputed values
+			p2idx <- (T_end_c+1-suppl.T):nrow(e0.matrix.reconstructed)
+			y1.part2 <- e0.matrix.reconstructed[p2idx,country$index]
+			names(y1.part2) <- rownames(e0.matrix.reconstructed)[p2idx]
+		}
+		x1 <- as.integer(c(names(y1.part1), names(y1.part2)))
+		x2 <- as.numeric(dimnames(e0pred$quantiles)[[3]])
 			
-		if(!is.null(meta$suppl.data$e0.matrix)) {
-    		supp.c.idx <- meta$suppl.data$index.from.all.countries[country$index]
-    		if(!is.na(supp.c.idx)) {
-    			suppl.data.idx <- which(!is.na(meta$suppl.data$e0.matrix[,supp.c.idx]))
-    			lpart1 <- lpart1 + length(suppl.data.idx)
-    			y1.part1 <- c(meta$suppl.data$e0.matrix[suppl.data.idx, supp.c.idx], y1.part1)
-    			x1 <- c(as.integer(rownames(meta$suppl.data$e0.matrix[suppl.data.idx,,drop=FALSE])), x1)
- 			}
-    	}
     	plot.data[[ipred]] <- list(obs.x=x1[1:lpart1], obs.y=y1.part1, pred.x=x2)
     	ylim.loc <- c(min(ylim.loc[1], plot.data[[ipred]]$obs.y), max(ylim.loc[2], plot.data[[ipred]]$obs.y))
     	if(lpart2 > 0) {
@@ -284,6 +277,7 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
     		ylim.loc <- c(min(ylim.loc[1], plot.data[[ipred]]$rec.y), max(ylim.loc[2], plot.data[[ipred]]$rec.y))
     	}
 	}
+	#stop('')
 	if(do.average) {
 		plot.data[[1]]$obs.y <- plot.data[[1]]$obs.y - (plot.data[[1]]$obs.y-plot.data[[2]]$obs.y)/2.
 		if(lpart2 > 0) plot.data[[1]]$rec.y - (plot.data[[1]]$rec.y-plot.data[[2]]$rec.y)/2.

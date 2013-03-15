@@ -439,3 +439,6 @@ get.countries.table.bayesLife.mcmc.set <- function(object, ...)
 	return(bayesTFR:::get.countries.table.bayesTFR.mcmc.set(object,...))
 get.countries.table.bayesLife.prediction <- function(object, ...) 
 	return(bayesTFR:::get.countries.table.bayesTFR.prediction(object,...))
+
+get.observed.e0 <- function(country.index, meta, matrix.name='e0.matrix', matrix.name.suppl=matrix.name)
+	return(bayesTFR:::get.observed.tfr(country.index, meta, matrix.name=matrix.name, matrix.name.suppl=matrix.name.suppl))

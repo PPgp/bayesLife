@@ -1,3 +1,17 @@
+1.1-2
+-----
+Function e0.median.reset added.
+
+Default revision number in projection summary functions set to NULL, because bayesTFR now determines it automatically.
+
+1.1-0/1 (3/13/2013)
+-----
+Added start.year argument into e0.predict.
+
+Bug in e0.jmale.predict fixed (caused error when missing values in female data).
+
+MCMCs for the Triangle parameters switched from Metropolis-Hastings to slice sampling.  
+
 1.0-2 (3/5/2013)
 -----
 Change due to change in bayesTFR, function for writing projection summaries - columns added. 

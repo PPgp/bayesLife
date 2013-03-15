@@ -47,15 +47,19 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
 		while(ntries <= 50) {
 			for (i in 1:4) {
 				# Triangle is truncated normal in [0,100]
-				Triangle.prop[i] <- rnorm.trunc(mean=Tr.mean[i], sd=Tr.sd[i], 
-									low=meta$Triangle.prior.low[i], high=meta$Triangle.prior.up[i])
-				accept.prob <- ((par.integral(Triangle.prop[i], lambdas.sqrt[i], 
-								low=meta$Triangle.c.prior.low[i], up=meta$Triangle.c.prior.up[i]))^(-C))/wpar.integral.to.mC[i]
-				if (runif(1) >= accept.prob) { # not accepted
-					Triangle.prop[i] <- mcenv$Triangle[i] # replace the proposal by the old value
-                    recompute.par.integral[i] <- FALSE
-                    #cat('\nnot accepted Delta ', i, ' iter ', iter)
-                } else recompute.par.integral[i] <- TRUE
+				# Triangle.prop[i] <- rnorm.trunc(mean=Tr.mean[i], sd=Tr.sd[i], 
+									# low=meta$Triangle.prior.low[i], high=meta$Triangle.prior.up[i])
+				# accept.prob <- ((par.integral(Triangle.prop[i], lambdas.sqrt[i], 
+								# low=meta$Triangle.c.prior.low[i], up=meta$Triangle.c.prior.up[i]))^(-C))/wpar.integral.to.mC[i]
+				# if (runif(1) >= accept.prob) { # not accepted
+					# Triangle.prop[i] <- mcenv$Triangle[i] # replace the proposal by the old value
+                    # recompute.par.integral[i] <- FALSE
+                    # #cat('\nnot accepted Delta ', i, ' iter ', iter)
+                # } else recompute.par.integral[i] <- TRUE
+                Triangle.prop[i] <- slice.sampling(mcenv$Triangle[i], logdensity.Triangle.k.z, meta$Triangle.width[i], 
+										low=meta$Triangle.prior.low[i], up=meta$Triangle.prior.up[i],
+										alpha=meta$a[i], delta=meta$delta[i], par.c=mcenv$Triangle.c[i], sd=1/lambdas.sqrt[i], 
+										c.low=meta$Triangle.c.prior.low[i], c.up=meta$Triangle.c.prior.up[i])
 			}
 			sT <- sum(Triangle.prop)
 			# discard samples for which the sum(Triangle) is outside of given interval.
@@ -363,20 +367,17 @@ lambdas.update <- function(mcmc, wpar.integral.to.mC, C) {
 	tau.sq <- mcmc$meta$tau^2
 	accepted <- rep(FALSE, 6)
 	for(i in 1:4) {
-		prop <- proposal.lambda(mcmc$meta$nu, tau.sq[i], mcmc$Triangle[i], mcmc$Triangle.c[i,], 
-								mcmc$meta$nr.countries)
-		# lpx0 <- logdensity.lambda(mcmc$lambda[i], mcmc, mcmc$meta$Triangle.prior.low[i],
-					# mcmc$meta$Triangle.prior.up[i], mcmc$Triangle[i], mcmc$Triangle.c[i,], tau.sq[i])
-		# lpx1 <- logdensity.lambda(prop, mcmc, mcmc$meta$Triangle.prior.low[i],
-					# mcmc$meta$Triangle.prior.up[i], mcmc$Triangle[i], mcmc$Triangle.c[i,], tau.sq[i])
-		# prob_accept <- exp(lpx1 - lpx0)
-
-		prob_accept <- ((par.integral(mcmc$Triangle[i], sqrt(prop), 
-							low=mcmc$meta$Triangle.c.prior.low[i], up=mcmc$meta$Triangle.c.prior.up[i]))^(-C))/wpar.integral.to.mC[i]
-		if (prob_accept >= 1 || runif(1) < prob_accept){
-			mcmc$lambda[i] <- prop
-			accepted[i] <- TRUE
-		}
+		# prop <- proposal.lambda(mcmc$meta$nu, tau.sq[i], mcmc$Triangle[i], mcmc$Triangle.c[i,], 
+								# mcmc$meta$nr.countries)
+		# prob_accept <- ((par.integral(mcmc$Triangle[i], sqrt(prop), 
+							# low=mcmc$meta$Triangle.c.prior.low[i], up=mcmc$meta$Triangle.c.prior.up[i]))^(-C))/wpar.integral.to.mC[i]
+		# if (prob_accept >= 1 || runif(1) < prob_accept){
+			# mcmc$lambda[i] <- prop
+			# accepted[i] <- TRUE
+		# }
+		mcmc$lambda[i] <- slice.sampling(mcmc$lambda[i], logdensity.lambda, mcmc$meta$lambda.width[i], 
+								mcmc=mcmc, low=0, up=Inf, c.low=mcmc$meta$Triangle.c.prior.low[i], c.up=mcmc$meta$Triangle.c.prior.up[i],
+								Triangle=mcmc$Triangle[i], Triangle.c=mcmc$Triangle.c[i,], tau.sq=tau.sq[i])
 	}
 	# update lambda.k 
 	prop <- proposal.lambda(mcmc$meta$nu, tau.sq[5], mcmc$k, mcmc$k.c, mcmc$meta$nr.countries)
@@ -440,9 +441,11 @@ logdensity.omega <- function(x, mcmc, dlf, DLdata, low, up) {
 
 set.slice.sampling.width <- function(mcenv){
     mcenv$meta$Triangle.c.width <- c(10, 10, 10, 10)
+    mcenv$meta$Triangle.width <- c(10, 10, 10, 10)
     mcenv$meta$k.c.width <- 2
     mcenv$meta$z.c.width <- 1
     mcenv$meta$z.width <- 1
+    mcenv$meta$lambda.width <- c(0.1,0.1,0.1,0.1)
     mcenv$meta$lambda.z.width <- 10
     mcenv$meta$omega.width <- 1
     return()
