@@ -16,6 +16,7 @@ export(
 	e0.predict.extra,
 	e0.median.shift,
 	e0.median.set,
+	e0.median.reset,
 	get.e0.shift,
 	convert.e0.trajectories,
 	write.e0.projection.summary,

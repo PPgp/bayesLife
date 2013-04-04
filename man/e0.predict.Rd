@@ -12,8 +12,8 @@ Using the posterior parameter samples simulated by \code{\link{run.e0.mcmc}} the
 e0.predict(mcmc.set = NULL, end.year = 2100, 
     sim.dir = file.path(getwd(), "bayesLife.output"), replace.output = FALSE, 
     predict.jmale = TRUE, nr.traj = NULL, thin = NULL, burnin = 10000, 
-    use.diagnostics = FALSE, save.as.ascii = 1000, output.dir = NULL, 
-    low.memory = TRUE, seed = NULL, verbose = TRUE, \dots)
+    use.diagnostics = FALSE, save.as.ascii = 1000, start.year = NULL,  
+    output.dir = NULL, low.memory = TRUE, seed = NULL, verbose = TRUE, \dots)
 }
 
 \arguments{
@@ -28,6 +28,7 @@ e0.predict(mcmc.set = NULL, end.year = 2100,
   \item{burnin}{Number of iterations to be discarded from the beginning of the parameter traces.}
   \item{use.diagnostics}{Logical determining if an existing convergence diagnostics should be used for choosing the values of \code{thin} and \code{burnin}. In such a case, arguments \code{nr.traj}, \code{thin} and \code{burnin} are ignored. The \sQuote{best} values are chosen from results of running the \code{\link{e0.diagnose}} function. Only diagnostics can be used that suggest a convergence of the underlying MCMCs. If there are more than one such objects, the one is chosen whose recommendation for the number of trajectories is larger and closest to 2000.}
   \item{save.as.ascii}{Either a number determining how many trajectories should be converted into an ASCII file, or \dQuote{all} in which case all trajectories are converted. It should be set to 0, if no conversion is desired.}
+  \item{start.year}{This argument should be only used if the start year of the prediction is before or at the present year of the MCMC run (see Details below). By default the prediction starts in the next time period after the present year (passed to \code{\link{run.e0.mcmc}}).}
   \item{output.dir}{Directory into which the resulting prediction object and the trajectories are stored. If it is \code{NULL}, it is set to either \code{sim.dir}, or to \code{output.dir} of \code{mcmc.set$meta} if \code{mcmc.set} is given.}
   \item{low.memory}{Logical indicating if the prediction should run in a low-memory mode. If it is \code{FALSE}, the whole traces of all parameters, including the burnin, are loaded into memory. Otherwise, burnins are discarded and parameters are loaded as they are needed and are not kept in the memory.}
   \item{seed}{Seed of the random number generator. If \code{NULL} no seed is set. It can be used to generate reproducible projections.}
@@ -39,6 +40,8 @@ The trajectories are generated using the double logistic function (Chunn et al. 
 	
 The projection is run for all missing values before the present year, if any. Medians over the trajectories are used as  imputed values and the trajectories are discarded. The process then continues by projecting the future values where all generated trajectories are kept.
 
+A special case is when the argument \code{start.year} is given that is smaller or equal the present year. In such a case, imputed missing values before present year are treated as ordinary predictions (trajectories are kept). All historical data between start year and present year are used as projections.
+ 
 The resulting prediction object is saved into \file{\{output.dir\}/predictions}. Trajectories for all countries are saved into the same directory in a binary format, one file per country. At the end of the projection, if \code{save.as.ascii} is larger than 0, the function converts the given number of trajectories into a CSV file of a UN-specific format. They are selected by equal spacing (see function \code{\link{convert.e0.trajectories}} for more details on the conversion). In addition, two summary files are created: one in a user-friendly format, the other using a UN-specific coding of the variants and time (see \code{\link{write.e0.projection.summary}} for more details).
 
 }

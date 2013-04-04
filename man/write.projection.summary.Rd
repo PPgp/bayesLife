@@ -8,7 +8,7 @@ The function creates two files containing projection summaries, such as the medi
 }
 \usage{
 write.e0.projection.summary(dir = file.path(getwd(), "bayesLife.output"), 
-    output.dir = NULL, revision = 14)
+    output.dir = NULL, revision = NULL)
 }
 \arguments{
   \item{dir}{Directory containing the prediction object. It should correspond to the \code{output.dir} argument of the \code{\link{e0.predict}} function.}

@@ -110,13 +110,27 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
     
     # propagate initial values for all chains if needed
     starting.values <- list()
-    for (var in c('Triangle.ini', 'lambda.ini')) 
+    for (var in c('Triangle.ini', 'lambda.ini')) {
     	if(!is.list(get(var))) assign(var, list(get(var)))
-    for (var in c('Triangle.ini', 'k.ini', 'z.ini', 'lambda.ini', 'lambda.k.ini', 'lambda.z.ini', 'omega.ini', 'iter')) {
+    	for(i in 1:4) {
+    		if (length(get(var)[[i]]) < nr.chains) {
+        		if (length(get(var)[[i]]) == 1) {
+            		assign(paste(var,'[[',i,']]', sep=''), rep(get(var)[[i]], nr.chains))
+            	} else {
+            		warning(var, '[[',i,']]', ' has the wrong length. Either 1 or ', nr.chains, 
+                                ' is allowed.\nValue set to ', get(var)[[i]][1], ' for all chains.')
+                    assign(paste(var,'[[',i,']]', sep=''), rep(get(var)[[i]][1], nr.chains))
+               }
+            }
+        }
+        starting.values[[var]] <- get(var)
+    }
+    for (var in c('k.ini', 'z.ini', 'lambda.k.ini', 'lambda.z.ini', 'omega.ini', 'iter')) {
     	if (length(get(var)) < nr.chains) {
         	if (length(get(var)) == 1) {
             	assign(var, rep(get(var), nr.chains))
             } else {
+            	stop('')
             	warning(var, ' has the wrong length. Either 1 or ', nr.chains, 
                                 ' is allowed.\nValue set to ', get(var)[1], ' for all chains.')
                                 assign(var, rep(get(var)[1], nr.chains))

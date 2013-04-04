@@ -569,13 +569,14 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 		#G1 <- e0f.data[Tc[icountry],icountry] - e0m.data[Tc[icountry],icountry]
 		Tc <- meta$Tc.index[[icountry]][length(meta$Tc.index[[icountry]])]
 		G1 <- e0f.data[Tc,icountry] - e0m.data[Tc,icountry]
+		last.obs.index <- if(is.null(e0.pred$present.year.index)) nrow(e0m.data) else e0.pred$present.year.index
 		for (itraj in 1:dim(trajectoriesF)[2]) {
-			Mtraj[1,itraj] <- e0m.data[e0.pred$present.year.index,icountry]
+			Mtraj[1,itraj] <- e0m.data[last.obs.index,icountry]
 			Gprev <- G1
 			for(time in 2:dim(trajectoriesF)[1]) {
 				#if(country$code==760) stop('')
-				if((Tc + time - 2 > e0.pred$present.year.index) && (e0.pred$present.year.index + time - 1 <= nrow(e0m.data))) {
-					Mtraj[time,itraj] <- e0m.data[e0.pred$present.year.index + time - 1, icountry]
+				if((Tc + time - 2 > last.obs.index) && (last.obs.index + time - 1 <= nrow(e0m.data))) {
+					Mtraj[time,itraj] <- e0m.data[last.obs.index + time - 1, icountry]
 					next
 				}
 				if(trajectoriesF[time-1,itraj] <= maxe0) { # 1st part of Equation 3.1
