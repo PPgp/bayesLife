@@ -44,8 +44,8 @@ get.wpp.e0.data <- function(sex='M', start.year=1950, present.year=2010, wpp.yea
 
 
 read.UNe0 <- function(sex, wpp.year, my.e0.file=NULL, ...) {
-	un.file.name <- file.path(.find.package("bayesLife"), "data", paste('UN', wpp.year, 'e0', sex, '.txt', sep=''))
-	un.suppl.file.name <- file.path(.find.package("bayesLife"), "data", paste('UN', wpp.year, 'e0', sex, '_supplemental.txt', sep=''))
+	un.file.name <- file.path(find.package("bayesLife"), "data", paste('UN', wpp.year, 'e0', sex, '.txt', sep=''))
+	un.suppl.file.name <- file.path(find.package("bayesLife"), "data", paste('UN', wpp.year, 'e0', sex, '_supplemental.txt', sep=''))
 	data <- bayesTFR:::do.read.un.file(un.file.name, wpp.year, my.file=my.e0.file, ...)
 	suppl.data<- NULL
 	if(file.exists(un.suppl.file.name)) 
