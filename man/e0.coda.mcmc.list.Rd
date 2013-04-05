@@ -45,7 +45,7 @@ Hana Sevcikova
 \code{\link{e0.partraces.plot}} for plotting the MCMC traces and \code{\link{summary.bayesLife.mcmc.set}}.
 }
 \examples{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
+sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 coda.list <- e0.coda.list.mcmc(sim.dir=sim.dir, country="France", burnin=30)
 summary(coda.list)
 }

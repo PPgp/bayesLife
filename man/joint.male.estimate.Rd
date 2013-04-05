@@ -72,7 +72,7 @@ Hana Sevcikova
 }
 \examples{
 \dontrun{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
+sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 m <- get.e0.mcmc(sim.dir)
 fit <- e0.jmale.estimate(m, verbose=TRUE)
 }}

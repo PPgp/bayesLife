@@ -1,3 +1,7 @@
+1.1-3 (4/5/2013)
+-----
+.find.package replaced by find.package.
+
 1.1-2 (3/19/2013)
 -----
 Function e0.median.reset added.

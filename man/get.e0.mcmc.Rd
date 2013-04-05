@@ -46,7 +46,7 @@ Hana Sevcikova
 }
 
 \examples{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
+sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 m <- get.e0.mcmc(sim.dir)
 summary(m)
 

@@ -43,7 +43,7 @@ Hana Sevcikova
 }
 \examples{
 \dontrun{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
+sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 e0.partraces.plot(sim.dir=sim.dir)
 e0.partraces.cs.plot(country="Ireland", sim.dir=sim.dir)
 }

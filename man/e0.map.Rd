@@ -63,7 +63,7 @@ Hana Sevcikova, Adrian Raftery
 
 \examples{
 \dontrun{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
+sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 pred <- get.e0.prediction(sim.dir=sim.dir)
 # Uses heat colors and seven categories by default
 e0.map(pred)

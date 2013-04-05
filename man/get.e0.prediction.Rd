@@ -46,7 +46,7 @@ Hana Sevcikova
 \code{\link{bayesLife.prediction}}, \code{\link{e0.predict}}, \code{\link{summary.bayesLife.prediction}}, \code{\link{e0.jmale.predict}}
 }
 \examples{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
+sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 pred <- get.e0.prediction(sim.dir=sim.dir)
 summary(pred, country="Canada")
 }

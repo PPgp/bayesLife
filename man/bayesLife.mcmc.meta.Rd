@@ -60,7 +60,7 @@ Hana Sevcikova
 \code{\link{run.e0.mcmc}}, \code{\link{get.e0.mcmc}}
 }
 \examples{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
+sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 m <- get.e0.mcmc(sim.dir)
 summary(m, meta.only = TRUE)
 names(m$meta)

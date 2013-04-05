@@ -41,7 +41,7 @@ Hana Sevcikova
 
 \examples{
 \dontrun{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
+sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 m <- get.e0.mcmc(sim.dir)
 e0.values <- get.e0.parameter.traces(m$mcmc.list, burnin=10, par.names="z")
 hist(e0.values, main=colnames(e0.values))

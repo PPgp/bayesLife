@@ -60,7 +60,7 @@ Hana Sevcikova
 
 \examples{
 \dontrun{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
+sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 pred <- get.e0.prediction(sim.dir)
 e0.trajectories.table(pred, country="Japan", pi=c(80, 95))
 e0.trajectories.plot(pred, country="Japan", pi=c(80, 95))

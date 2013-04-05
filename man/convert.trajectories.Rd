@@ -40,7 +40,7 @@ Hana Sevcikova
 }
 \examples{
 \dontrun{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
+sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 pred.dir <- file.path(getwd(), "exampleLEpred")
 
 # stores 10 trajectories out of 26 (2x(60-35)/2 + 1) into 

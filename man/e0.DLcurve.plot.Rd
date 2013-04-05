@@ -41,7 +41,7 @@ Hana Sevcikova
 
 \examples{
 \dontrun{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
+sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 mcmc.set <- get.e0.mcmc(sim.dir=sim.dir)
 e0.DLcurve.plot(country="Japan", mcmc.set, burnin=40)
 }

@@ -35,7 +35,7 @@ Hana Sevcikova
 %, \code{\link{e0.median.shift}}
 }
 \examples{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output") 
+sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output") 
 pred <- get.e0.prediction(sim.dir=sim.dir)
 get.e0.trajectories(pred, "Germany")
 }

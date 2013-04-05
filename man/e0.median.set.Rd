@@ -20,6 +20,7 @@ e0.median.reset(sim.dir, countries)
 \arguments{
   \item{sim.dir}{Directory containing the prediction object.}
   \item{country}{Name or numerical code of a country.}
+  \item{countries}{Vector of country names or codes.}
   \item{values}{Array of the new median values.}
   \item{years}{Numeric vector giving years which \code{values} correspond to. Ideally it should be of the same length as \code{values}. If it is \code{NULL},
   	\code{values} are set starting from the first prediction period. If \code{values} correspond to consecutive years, only the first year might be given here. A year \eqn{t} represents a prediction period \eqn{[t_i, t_{i+1}]} if \eqn{t_i < t \leq t_{i+1}}.}

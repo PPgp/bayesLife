@@ -36,7 +36,7 @@ test.estimate.mcmc <- function(compression='None') {
 	# run MCMC for an aggregation
 	test.name <- 'estimating MCMC for extra areas'
 	start.test(test.name)
-	data.dir <- file.path(.find.package("bayesLife"), 'data')
+	data.dir <- file.path(find.package("bayesLife"), 'data')
 	m <- run.e0.mcmc.extra(sim.dir=sim.dir, 
 					my.e0.file=file.path(data.dir, 'my_e0_template.txt'), burnin=0)
 	stopifnot(is.element(900, m$meta$regions$country_code)) # 'World' should be included
@@ -129,7 +129,7 @@ test.estimate.mcmc.with.suppl.data <- function(compression='None') {
 	# run MCMC for an aggregation
 	test.name <- 'estimating MCMC for extra areas with supplemental data'
 	start.test(test.name)
-	data.dir <- file.path(.find.package("bayesLife"), 'data')
+	data.dir <- file.path(find.package("bayesLife"), 'data')
 	m <- run.e0.mcmc.extra(sim.dir=sim.dir, 
 					my.e0.file=file.path(data.dir, 'my_e0_template.txt'), burnin=0)
 	stopifnot(is.element(900, m$meta$regions$country_code)) # 'World' should be included
@@ -151,7 +151,7 @@ test.estimate.mcmc.with.suppl.data <- function(compression='None') {
 test.existing.simulation <- function() {
 	test.name <- 'retrieving MCMC results'
 	start.test(test.name)
-	sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
+	sim.dir <- file.path(find.package("bayesLife"), "ex-data", 'bayesLife.output')
 	m <- get.e0.mcmc(sim.dir, low.memory=FALSE, chain.ids=c(1,2))
 	stopifnot(length(m$mcmc.list)==2)
 	stopifnot(dim(m$mcmc.list[[1]]$traces)[1]==31) # because the chains are thinned by two + init value (i.e. 60/2 + 1)
@@ -178,7 +178,7 @@ test.existing.simulation <- function() {
 test.DLcurve <- function() {
 	test.name <- 'plotting DL curves'
 	start.test(test.name)
-	sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
+	sim.dir <- file.path(find.package("bayesLife"), "ex-data", 'bayesLife.output')
 	m <- get.e0.mcmc(sim.dir)
 	filename <- tempfile()
 	png(filename=filename)
@@ -193,7 +193,7 @@ test.DLcurve <- function() {
 test.e0trajectories <- function() {
 	test.name <- 'plotting e0 trajectories'
 	start.test(test.name)
-	sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
+	sim.dir <- file.path(find.package("bayesLife"), "ex-data", 'bayesLife.output')
 	pred <- get.e0.prediction(sim.dir=sim.dir)
 	filename <- tempfile()
 	png(filename=filename)
@@ -214,7 +214,7 @@ test.e0trajectories <- function() {
 test.plot.all <- function() {
 	test.name <- 'plotting e0 trajectories and DL curves for all countries'
 	start.test(test.name)
-	sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
+	sim.dir <- file.path(find.package("bayesLife"), "ex-data", 'bayesLife.output')
 	pred <- get.e0.prediction(sim.dir=sim.dir)
 	mc <- get.e0.mcmc(sim.dir)
 	dir <- tempfile()
@@ -233,7 +233,7 @@ test.plot.all <- function() {
 test.plot.density <- function() {
 	test.name <- 'plotting parameter density'
 	start.test(test.name)
-	sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
+	sim.dir <- file.path(find.package("bayesLife"), "ex-data", 'bayesLife.output')
 	pred <- get.e0.prediction(sim.dir=sim.dir)
 	filename <- tempfile()
 	png(filename=filename)
@@ -248,7 +248,7 @@ test.plot.density <- function() {
 test.plot.map <- function() {
 	test.name <- 'creating e0 maps'
 	start.test(test.name)
-	sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
+	sim.dir <- file.path(find.package("bayesLife"), "ex-data", 'bayesLife.output')
 	pred <- get.e0.prediction(sim.dir=sim.dir)
 	filename <- tempfile()
 	e0.map(pred, year=2098, device='png', device.args=list(filename=filename))
@@ -260,7 +260,7 @@ test.plot.map <- function() {
 	
 	test.name <- 'creating e0 maps of observed data'
 	start.test(test.name)
-	sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
+	sim.dir <- file.path(find.package("bayesLife"), "ex-data", 'bayesLife.output')
 	pred <- get.e0.prediction(sim.dir=sim.dir)
 	filename <- tempfile()
 	e0.map(pred, year=1974, device='png', device.args=list(filename=filename))
@@ -272,7 +272,7 @@ test.plot.map <- function() {
 	
 	test.name <- 'creating parameter maps'
 	start.test(test.name)
-	sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
+	sim.dir <- file.path(find.package("bayesLife"), "ex-data", 'bayesLife.output')
 	pred <- get.e0.prediction(sim.dir=sim.dir)
 	filename <- tempfile()
 	e0.map(pred, par.name='z.c', device='png', device.args=list(filename=filename))
@@ -286,7 +286,7 @@ test.plot.map <- function() {
 test.get.parameter.traces <- function() {
 	test.name <- 'getting parameter traces'
 	start.test(test.name)
-	sim.dir <- file.path(.find.package("bayesLife"), "ex-data", 'bayesLife.output')
+	sim.dir <- file.path(find.package("bayesLife"), "ex-data", 'bayesLife.output')
 	m <- get.e0.mcmc(sim.dir, low.memory=TRUE)
 	traces <- get.e0.parameter.traces(m$mcmc.list, burnin=21, 
 					thinning.index=c(4, 21, 39))

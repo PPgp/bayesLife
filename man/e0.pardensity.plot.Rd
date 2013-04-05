@@ -46,7 +46,7 @@ Hana Sevcikova
 }
 \examples{
 \dontrun{
-sim.dir <- file.path(.find.package("bayesLife"), "ex-data", "bayesLife.output")
+sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 e0.pardensity.plot(sim.dir=sim.dir, burnin=10)
 e0.pardensity.cs.plot(country="Ireland", sim.dir=sim.dir, burnin=10)
 }
