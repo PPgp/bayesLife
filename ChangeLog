@@ -1,4 +1,8 @@
-1.1-3 (4/5/2013)
+1.1-4 (4/6/2013)
+-----
+e0.joint.plot: allow plotting points with identical values.  
+
+1.1-3 (4/5/2013) [CRAN]
 -----
 .find.package replaced by find.package.
 

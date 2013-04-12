@@ -133,20 +133,24 @@ e0.joint.plot <- function(e0.pred, country, pi=95, years, nr.points=500,
 			Mpoints <- trajM[sample.idx]
 			points(Fpoints, Mpoints, pch='.', col=col[iyear])
 		}
-		if(length(pi) > 0) {
-			ellips <- dataEllipse(trajF, trajM, levels=pi/100, draw=FALSE)
-			if(length(pi) == 1) {
-				ellips <- list(ellips)
-				names(ellips) <- as.character(pi/100)
+		if(length(pi) > 0){
+			if(!all(trajF[-1]==trajF[1]) &&  !all(trajM[-1]==trajM[1])){
+				ellips <- dataEllipse(trajF, trajM, levels=pi/100, draw=FALSE)
+				if(length(pi) == 1) {
+					ellips <- list(ellips)
+					names(ellips) <- as.character(pi/100)
+				}
+				for(ipi in 1:length(pi)) {
+					# hack: modify points above the x=y line
+					el <- ellips[[as.character(pi[ipi]/100)]]
+					above <- el[,'x'] < el[,'y']
+					el[above,'y']<- el[above,'x']
+					lines(el, col=col[iyear])
+				}
+				#contour(dens, levels=cibounds, drawlabels=TRUE, labels=pi, add=TRUE, col=col[iyear], ...)
+			} else { # if all trajectories the same, make the point larger
+				points(trajF[1], trajM[1], pch=16, col=col[iyear])
 			}
-			for(ipi in 1:length(pi)) {
-				# hack: modify points above the x=y line
-				el <- ellips[[as.character(pi[ipi]/100)]]
-				above <- el[,'x'] < el[,'y']
-				el[above,'y']<- el[above,'x']
-				lines(el, col=col[iyear])
-			}
-			#contour(dens, levels=cibounds, drawlabels=TRUE, labels=pi, add=TRUE, col=col[iyear], ...)
 		}
 	}
 	if(show.legend) {
