@@ -1,3 +1,7 @@
+1.1-5 (4/19/2013)
+-----
+e0.median.set and e0.median.shift allowed for joint male predictions.
+
 1.1-4 (4/6/2013)
 -----
 e0.joint.plot: allow plotting points with identical values.  
