@@ -1,7 +1,8 @@
 library(bayesLife)
 source('test_functions.R')
 
-test.get.wpp.data()
+test.get.wpp.data(2008)
+test.get.wpp.data(2010)
 test.existing.simulation()
 test.e0trajectories()
 test.get.parameter.traces()

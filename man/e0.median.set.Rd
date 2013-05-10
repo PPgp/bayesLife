@@ -10,12 +10,12 @@ Editing the Projection Medians
 These functions are to be used by expert analysts. They allow to change the projection medians either to specific values or shift the medians by a given constant.
 }
 \usage{
-e0.median.set(sim.dir, country, values, years = NULL)
+e0.median.set(sim.dir, country, values, years = NULL, joint.male = FALSE)
 
 e0.median.shift(sim.dir, country, reset = FALSE, shift = 0, 
-    from = NULL, to = NULL)
+    from = NULL, to = NULL, joint.male = FALSE)
     
-e0.median.reset(sim.dir, countries)
+e0.median.reset(sim.dir, countries, joint.male = FALSE)
 }
 \arguments{
   \item{sim.dir}{Directory containing the prediction object.}
@@ -24,6 +24,7 @@ e0.median.reset(sim.dir, countries)
   \item{values}{Array of the new median values.}
   \item{years}{Numeric vector giving years which \code{values} correspond to. Ideally it should be of the same length as \code{values}. If it is \code{NULL},
   	\code{values} are set starting from the first prediction period. If \code{values} correspond to consecutive years, only the first year might be given here. A year \eqn{t} represents a prediction period \eqn{[t_i, t_{i+1}]} if \eqn{t_i < t \leq t_{i+1}}.}
+  \item{joint.male}{Logical. If \code{TRUE}, the function is applied to a male prediction that was generated using the joint female-male model implemented in the function \code{\link{e0.jmale.predict}}.}
   \item{reset}{Logical. If \code{TRUE} medians in a range of \code{from} and \code{to} are reset to their original values.}
   \item{shift}{Constant by which the medians should be offset. It is not used if \code{reset} is \code{TRUE}.}
   \item{from}{Year from which the offset/reset should start. By default, it starts at the first prediction period.}

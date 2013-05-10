@@ -18,13 +18,13 @@ e0.jmale.predict(e0.pred, estimates = NULL, gap.lim = c(0, 18),
   \item{estimates}{List of the same structure as returned by \code{\link{e0.jmale.estimate}}, containing the model estimation results. If it is not given, the \code{\link{e0.jmale.estimate}} function is invoked.}
   \item{gap.lim}{Vector of length two giving the minimum and maximum bounds for the female-male life expectancy gaps.}
  \item{min.e0.eq2.pred}{Minimum female life expectancy for male projections handled by the second equation (parameter \eqn{M} in Equation (1) in Raftery et al. (2012)).}
-  \item{my.e0.file}{File name containing user-specified male time series for one or more countries. The function replaces the corresponding country data from the UN WPP file by values in this file. Only columns are replaced that match column names of the WPP file.}
+  \item{my.e0.file}{File name containing user-specified male time series for one or more countries. The function replaces the corresponding country data from the WPP dataset by values in this file. Only columns are replaced that match column names of the WPP dataset.}
   \item{save.as.ascii}{Either a number determining how many trajectories should be converted into an ASCII file, or \dQuote{all} in which case all trajectories are converted. It should be set to 0, if no conversion is desired.}
   \item{verbose}{Logical switching log messages on and off.}
   \item{\dots}{Further arguments passed to \code{\link{e0.jmale.estimate}}.}
 }
 \details{
-If no \code{estimates} are given, the function invokes an estimation by calling \code{\link{e0.jmale.estimate}}. Using those estimates, the male life expectancy is projected forward in time (as a function of a female-male gap), using the female predictions from \code{e0.pred}. The initial male data point is extracted from the male UN WPP data (\link{UN2010e0}) and possibly partly replaced by any user-specified data given in \code{my.e0.file}.
+If no \code{estimates} are given, the function invokes an estimation by calling \code{\link{e0.jmale.estimate}}. Using those estimates, the male life expectancy is projected forward in time (as a function of a female-male gap), using the female predictions from \code{e0.pred}. The initial male data point is extracted from the male WPP dataset (\code{\link[wpp2010]{e0M}}) and possibly partly replaced by any user-specified data given in \code{my.e0.file}.
 
 The resulting trajectory files are stored in a subdirectory of the female prediction directory, called \sQuote{joint_male}. Furthermore, an object of class \code{\link{bayesLife.prediction}} is created and added to \code{e0.pred} as a component called \code{joint.male}. 
 

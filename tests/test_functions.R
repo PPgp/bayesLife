@@ -36,7 +36,7 @@ test.estimate.mcmc <- function(compression='None') {
 	# run MCMC for an aggregation
 	test.name <- 'estimating MCMC for extra areas'
 	start.test(test.name)
-	data.dir <- file.path(find.package("bayesLife"), 'data')
+	data.dir <- file.path(find.package("bayesLife"), 'extdata')
 	m <- run.e0.mcmc.extra(sim.dir=sim.dir, 
 					my.e0.file=file.path(data.dir, 'my_e0_template.txt'), burnin=0)
 	stopifnot(is.element(900, m$meta$regions$country_code)) # 'World' should be included
@@ -129,7 +129,7 @@ test.estimate.mcmc.with.suppl.data <- function(compression='None') {
 	# run MCMC for an aggregation
 	test.name <- 'estimating MCMC for extra areas with supplemental data'
 	start.test(test.name)
-	data.dir <- file.path(find.package("bayesLife"), 'data')
+	data.dir <- file.path(find.package("bayesLife"), 'extdata')
 	m <- run.e0.mcmc.extra(sim.dir=sim.dir, 
 					my.e0.file=file.path(data.dir, 'my_e0_template.txt'), burnin=0)
 	stopifnot(is.element(900, m$meta$regions$country_code)) # 'World' should be included

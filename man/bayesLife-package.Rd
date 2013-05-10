@@ -42,6 +42,8 @@ For MCMC diagnostics, function \link{e0.coda.list.mcmc} creates an object of typ
 
 Existing simulation results can be accessed using the \link{get.e0.mcmc} function.  An existing prediction can be accessed via \link{get.e0.prediction}.
 
+Historical data are taken from one of the packages \pkg{wpp2008}, \pkg{wpp2010} or \pkg{wpp2012}, depending on users settings.
+
 }
 
 \note{

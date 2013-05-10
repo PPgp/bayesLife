@@ -22,7 +22,7 @@ e0.jmale.estimate(mcmc.set, countries.index = NULL,
 }
  \item{min.e0.eq2}{Minimum female life expectancy of records included in the estimation of the second equation (parameter \eqn{M} in Details below).}
  \item{constant.gap.eq2}{Logical. If \code{TRUE} the coefficient of the second equation (\eqn{\gamma_1}) is set to one and the standard deviation is estimated under the assumption of normal distribution.}
- \item{my.e0.file}{File name containing user-specified male time series for one or more countries. The function replaces the corresponding country data from the UN WPP file by values in this file. Only columns are replaced that match column names of the WPP file.}
+ \item{my.e0.file}{File name containing user-specified male time series for one or more countries. The function replaces the corresponding country data from the  WPP dataset by values in this file. Only columns are replaced that match column names of the WPP dataset.}
  \item{verbose}{Logical switching log messages on and off. If \code{TRUE} summary results from the \code{\link[hett]{tlm}} function of both equations are shown.}
 }
 \details{
@@ -47,7 +47,7 @@ Here, \eqn{t} is the time and \eqn{c} is the country index. \eqn{G_{c,t}}{G_(c,t
 
 Using the \code{\link[hett]{tlm}} function of the \pkg{hett} package, the function  estimates the coefficients \eqn{\beta_i}{beta_i} (\eqn{i=1,\dots,4}) and \eqn{\gamma_1}{gamma_1}, as well as paramteres \eqn{\sigma_j}{sigma_j} (\eqn{j=1,2}) and optionally the degrees of freedom \eqn{\nu_j}{nu_j} (\eqn{j=1,2}). If \code{constant.gap.eq2} is \code{TRUE}, \eqn{\gamma_1}{gamma_1} is set to 1 and \eqn{\epsilon_{c,t}}{epsilon_(c,t)} is iid \eqn{N(\mu=0, \sigma_2^2)}{N(mu=0, sigma_2^2)}.
 
-The \code{mcmc.set} object should be a \code{\link{bayesLife.mcmc.set}} object obtained from a simulation of a female life expectancy. Note that since only the observed data and no MCMC results are used in this estimation, the \code{mcmc.set} object can be obtained from a toy simulation such as in the example below. The function extracts observed data from this object and treats them as \eqn{l_{c,t}}. For the male historical time series, the function takes the male UN WPP data  from the same WPP year as the female data (\link{UN2010e0}) and possibly partly replaces it by any user-specified data given in \code{my.e0.file}. For the first equation above, all records are used. For the second equation, only records with female life expectancy that are larger or equal \code{min.e0.eq2} are used.
+The \code{mcmc.set} object should be a \code{\link{bayesLife.mcmc.set}} object obtained from a simulation of a female life expectancy. Note that since only the observed data and no MCMC results are used in this estimation, the \code{mcmc.set} object can be obtained from a toy simulation such as in the example below. The function extracts observed data from this object and treats them as \eqn{l_{c,t}}. For the male historical time series, the function takes the male WPP dataset  from the same \pkg{wpp} package as the female data (\code{\link[wpp2010]{e0M}}) and possibly partly replaces it by any user-specified data given in \code{my.e0.file}. For the first equation above, all records are used. For the second equation, only records with female life expectancy that are larger or equal \code{min.e0.eq2} are used.
 }
 \value{
 List with the components, \code{eq1} and \code{eq2}, each containing estimation results from the first and second equation, respectively. These are:
