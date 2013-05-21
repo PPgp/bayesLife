@@ -353,7 +353,7 @@ convert.e0.trajectories <- function(dir=file.path(getwd(), 'bayesLife.output'),
 }
 
 write.e0.projection.summary <- function(dir=file.path(getwd(), 'bayesLife.output'), 
-									 output.dir=NULL, revision=NULL) {
+									 output.dir=NULL, revision=NULL, adjusted=FALSE) {
 # Writes four prediction summary files, one in a user-friendly format, one in a UN-format, one for each sex.
 	pred <- get.e0.prediction(sim.dir=dir)
 	predsex <- pred$mcmc.set$meta$sex
@@ -368,13 +368,14 @@ write.e0.projection.summary <- function(dir=file.path(getwd(), 'bayesLife.output
 			else outdir <- output.dir
 		}
 		if(!file.exists(outdir)) dir.create(outdir, recursive=TRUE)
-		do.write.e0.projection.summary(preds[[sex]], outdir, sex=sex, revision=revision)
+		do.write.e0.projection.summary(preds[[sex]], outdir, sex=sex, revision=revision, adjusted=adjusted)
 	}
 }
 		
-do.write.e0.projection.summary <- function(pred, output.dir, sex=NULL, revision=NULL) {
+do.write.e0.projection.summary <- function(pred, output.dir, sex=NULL, revision=NULL, adjusted=FALSE) {
 	if (is.null(sex)) sex <- pred$mcmc.set$meta$sex
-	bayesTFR:::do.write.projection.summary(pred, output.dir, revision=revision, indicator.id=10, sex.id=c(M=1,F=2)[sex])
+	bayesTFR:::do.write.projection.summary(pred, output.dir, revision=revision, indicator.id=10, 
+				sex.id=c(M=1,F=2)[sex], adjusted=adjusted)
 }
 				
 get.traj.ascii.header.bayesLife.mcmc.meta <- function(meta, ...) 
