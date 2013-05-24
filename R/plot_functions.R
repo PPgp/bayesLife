@@ -1,3 +1,5 @@
+if(getRversion() >= "2.15.1") utils::globalVariables("loess_sd")
+data(loess_sd, envir=environment())
 
 e0.gap.plot.all <- function(e0.pred, output.dir=file.path(getwd(), 'e0gaps'),
 							output.type="png", verbose=FALSE, ...) {
@@ -451,7 +453,6 @@ e0.get.dlcurves <- function(x, mcmc.list, country.code, country.index, burnin, n
 						paste('z.c', postfix,sep=''))
 	T <- length(mcmc.list[[1]]$meta$loessSD[,country.index])
 	if(predictive.distr) {
-		data(loess_sd)
 		loessSD <- loess.lookup(x)
 		if(!is.null(mcmc.list[[1]]$meta$constant.variance) && mcmc.list[[1]]$meta$constant.variance)
 			loessSD[] <- 1

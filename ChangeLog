@@ -1,3 +1,7 @@
+2.0-0 (5/23/2013)
+-----
+WPP data removed and put in separate packages (wpp2008, wpp2010). The package is now dependent on those.
+
 1.1-6 (5/20/2013)
 -----
 Argument 'adjusted' added to write.projection.summary and its underlying functions.

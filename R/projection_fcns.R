@@ -1,4 +1,5 @@
-
+if(getRversion() >= "2.15.1") utils::globalVariables("loess_sd")
+data(loess_sd, envir=environment())
 
 e0.proj.le.SDPropToLoess<-function(x,l.start,kap,n.proj=11, p1=9, p2=9, const.var=FALSE){
   proj<-NULL
@@ -133,7 +134,6 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
 							    save.as.ascii=1000, output.dir = NULL, write.summary.files=TRUE, 
 							    create.thinned.mcmc.extra=FALSE,
 							    verbose=verbose){
-	data(loess_sd)
 	# if 'countries' is given, it is an index
 	present.year <- if(is.null(start.year)) mcmc.set$meta$present.year else start.year - 5
 	nr_project <- length(seq(present.year+5, end.year, by=5))

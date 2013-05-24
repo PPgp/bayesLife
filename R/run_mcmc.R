@@ -1,3 +1,6 @@
+if(getRversion() >= "2.15.1") utils::globalVariables("loess_sd")
+data(loess_sd, envir=environment())
+
 run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000, 
 							output.dir=file.path(getwd(), 'bayesLife.output'), 
                          thin=10, replace.output=FALSE,
@@ -341,7 +344,6 @@ init.nodes.e0 <- function() {
 }
 
 .do.part.e0.mcmc.meta.ini <- function(data, meta) {
-	data('loess_sd')
 	nr_countries <- ncol(data$e0.matrix)
     #T_end_c <- rep(NA, nr_countries)
     Tc.index <- list()

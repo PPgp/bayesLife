@@ -8,12 +8,13 @@ The function creates two files containing projection summaries, such as the medi
 }
 \usage{
 write.e0.projection.summary(dir = file.path(getwd(), "bayesLife.output"), 
-    output.dir = NULL, revision = NULL)
+    output.dir = NULL, revision = NULL, adjusted = FALSE)
 }
 \arguments{
   \item{dir}{Directory containing the prediction object. It should correspond to the \code{output.dir} argument of the \code{\link{e0.predict}} function.}
   \item{output.dir}{Directory in which the resulting file will be stored. If \code{NULL} the same directory is used as for the prediction.}
-  \item{revision}{UN revision number. Used as a constant in the second file only.}
+  \item{revision}{UN revision number. If \code{NULL} it is determined from the corresponding WPP year: WPP 2008 corresponds to revision 13, every subsequent WPP increases the revision number by one. Used as a constant in the second file only.}
+   \item{adjusted}{Logical. By default the function writes summary using the original BHM projections. If the projection medians are adjusted (using e.g. \code{\link{e0.median.set}}), setting this argument to \code{TRUE} causes writing the adjusted projections.}
 }
 \details{
 The first file that the function creates is called \file{projection_summary_user_friendly.csv}, it is a comma-separated table with the following columns: 
