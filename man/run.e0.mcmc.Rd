@@ -13,7 +13,7 @@ Runs (or continues running) MCMCs for simulating the life expectancy for all cou
 run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 160000, 
     output.dir = file.path(getwd(), "bayesLife.output"), 
     thin = 10, replace.output = FALSE, 
-    start.year = 1873, present.year = 2010, wpp.year = 2010, 
+    start.year = 1873, present.year = 2010, wpp.year = 2012, 
     my.e0.file = NULL, buffer.size = 100, 
     a = c(13.215, 41.070, 9.235, 17.605, 2.84, 0.385), 
     delta = c(3.844, 4.035, 11.538, 5.639, 0.901, 0.4), 
@@ -23,20 +23,20 @@ run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 160000,
     z.ini = NULL, lambda.ini = list(NULL, NULL, NULL, NULL), 
     lambda.k.ini = NULL, lambda.z.ini = NULL, omega.ini = NULL, 
     Triangle.ini.low = c(10, 30, 0.1, 10), Triangle.ini.up = c(30, 50, 10, 30), 
-    k.ini.low = 3, k.ini.up = 5, z.ini.low = 1e-04, z.ini.up = 1.1, 
+    k.ini.low = 3, k.ini.up = 5, z.ini.low = 1e-04, z.ini.up = 0.653, 
     lambda.ini.low = c(0.01, 0.01, 0.01, 0.01), 
     lambda.ini.up = c(0.1, 0.1, 0.1, 0.1), 
     lambda.k.ini.low = 0.3, lambda.k.ini.up = 1, 
     lambda.z.ini.low = 1, lambda.z.ini.up = 40, 
     omega.ini.low = 0.1, omega.ini.up = 5, 
     Triangle.prior.low=c(0, 0, -20, 0), Triangle.prior.up=c(100, 100, 100, 100),
-    k.prior.low = 0, k.prior.up = 10, z.prior.low = 0, z.prior.up = 1.15,
+    k.prior.low = 0, k.prior.up = 10, z.prior.low = 0, z.prior.up = 0.653,
     Triangle.c.ini.norm = list(round(
     	Triangle.ini.low + (Triangle.ini.up - Triangle.ini.low)/2), c(2, 2, 2, 2)), 
     k.c.ini.norm = c(round(k.ini.low + (k.ini.up - k.ini.low)/2), 2), 
     z.c.ini.norm = c(round(z.ini.low + (z.ini.up - z.ini.low)/2, 2), 0.2), 
     Triangle.c.prior.low = c(0, 0, -20, 0), Triangle.c.prior.up = c(100, 100, 100, 100),
-    k.c.prior.low = 0, k.c.prior.up = 10, z.c.prior.low = 0, z.c.prior.up = 1.15,
+    k.c.prior.low = 0, k.c.prior.up = 10, z.c.prior.low = 0, z.c.prior.up = 0.653,
     country.overwrites = NULL, nu = 4, dl.p1 = 9, dl.p2 = 9, 
     sumTriangle.lim = c(30, 110), constant.variance = FALSE, seed = NULL, 
     parallel = FALSE, nr.nodes = nr.chains, compression.type = 'None',
@@ -77,19 +77,19 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{Triangle.ini.low, Triangle.ini.up}{A vector of length four. They are the lower and upper bounds for initial values of \eqn{\Delta_1}{Triangle_1}, \dots, \eqn{\Delta_4}{Triangle_4}. An \eqn{i}-th item is only used if \code{Triangle.ini[[i]]} is \code{NULL}.}
   \item{k.ini.low, k.ini.up}{Single value giving the lower and upper bounds for initial values of \eqn{k}. It is only used if \code{k.ini} is \code{NULL}.}
   \item{z.ini.low, z.ini.up}{Single value giving the lower and upper bounds for initial values of \eqn{z}. It is only used if \code{z.ini} is   
-  	\code{NULL}.}
+  	\code{NULL}. Regarding defaults, see Note below.}
  \item{lambda.ini.low, lambda.ini.up}{A vector of length four. They are the lower and upper bounds for initial values of \eqn{\lambda_1}{lambda_1}, \dots, \eqn{\lambda_4}{lambda_4}. An \eqn{i}-th item is only used if \code{lambda.ini[[i]]} is \code{NULL}.}
   \item{lambda.k.ini.low, lambda.k.ini.up}{Single value giving the lower and upper bounds for initial values of \eqn{\lambda_k}{lambda_k}. It is only used if \code{lambda.k.ini} is \code{NULL}.}
   \item{lambda.z.ini.low, lambda.z.ini.up}{Single value giving the lower and upper bounds for initial values of \eqn{\lambda_z}{lambda_z}. It is only used if \code{lambda.z.ini} is \code{NULL}.}
   \item{omega.ini.low, omega.ini.up}{Single value giving the lower and upper bounds for initial values of \eqn{\omega}{omega}. It is only used if \code{omega.ini} is \code{NULL}.}
   \item{Triangle.prior.low, Triangle.prior.up}{A vector of length four. They are the lower and upper bounds for the prior (truncated normal) distribution of \eqn{\Delta_1}{Triangle_1}, \dots, \eqn{\Delta_4}{Triangle_4}.}
     \item{k.prior.low, k.prior.up}{Single value giving the lower and upper bounds for the prior (truncated normal) distribution  of \eqn{k}. }
-    \item{z.prior.low, z.prior.up}{Single value giving the lower and upper bounds for the prior (truncated normal) distribution  of \eqn{z}.}
+    \item{z.prior.low, z.prior.up}{Single value giving the lower and upper bounds for the prior (truncated normal) distribution  of \eqn{z}. Regarding defaults, see Note below.}
   \item{Triangle.c.ini.norm}{A list with two elements, each of them being a vector of size four. The first and second element in the list corresponds to the means and standard deviation, respectively, for the initial values of the country-specific parameters \eqn{\Delta_1^c}{Triangle_1_c}, \dots, \eqn{\Delta_4^c}{Triangle_4_c} which are drawn from a truncated normal distribution with bounds defined by \code{Triangle.c.prior.low} and \code{Triangle.c.prior.up}.}
   \item{k.c.ini.norm, z.c.ini.norm}{A vector of length two. The first and second element corresponds to the means and standard deviation, respectively, for the initial values of the country-specific parameters \eqn{k^c} (\eqn{z^c}) which are drawn from a normal distribution truncated between \code{k.c.prior.low} and \code{k.c.prior.up} (\code{z.c.prior.low} and \code{z.c.prior.up}).}
     \item{Triangle.c.prior.low, Triangle.c.prior.up}{A vector of length four. They are the lower and upper bounds for the prior (truncated normal) distribution of country-specific \eqn{\Delta_1^c}{Triangle_1_c}, \dots, \eqn{\Delta_4^c}{Triangle_4_c}.}
     \item{k.c.prior.low, k.c.prior.up}{Single value giving the lower and upper bounds for the prior (truncated normal) distribution  of country-specific \eqn{k^c}. }
-    \item{z.c.prior.low, z.c.prior.up}{Single value giving the lower and upper bounds for the prior (truncated normal) distribution  of country-specific \eqn{z^c}.}
+    \item{z.c.prior.low, z.c.prior.up}{Single value giving the lower and upper bounds for the prior (truncated normal) distribution  of country-specific \eqn{z^c}. Regarding defaults, see Note below.}
   \item{country.overwrites}{This argument allows to overwrite some of the prior parameters for specific countries. If it is not \code{NULL} it should be a data frame with an obligatory column \sQuote{country_code}. Each row then corresponds to one country. Other columns can be \sQuote{k.c.prior.low}, \sQuote{k.c.prior.up}, \sQuote{z.c.prior.low}, \sQuote{z.c.prior.up}, \sQuote{Triangle_\eqn{x}.c.prior.low} and \sQuote{Triangle_\eqn{x}.c.prior.up} where \eqn{x} can be an integer from 1 to 4.}
   \item{nu}{The shape parameter of the Gamma distributions of all \eqn{\lambda}{lambda} parameters is \code{nu/2}.}
   \item{dl.p1, dl.p2}{Values of the parameters \eqn{p_1} and \eqn{p_2} of the double logistic function.}
@@ -110,8 +110,8 @@ continue.e0.mcmc(iter, chain.ids = NULL,
 	
 Using the function \code{continue.e0.mcmc} one can continue simulating an existing MCMCs by \code{iter} iterations for either all or selected chains.
 
-The function loads observed data (further denoted as WPP dataset) from the \code{\link[wpp2010]{e0M}} (\code{\link[wpp2010]{e0F}}) and \code{\link[wpp2010]{e0M_supplemental}} (\code{\link[wpp2010]{e0F_supplemental}}) datasets in a \pkg{wpp}\eqn{x} package where \eqn{x} is the \code{wpp.year}. It is then merged with the  \code{\link{include}} dataset that corresponds to the same \code{wpp.year}. The argument \code{my.e0.file} can be used to overwrite those default data. Such a file can include a subset of countries contained in the WPP dataset, as well as a set of new countries. In the former case,
-  	the function replaces the corresponding country data from the WPP dataset by values in this file. Only columns are replaced that match column names of the WPP dataset, and in addition, columns \sQuote{last.observed} and \sQuote{include_code} are used, if present. Countries are merged with WPP using the column \sQuote{country_code}. In addition, in order the countries to be included in the simulation, in both cases (whether they are included in the WPP dataset or not), they must be contained in the UN table of locations (\code{\link[wpp2010]{UNlocations}}). In addition, their corresponding \sQuote{include_code} must be set to 2. If the column \sQuote{include_code} is present in \code{my.e0.file}, its value overwrites the default include code, unless is -1.
+The function loads observed data (further denoted as WPP dataset) from the \code{\link[wpp2012]{e0M}} (\code{\link[wpp2012]{e0F}}) and \code{\link[wpp2012]{e0M_supplemental}} (\code{\link[wpp2012]{e0F_supplemental}}) datasets in a \pkg{wpp}\eqn{x} package where \eqn{x} is the \code{wpp.year}. It is then merged with the  \code{\link{include}} dataset that corresponds to the same \code{wpp.year}. The argument \code{my.e0.file} can be used to overwrite those default data. Such a file can include a subset of countries contained in the WPP dataset, as well as a set of new countries. In the former case,
+  	the function replaces the corresponding country data from the WPP dataset by values in this file. Only columns are replaced that match column names of the WPP dataset, and in addition, columns \sQuote{last.observed} and \sQuote{include_code} are used, if present. Countries are merged with WPP using the column \sQuote{country_code}. In addition, in order the countries to be included in the simulation, in both cases (whether they are included in the WPP dataset or not), they must be contained in the UN table of locations (\code{\link[wpp2012]{UNlocations}}). In addition, their corresponding \sQuote{include_code} must be set to 2. If the column \sQuote{include_code} is present in \code{my.e0.file}, its value overwrites the default include code, unless is -1.
 
 For simulation of the hyperparameters of the Bayesian hierarchical model, all countries are used that are included in the WPP dataset, possibly complemented by the \code{my.e0.file}, that have \code{include_code} equal to 2. The hyperparameters are used to simulate country-specific parameters, which is done for all countries with \code{include_code} equal 1 or 2.  The following values of \code{include_code} in \code{my.e0.file} are recognized: -1 (do not overwrite the default include code), 0 (ignore), 1 (include in prediction but not estimation), 2 (include in both, estimation and prediction). Thus, the set of countries included in the estimation and prediction can be fully specified by the user.
 
@@ -119,20 +119,34 @@ Optionally, \code{my.e0.file} can contain a column called \code{last.observed} c
 
 The package contains a dataset called \file{my_e0_template} (in \file{extdata} directory) which is a template for user-specified \code{my.e0.file}.
 }
+\note{
+	Parameter \eqn{z} determines the asymptote in gains in life expectancy. The following text gives an explanation for the choice of  upper limits on \eqn{z}-related parameters: 
+	
+	The pace of improvement and the asymptotic limit in future gains in female life expectancy vary for each projected trajectory, but ultimately is informed and constrained by the finding that the rate of increase of maximum female life expectancy over the past 150 year has been highly linear (2a, 2b) (i.e., about 2.4 years per decade), albeit at slightly lower pace once the leading countries started to exceed 75 years of female life expectancy at birth in the 1960s (3) (about 2.26 years of gains per decade). By assuming that the asymptotic average rate of increase in life expectancy is nonnegative, life expectancy is assumed to continually increase (on average), and no limit is imposed to life expectancy in the foreseeable future. The increase in maximum female life span among countries with highest life expectancy and reliable data on very old age provide further guidance on future rate of progress which has also been increasingly linear at least since the 1970s (4a-4c) (about 1.25 years per decade for countries like Sweden and Norway), and is used to inform the asymptotic average rate of increase in female life expectancy used in the 2012 WPP Revision. To set the posterior median to an annual gain of 0.125 year (or 5-year gain of 0.625 in this context) the upper bound value of 0.653 is used for the world prior (\eqn{z}) and country-specific prior (\eqn{z_c}) as default values in the estimation of the double-logistic parameters.
+}
 \value{
 	An object of class \code{bayesLife.mcmc.set} which is a list with two components:
 	\item{meta}{An object of class \code{\link{bayesLife.mcmc.meta}}.}
 	\item{mcmc.list}{A list of objects of class \code{\link{bayesLife.mcmc}}, one for each MCMC.}
 }
 \references{
-J. L. Chunn, A. E. Raftery, P. Gerland (2010): Bayesian Probabilistic Projections of Life Expectancy for All Countries.  Working Paper nr. 105, Center for Statistics and the Social Sciences, University of Washington. \url{http://www.csss.washington.edu/Papers}
+(1) J. L. Chunn, A. E. Raftery, P. Gerland (2010): Bayesian Probabilistic Projections of Life Expectancy for All Countries.  Working Paper nr. 105, Center for Statistics and the Social Sciences, University of Washington. \url{http://www.csss.washington.edu/Papers}
+
+(2a)  Oeppen J, and J.W. Vaupel (2002) Broken limits to life expectancy. Science 296:1029-1031. 
+
+(2b) Vaupel, J.W. and K.G.V. Kistowski. 2005. Broken Limits to Life Expectancy. Ageing Horizons (3):6-13.
+
+(3) Vallin, J., and F. Mesle (2009). The Segmented Trend Line of Highest Life Expectancies. Population and Development Review, 35(1), 159-187. doi:10.1111/j.1728-4457.2009.00264.x
+
+(4a) Wilmoth, J. R., L. J. Deegan, H. Lundstrom, and S. Horiuchi (2000). Increase of maximum life-span in Sweden, 1861-1999. Science, 289(5488), 2366-2368. 
+
+(4b) Wilmoth, J. R. and J-M. Robine. (2003). The world trend in maximum life span, in: J. R. Carey and S. Tuljapurkar (eds.), Life Span: Evolutionary, Ecological, and Demographic Perspectives, supplement to vol. 29, Population and Development Review, pp. 239-257. 
+
+(4c) Wilmoth, J. R. and N. Ouellette (2012). Maximum human lifespan: Will the records be unbroken?, Paper presented at the European Population Conference, Stockholm, Sweden, 13-16 June.
 }
 \author{
-Hana Sevcikova
+Hana Sevcikova, Patrick Gerland contributed to the documentation.
 }
-%%\note{
-%%  ~~further notes~~
-%%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 

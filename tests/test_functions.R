@@ -6,11 +6,12 @@ test.ok <- function(name) cat('\n==== Test of', name, 'OK.===>\n')
 test.get.wpp.data <- function(wpp.year=2008) {
 	test.name <- 'getting WPP data'
 	start.test(test.name)
-	data <- bayesLife:::get.wpp.e0.data()
+	ncountries <- list('2008'=158, '2010'=159, '2012'=162)
+	data <- bayesLife:::get.wpp.e0.data(wpp.year=wpp.year)
 	stopifnot(length(dim(data$e0.matrix))==2)
-	stopifnot(ncol(data$e0.matrix)==158)
+	stopifnot(ncol(data$e0.matrix)==ncountries[[as.character(wpp.year)]])
 	stopifnot(nrow(data$e0.matrix)==12)
-	stopifnot(rownames(data$e0.matrix[12])=='2008')
+	stopifnot(rownames(data$e0.matrix[12])==as.character(wpp.year))
 	test.ok(test.name)
 }
 
@@ -66,7 +67,7 @@ test.estimate.mcmc <- function(compression='None') {
 	stopifnot(is.element(903, pred$mcmc.set$meta$regions$country_code))
 	stopifnot(!is.null(bayesTFR:::get.trajectories(pred, 903)$trajectories))
 	stopifnot(all(dim(pred$joint.male$quantiles) == dim(pred$quantiles)))
-	stopifnot(dim(pred$joint.male$quantiles)[1] == 161)
+	stopifnot(dim(pred$joint.male$quantiles)[1] == 164)
 	test.ok(test.name)
     
 	test.name <- 'shifting the median'
@@ -336,11 +337,13 @@ test.estimate.mcmc.with.overwrites <- function() {
     m <- run.e0.mcmc(nr.chains=1, iter=50, thin=1, output.dir=sim.dir, 
     				Triangle.c.prior.low=c(0, 0, -20, 0), country.overwrites=overwrites,
     				seed=10)
+    iNiger <- get.country.object(562, m$meta)
+    iSene <- get.country.object(686, m$meta)
     
-    stopifnot((m$meta$country.bounds$k.c.prior.up[17] == 5) && (m$meta$country.bounds$k.c.prior.up[18] == 7) && 
-    			all(m$meta$country.bounds$k.c.prior.up[-c(17,18)]==10))
-    stopifnot((m$meta$country.bounds$Triangle_3.c.prior.low[18] == 0) &&  
-    			all(m$meta$country.bounds$Triangle_3.c.prior.low[-18]==-20))
+    stopifnot((m$meta$country.bounds$k.c.prior.up[iNiger$index] == 5) && (m$meta$country.bounds$k.c.prior.up[iSene$index] == 7) && 
+    			all(m$meta$country.bounds$k.c.prior.up[-c(iNiger$index,iSene$index)]==10))
+    stopifnot((m$meta$country.bounds$Triangle_3.c.prior.low[iSene$index] == 0) &&  
+    			all(m$meta$country.bounds$Triangle_3.c.prior.low[-iSene$index]==-20))
     #check traces		
     traces.Niger <- get.e0.parameter.traces.cs(m$mcmc.list, get.country.object('Niger', m$meta), 
     					par.names=c('Triangle.c', 'k.c'))
@@ -358,8 +361,8 @@ test.estimate.mcmc.with.overwrites <- function() {
 	m <- run.e0.mcmc.extra(sim.dir=sim.dir, countries=c(800,900), burnin=0, country.overwrites=overwrites)
 	Ug <- get.country.object('Uganda', m$meta)
 	Wrld <- get.country.object(900, m$meta)
-	stopifnot((m$meta$country.bounds$k.c.prior.up[Ug$index] == 3) && (m$meta$country.bounds$k.c.prior.up[18] == 7) && 
-    			(m$meta$country.bounds$k.c.prior.up[Wrld$index] == 8) && all(m$meta$country.bounds$k.c.prior.up[-c(17, 18, Ug$index,Wrld$index)]==10))
+	stopifnot((m$meta$country.bounds$k.c.prior.up[Ug$index] == 3) && (m$meta$country.bounds$k.c.prior.up[iSene$index] == 7) && 
+    			(m$meta$country.bounds$k.c.prior.up[Wrld$index] == 8) && all(m$meta$country.bounds$k.c.prior.up[-c(iNiger$index, iSene$index, Ug$index,Wrld$index)]==10))
     stopifnot((m$meta$country.bounds$k.c.prior.low[Ug$index] == 2) && all(m$meta$country.bounds$k.c.prior.low[-Ug$index]==0))
     traces.Ug <- get.e0.parameter.traces.cs(m$mcmc.list, Ug, par.names=c('k.c'))
 	stopifnot(all(traces.Ug[,'k.c_c800'] <= 3) && all(traces.Ug[,'k.c_c800'] > 2))

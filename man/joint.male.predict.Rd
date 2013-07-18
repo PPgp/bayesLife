@@ -24,7 +24,7 @@ e0.jmale.predict(e0.pred, estimates = NULL, gap.lim = c(0, 18),
   \item{\dots}{Further arguments passed to \code{\link{e0.jmale.estimate}}.}
 }
 \details{
-If no \code{estimates} are given, the function invokes an estimation by calling \code{\link{e0.jmale.estimate}}. Using those estimates, the male life expectancy is projected forward in time (as a function of a female-male gap), using the female predictions from \code{e0.pred}. The initial male data point is extracted from the male WPP dataset (\code{\link[wpp2010]{e0M}}) and possibly partly replaced by any user-specified data given in \code{my.e0.file}.
+If no \code{estimates} are given, the function invokes an estimation by calling \code{\link{e0.jmale.estimate}}. Using those estimates, the male life expectancy is projected forward in time (as a function of a female-male gap), using the female predictions from \code{e0.pred}. The initial male data point is extracted from the male WPP dataset (\code{\link[wpp2012]{e0M}}) and possibly partly replaced by any user-specified data given in \code{my.e0.file}.
 
 The resulting trajectory files are stored in a subdirectory of the female prediction directory, called \sQuote{joint_male}. Furthermore, an object of class \code{\link{bayesLife.prediction}} is created and added to \code{e0.pred} as a component called \code{joint.male}. 
 

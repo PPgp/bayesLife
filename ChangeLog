@@ -1,4 +1,10 @@
-2.0-0 (5/23/2013)
+2.0-1 (7/18/2013)
+-----
+e0.joint.plot can display observed data. Added graphical arguments obs.pch and obs.cex for the observed data.
+
+Default wpp.year changed to 2012. wpp2012 package put into required dependencies and wpp2010 into suggested dependencies.
+
+2.0-0 (5/23/2013) [CRAN]
 -----
 WPP data removed and put in separate packages (wpp2008, wpp2010). The package is now dependent on those.
 

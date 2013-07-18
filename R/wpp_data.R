@@ -1,4 +1,4 @@
-get.wpp.e0.data <- function(sex='M', start.year=1950, present.year=2010, wpp.year=2008, my.e0.file=NULL, 
+get.wpp.e0.data <- function(sex='M', start.year=1950, present.year=2010, wpp.year=2012, my.e0.file=NULL, 
 							verbose=FALSE) {
 	sex <- toupper(sex)
 	if(sex != 'M' && sex != 'F')

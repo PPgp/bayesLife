@@ -92,74 +92,87 @@ e0.joint.plot.all <- function(e0.pred, output.dir=file.path(getwd(), 'e0joint'),
 }
 
 e0.joint.plot <- function(e0.pred, country, pi=95, years, nr.points=500,
+							obs.pch=17, obs.cex=1,
 							xlim=NULL, ylim=NULL, xlab='Female life expectancy', ylab='Male life expectancy', 
 							main=NULL, col=NULL, show.legend=TRUE, add=FALSE, ...) {
 	if(!has.e0.jmale.prediction(e0.pred)) 
 		stop('A male prediction does not exist for the given prediction object. Run e0.jmale.predict.')
-	years.idx <- unlist(lapply(years, bayesTFR:::get.prediction.year.index, pred=e0.pred))
+	start.year <- as.integer(dimnames(e0.pred$quantiles)[[3]][1])
+	years.obs <- years[years <= start.year+2]
+	years.pred <- years[years > start.year+2]
+	years.idx <- unlist(lapply(years.pred, bayesTFR:::get.prediction.year.index, pred=e0.pred))
 	years.idx <- years.idx[years.idx > 1]
-	if(length(years.idx) <= 0) 
+	years.obs.idx <- unlist(lapply(years.obs, bayesTFR:::get.estimation.year.index, meta=e0.pred$mcmc.set$meta))
+	lyears <- length(years.idx)+length(years.obs.idx)
+	if(lyears <= 0) 
 		stop('Argument years must have values within the range [', 
-							e0.pred$end.year - e0.pred$nr.projections*5, ',', e0.pred$end.year, '].')
-	if(length(years.idx) != length(years))
-		warning('Some years invalid. Valid range: [', e0.pred$end.year - e0.pred$nr.projections*5, ',', e0.pred$end.year, '].')
+						bayesTFR:::get.estimation.years(e0.pred$mcmc.set$meta)[1], ',', e0.pred$end.year, '].')
+	if(length(years.idx)+length(years.obs.idx) != length(years))
+		warning('Some years invalid. Valid range: [', bayesTFR:::get.estimation.years(e0.pred$mcmc.set$meta)[1], ',', e0.pred$end.year, '].')
 		
 	require(car)
-	
+	country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
 	e0M.pred <- get.e0.jmale.prediction(e0.pred)
+	obsF <- obsM <- NULL
+	if(length(years.obs.idx) > 0) { # observed data
+		obsF <- e0.pred$e0.matrix.reconstructed[years.obs.idx, country.obj$index]
+		obsM <- e0M.pred$e0.matrix.reconstructed[years.obs.idx, country.obj$index]
+	}
 	trajFall <- get.e0.trajectories(e0.pred, country)[years.idx,,drop=FALSE]
 	trajMall <- get.e0.trajectories(e0M.pred, country)[years.idx,,drop=FALSE]
 	nr.points <- min(nr.points, ncol(trajFall))
 	if(!add) {
-		minxy <- min(trajFall, trajMall)
-		maxxy <- max(trajFall, trajMall)
+		minxy <- min(trajFall, trajMall, obsF, obsM)
+		maxxy <- max(trajFall, trajMall, obsF, obsM)
 		if(is.null(xlim)) xlim <- c(minxy, maxxy)
-		if(is.null(xlim)) ylim <- c(minxy, maxxy)
-		country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
+		if(is.null(xlim)) ylim <- c(minxy, maxxy)		
 		if(is.null(main)) main <- country.obj$name
 		plot(c(minxy, maxxy), c(minxy, maxxy), type='n', xlab=xlab, ylab=ylab, 
 				xlim=xlim, ylim=ylim, main=main, panel.first = grid(), ...)
 		abline(0,1)
 	}
-	col <- if(is.null(col)) rainbow(length(years.idx)) else rep(col, length(years.idx))
-	for(iyear in 1:length(years.idx)) {
-		trajF <- trajFall[iyear,]
-		trajM <- trajMall[iyear,]
-		#dens <- kde2d(trajF, trajM, n=100)
-		#for(i in 1:length(dens$x)) 
-		#	dens$z[i,dens$x[i]<dens$y] <- 0
-		#cibounds <- quantile(dens$z, probs=1-pi/100)
-		if(nr.points > 0) {
-			sample.idx <- if(nr.points < length(trajF)) sample(1:length(trajF), nr.points) else 1:nr.points
-			Fpoints <- trajF[sample.idx]
-			Mpoints <- trajM[sample.idx]
-			points(Fpoints, Mpoints, pch='.', col=col[iyear])
-		}
-		if(length(pi) > 0){
-			if(!all(trajF[-1]==trajF[1]) &&  !all(trajM[-1]==trajM[1])){
-				ellips <- dataEllipse(trajF, trajM, levels=pi/100, draw=FALSE)
-				if(length(pi) == 1) {
-					ellips <- list(ellips)
-					names(ellips) <- as.character(pi/100)
+	col <- if(is.null(col)) rainbow(lyears) else rep(col, lyears)
+	if(length(years.obs.idx) > 0) { # observed data
+		points(obsF, obsM, col=col[1:length(years.obs.idx)], pch=obs.pch, cex=obs.cex)
+	}
+	if(length(years.idx) > 0) { #
+		for(iyear in 1:length(years.idx)) {
+			trajF <- trajFall[iyear,]
+			trajM <- trajMall[iyear,]
+			colidx <- iyear+length(years.obs.idx)
+			if(nr.points > 0) {
+				sample.idx <- if(nr.points < length(trajF)) sample(1:length(trajF), nr.points) else 1:nr.points
+				Fpoints <- trajF[sample.idx]
+				Mpoints <- trajM[sample.idx]
+				points(Fpoints, Mpoints, pch='.', col=col[colidx])
+			}
+			if(length(pi) > 0){
+				if(!all(trajF[-1]==trajF[1]) &&  !all(trajM[-1]==trajM[1])){
+					ellips <- dataEllipse(trajF, trajM, levels=pi/100, draw=FALSE)
+					if(length(pi) == 1) {
+						ellips <- list(ellips)
+						names(ellips) <- as.character(pi/100)
+					}
+					for(ipi in 1:length(pi)) {
+						# hack: modify points above the x=y line
+						el <- ellips[[as.character(pi[ipi]/100)]]
+						above <- el[,'x'] < el[,'y']
+						el[above,'y']<- el[above,'x']
+						lines(el, col=col[colidx])
+					}
+				} else { # if all trajectories the same, make the point larger
+					points(trajF[1], trajM[1], pch=obs.pch, col=col[colidx], cex=obs.cex)
 				}
-				for(ipi in 1:length(pi)) {
-					# hack: modify points above the x=y line
-					el <- ellips[[as.character(pi[ipi]/100)]]
-					above <- el[,'x'] < el[,'y']
-					el[above,'y']<- el[above,'x']
-					lines(el, col=col[iyear])
-				}
-				#contour(dens, levels=cibounds, drawlabels=TRUE, labels=pi, add=TRUE, col=col[iyear], ...)
-			} else { # if all trajectories the same, make the point larger
-				points(trajF[1], trajM[1], pch=16, col=col[iyear])
 			}
 		}
 	}
 	if(show.legend) {
-		periods <- bayesTFR:::get.prediction.periods(e0.pred$mcmc.set$meta, max(years.idx))[years.idx]
+		periods <- c(bayesTFR:::get.tfr.periods(e0.pred$mcmc.set$meta)[years.obs.idx], 
+					 if(length(years.idx)>0) bayesTFR:::get.prediction.periods(e0.pred$mcmc.set$meta, max(years.idx))[years.idx-1]
+					 	else c())
 		legend('topleft', legend=periods, col=col, bty='n', lty=1)
 	}
-				
+
 }
 
 e0.trajectories.plot.all <- function(e0.pred, 
