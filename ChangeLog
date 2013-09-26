@@ -1,4 +1,8 @@
-2.0-1 (7/18/2013)
+2.0-2 ()
+-----
+Changes in dependencies and imports.
+
+2.0-1 (7/18/2013) [CRAN]
 -----
 e0.joint.plot can display observed data. Added graphical arguments obs.pch and obs.cex for the observed data.
 

@@ -110,7 +110,6 @@ e0.joint.plot <- function(e0.pred, country, pi=95, years, nr.points=500,
 	if(length(years.idx)+length(years.obs.idx) != length(years))
 		warning('Some years invalid. Valid range: [', bayesTFR:::get.estimation.years(e0.pred$mcmc.set$meta)[1], ',', e0.pred$end.year, '].')
 		
-	require(car)
 	country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
 	e0M.pred <- get.e0.jmale.prediction(e0.pred)
 	obsF <- obsM <- NULL

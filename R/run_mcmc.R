@@ -143,8 +143,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
     }
 
 	if (parallel) { # run chains in parallel
-		require(snowFT)
-		chain.set <- performParallel(nr.nodes, 1:nr.chains, mcmc.run.chain.e0, 
+		chain.set <- bayesTFR:::bDem.performParallel(nr.nodes, 1:nr.chains, mcmc.run.chain.e0, 
                                      initfun=init.nodes.e0, meta=bayesLife.mcmc.meta, 
                                      thin=thin, iter=iter, 
                                      starting.values=starting.values,                                     
@@ -227,9 +226,8 @@ continue.e0.mcmc <- function(iter, chain.ids=NULL, output.dir=file.path(getwd(),
                 chain.ids <- names(mcmc.set$mcmc.list)
         }
         if (parallel) { # run chains in parallel
-                require(snowFT)
                 if(is.null(nr.nodes)) nr.nodes<-length(chain.ids)
-                chain.list <- performParallel(nr.nodes, chain.ids, continue.e0.chain, 
+                chain.list <- bayesTFR:::bDem.performParallel(nr.nodes, chain.ids, continue.e0.chain, 
                                                 initfun=init.nodes.e0, mcmc.list=mcmc.set$mcmc.list, iter=iter, 
                                                 verbose=verbose, verbose.iter=verbose.iter, ...)
                 for (i in 1:length(chain.ids))
@@ -301,9 +299,8 @@ run.e0.mcmc.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 	if (!is.null(mcmc.set$mcmc.list[[1]]$rng.state)) .Random.seed <- mcmc.set$mcmc.list[[1]]$rng.state
 	
 	if (parallel) { # run chains in parallel
-		require(snowFT)
 		if(is.null(nr.nodes)) nr.nodes<-length(chain.ids)
-		chain.list <- performParallel(nr.nodes, chain.ids, e0.mcmc.run.chain.extra, 
+		chain.list <- bayesTFR:::bDem.performParallel(nr.nodes, chain.ids, e0.mcmc.run.chain.extra, 
 						initfun=init.nodes.e0, mcmc.list=mcmc.set$mcmc.list, countries=Eini$index, 
 						posterior.sample=post.idx, iter=iter, burnin=burnin, verbose=verbose, verbose.iter=verbose.iter, ...)
 		for (i in 1:length(chain.ids))

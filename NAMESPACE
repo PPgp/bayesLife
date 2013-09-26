@@ -1,8 +1,9 @@
 
 # import
 import(
-    bayesTFR
+    bayesTFR, hett, coda
 )
+importFrom(car, dataEllipse)
 
 #exportPattern("^[[:alpha:]]+")
 useDynLib(bayesLife)

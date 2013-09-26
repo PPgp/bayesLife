@@ -428,7 +428,6 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 								min.e0.eq2 = 80, estDof.eq2 = TRUE, start.eq2 = list(dof = 2), 
 								constant.gap.eq2=TRUE, my.e0.file=NULL, verbose=FALSE) {
 	# Estimate coefficients for joint prediction of female and male e0
-	require(hett)
 	unblock.gtk('bDem.e0pred', list(bDem.e0pred.status='estimating joint male'))
 	if (is.null(countries.index)) countries.index <- 1:get.nr.countries.est(mcmc.set$meta)
 	e0f.data <- get.data.matrix(mcmc.set$meta)[,countries.index]

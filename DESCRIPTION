@@ -6,7 +6,8 @@ Date: 2013-7-18
 Author: Hana Sevcikova, Adrian Raftery; original WinBugs code written by Jennifer Chunn 
 Maintainer: Hana Sevcikova <hanas@uw.edu>
 Description: Making probabilistic projections of life expectancy for all countries of the world, using a Bayesian hierarchical model.
-Depends: bayesTFR (>= 4.0-0), wpp2012
-Suggests: hett, car, snowFT, wpp2008, wpp2010
+Depends: bayesTFR (>= 4.0-0)
+Imports: wpp2012, hett, car, coda
+Suggests: wpp2008, wpp2010
 License: GPL (>= 2)
 URL: http://bayespop.csss.washington.edu
