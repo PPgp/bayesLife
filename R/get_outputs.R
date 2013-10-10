@@ -52,7 +52,7 @@ has.e0.mcmc <- function(sim.dir) {
 e0.mcmc <- function(mcmc.set, chain.id=1) return (mcmc.set$mcmc.list[[chain.id]])
 
 e0.mcmc.list <- function(mcmc.set, chain.ids=NULL) 
-	return(bayesTFR:::tfr.mcmc.list(mcmc.set=mcmc.set, chain.ids=chain.ids))
+	return(bayesTFR::tfr.mcmc.list(mcmc.set=mcmc.set, chain.ids=chain.ids))
 
 has.e0.prediction <- function(mcmc=NULL, sim.dir=NULL) {
 	if (!is.null(mcmc)) sim.dir <- if(is.character(mcmc)) mcmc else mcmc$meta$output.dir
@@ -373,7 +373,7 @@ create.thinned.e0.mcmc.extra <- function(mcmc.set, thinned.mcmc.set, countries, 
 
 get.e0.trajectories <- function(e0.pred, country) {
 	# country can be a name; returns only trajectories
-	return(bayesTFR:::get.tfr.trajectories(e0.pred, country=country))
+	return(bayesTFR::get.tfr.trajectories(e0.pred, country=country))
 }
 
 get.e0.trajectories.object <- function(e0.pred, country, nr.traj=NULL, typical.trajectory=FALSE, pi=NULL, ...) {

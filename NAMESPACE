@@ -1,7 +1,7 @@
 
 # import
 import(
-    bayesTFR, hett, coda
+    bayesTFR, hett, coda, wpp2012
 )
 importFrom(car, dataEllipse)
 

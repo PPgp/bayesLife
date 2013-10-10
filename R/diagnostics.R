@@ -5,7 +5,7 @@ e0.raftery.diag <- function(mcmc=NULL,
 							 par.names.cs = e0.parameter.names.cs(),
 							 country.sampling.prop=1,
 							 verbose=TRUE, ...) {
-return(bayesTFR:::tfr.raftery.diag(mcmc=mcmc, sim.dir=sim.dir, burnin=burnin,
+return(bayesTFR::tfr.raftery.diag(mcmc=mcmc, sim.dir=sim.dir, burnin=burnin,
 						country=country, par.names=par.names, par.names.cs=par.names.cs,
 						country.sampling.prop=country.sampling.prop, verbose=verbose, ...))
 }

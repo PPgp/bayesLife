@@ -30,7 +30,7 @@ e0.predict <- function(mcmc.set=NULL, end.year=2100, sim.dir=file.path(getwd(), 
 		if (ldiag == 0) stop('There is no diagnostics available. Use manual settings of "nr.traj" or "thin".')
 		use.nr.traj <- use.burnin <- rep(NA, ldiag)
 		for(idiag in 1:ldiag) {
-			if (bayesTFR:::has.mcmc.converged(diag.list[[idiag]])) {
+			if (bayesTFR::has.mcmc.converged(diag.list[[idiag]])) {
 				use.nr.traj[idiag] <- diag.list[[idiag]]$use.nr.traj
 				use.burnin[idiag] <- diag.list[[idiag]]$burnin
 			}
@@ -397,7 +397,7 @@ e0.median.reset <- function(sim.dir, countries, joint.male=FALSE) {
 	invisible(pred)
 }
 
-get.e0.shift <- function(country.code, pred) return(bayesTFR:::get.tfr.shift(country.code, pred))
+get.e0.shift <- function(country.code, pred) return(bayesTFR::get.tfr.shift(country.code, pred))
 
 e0.median.shift <- function(sim.dir, country, reset=FALSE, shift=0, from=NULL, to=NULL, joint.male=FALSE) {
 	pred <- get.e0.prediction(sim.dir, joint.male=joint.male)

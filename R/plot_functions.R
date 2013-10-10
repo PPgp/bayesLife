@@ -309,7 +309,7 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 			e0.median <- trajectories$median
 		} else {
 			trajectories <- get.e0.trajectories.object(e0pred, country$code, nr.traj=nr.traj, typical.trajectory=typical.trajectory)
-			e0.median <- bayesTFR:::get.median.from.prediction(e0pred, country$index, country$code)
+			e0.median <- bayesTFR::get.median.from.prediction(e0pred, country$index, country$code)
 		}
 		cqp <- list()
 		if(ipred > 1) add <- TRUE
@@ -621,7 +621,7 @@ e0.pardensity.cs.plot <- function(country, mcmc.list=NULL, sim.dir=file.path(get
 
 get.e0.map.parameters <- function(pred, e0.range=NULL, nr.cats=50, same.scale=TRUE, 
 						quantile=0.5, ...) {
-	return(bayesTFR:::get.tfr.map.parameters(pred, e0.range, nr.cats=nr.cats, same.scale=same.scale,
+	return(bayesTFR::get.tfr.map.parameters(pred, e0.range, nr.cats=nr.cats, same.scale=same.scale,
 							quantile=quantile, ...))
 }
 
@@ -629,7 +629,7 @@ get.e0.map.parameters <- function(pred, e0.range=NULL, nr.cats=50, same.scale=TR
 	return(paste(get.sex.label(pred$mcmc.set$meta), 'e0: quantile'))
 
 e0.map <- function(pred, ...) {
-	return(bayesTFR:::tfr.map(pred, ...))
+	return(bayesTFR::tfr.map(pred, ...))
 }
 e0.map.all <- function(pred, output.dir, output.type='png', e0.range=NULL, nr.cats=50, same.scale=TRUE, 
 						quantile=0.5, file.prefix='e0wrldmap_', ...) {
