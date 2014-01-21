@@ -425,7 +425,7 @@ e0.median.set <- function(sim.dir, country, values, years=NULL, joint.male=FALSE
 
 e0.jmale.estimate <- function(mcmc.set, countries.index=NULL, 
 								estDof.eq1 = TRUE, start.eq1 = list(dof = 2), 
-								min.e0.eq2 = 80, estDof.eq2 = TRUE, start.eq2 = list(dof = 2), 
+								max.e0.eq1 = 83, estDof.eq2 = TRUE, start.eq2 = list(dof = 2), 
 								constant.gap.eq2=TRUE, my.e0.file=NULL, verbose=FALSE) {
 	# Estimate coefficients for joint prediction of female and male e0
 	unblock.gtk('bDem.e0pred', list(bDem.e0pred.status='estimating joint male'))
@@ -442,23 +442,25 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 
 	e0.1953 <- rep(e0f.data['1953',], each=T)
 	dep.var <- as.numeric(G[2:nrow(G),])
-	e0F <- as.numeric(e0f.data[1:T,])
-	is.not.na <- !is.na(dep.var) & !is.na(e0F)
-	data.eq1 <- data.frame(
-					G=dep.var[is.not.na], # dependent variable
+	e0F <- as.numeric(e0f.data[2:(T+1),])
+	data <- data.frame(
+					G=dep.var, # dependent variable
 					# covariates
-					e0.1953=e0.1953[is.not.na], 
-					Gprev=as.numeric(G[1:T,])[is.not.na],
-					e0=e0F[is.not.na],
-					e0d75=pmax(0,e0F[is.not.na]-75) 
-				)
+					e0.1953=e0.1953, 
+					Gprev=as.numeric(G[1:T,]),
+					e0=e0F,
+					e0d75=pmax(0,e0F-75)
+	)
+	use.eq1 <- !is.na(dep.var) & !is.na(e0F) & e0F <= max.e0.eq1
+	data.eq1 <- data[use.eq1,]
 	fit.eq1 <- tlm(G~., data=data.eq1, estDof = estDof.eq1, start=start.eq1)
 	if(verbose)
 		print(summary(fit.eq1))
 	errscale.eq1<-as.numeric(exp(fit.eq1$scale.fit$coefficients[1]))
 	errsd.eq1<-sqrt(errscale.eq1)
 
-	data.eq2 <- data.eq1[data.eq1$e0 >= min.e0.eq2,]
+	use.eq2 <- !is.na(dep.var) & !is.na(e0F) & e0F > max.e0.eq1
+	data.eq2 <- data[use.eq2,]
 	if(verbose) 
 		cat('\n\nUsing', nrow(data.eq2), 'data points for equation 2.\n\n')
 	if(!constant.gap.eq2) {
@@ -472,7 +474,7 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 	} else {# constant gap in eq.2
 		dof2 <- NULL
 		coef2 <- c(Gprev=1)
-		errsd.eq2 <- sd(abs(data.eq2$G - data.eq2$Gprev))
+		errsd.eq2 <- sqrt(mean((data.eq2$G - data.eq2$Gprev)^2))
 	}
 	return(list(eq1 = list(coefficients=fit.eq1$loc.fit$coefficients, 
 						   sigma=errsd.eq1, dof = fit.eq1$dof),
@@ -481,7 +483,7 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 }
 
 e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim.eq2=c(3,9),	
-								min.e0.eq2.pred=80, my.e0.file=NULL, save.as.ascii=1000, verbose=TRUE, ...) {
+								max.e0.eq1.pred=83, my.e0.file=NULL, save.as.ascii=1000, verbose=TRUE, ...) {
 	# Predicting male e0 from female predictions. estimates is the result of 
 	# the e0.jmale.estimate function. If it is NULL, the estimation is performed 
 	# using the ... arguments
@@ -505,13 +507,13 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	joint.male$mcmc.set <- NULL
 	joint.male$joint.male <- NULL
 	joint.male$pred.pars <- list(gap.lim=gap.lim, #gap.lim.eq2=gap.lim.eq2, 
-								min.e0.eq2.pred=min.e0.eq2.pred)
+								max.e0.eq1.pred=max.e0.eq1.pred)
 	
 	if(file.exists(joint.male$output.directory)) unlink(joint.male$output.directory, recursive=TRUE)
 	dir.create(joint.male$output.directory, recursive=TRUE)
 	bayesLife.prediction <- .do.jmale.predict(e0.pred, joint.male, 1:get.nr.countries(meta),  
 								gap.lim=gap.lim, #gap.lim.eq2=gap.lim.eq2, 
-								eq2.age.start=min.e0.eq2.pred, verbose=verbose)
+								eq2.age.start=max.e0.eq1.pred, verbose=verbose)
 	save(bayesLife.prediction, file=prediction.file)
 	cat('\nPrediction stored into', joint.male$output.directory, '\n')
 	bayesTFR:::do.convert.trajectories(pred=get.e0.jmale.prediction(bayesLife.prediction), n=save.as.ascii, 
@@ -521,7 +523,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 }
 
 .do.e0.jmale.predict.extra <- function(e0.pred, countries.idx, idx.other.to.new, idx.other.to.old,
-									gap.lim.eq1=c(0,18),  gap.lim.eq2=c(3,9), min.e0.eq2.pred=80, my.e0.file=NULL, 
+									gap.lim.eq1=c(0,18),  gap.lim.eq2=c(3,9), max.e0.eq1.pred=83, my.e0.file=NULL, 
 									verbose=TRUE) {
 	# called from e0.predict.extra
 	if (!has.e0.jmale.prediction(e0.pred)) stop('Joint female-male prediction must be available for e0.pred. Use e0.jmale.predict.')
@@ -537,7 +539,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	
 	new.pred <- .do.jmale.predict(e0.pred, joint.male, countries.idx, gap.lim=joint.male$pred.pars$gap.lim, 
 									#gap.lim.eq2=joint.male$gap.lim.eq2,
-									eq2.age.start=joint.male$pred.pars$min.e0.eq2.pred, verbose=verbose)
+									eq2.age.start=joint.male$pred.pars$max.e0.eq1.pred, verbose=verbose)
 	new.jmale <- new.pred$joint.male
 	prev.jmale <- e0.pred$joint.male
 	joint.male$quantiles <- new.jmale$quantiles
@@ -593,12 +595,12 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 					Mtraj[time,itraj] <- e0m.data[last.obs.index + time - 1, icountry]
 					next
 				}
-				if(trajectoriesF[time-1,itraj] <= maxe0) { # 1st part of Equation 3.1
+				if(trajectoriesF[time,itraj] <= maxe0) { # 1st part of Equation 3.1
 					Gtdeterm <- (estimates$eq1$coefficients[1] + # intercept
 					   			 estimates$eq1$coefficients['Gprev']*Gprev +
 					   			 estimates$eq1$coefficients['e0.1953']*e0f.data['1953',icountry] +
-					   			 estimates$eq1$coefficients['e0']*trajectoriesF[time-1,itraj] +
-					   			 estimates$eq1$coefficients['e0d75']*max(0, trajectoriesF[time-1,itraj]-75))
+					   			 estimates$eq1$coefficients['e0']*trajectoriesF[time,itraj] +
+					   			 estimates$eq1$coefficients['e0d75']*max(0, trajectoriesF[time,itraj]-75))
 					Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
 					while(Gt < gap.lim[1] || Gt > gap.lim[2]) 
 						Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
