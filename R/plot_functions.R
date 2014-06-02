@@ -167,7 +167,8 @@ e0.joint.plot <- function(e0.pred, country, pi=95, years, nr.points=500,
 	}
 	if(show.legend) {
 		periods <- c(bayesTFR:::get.tfr.periods(e0.pred$mcmc.set$meta)[years.obs.idx], 
-					 if(length(years.idx)>0) bayesTFR:::get.prediction.periods(e0.pred$mcmc.set$meta, max(years.idx))[years.idx-1]
+					 if(length(years.idx)>0) bayesTFR:::get.prediction.periods(e0.pred$mcmc.set$meta, max(years.idx), 
+					 											present.year.index=e0.pred$present.year.index)[years.idx]
 					 	else c())
 		legend('topleft', legend=periods, col=col, bty='n', lty=1)
 	}

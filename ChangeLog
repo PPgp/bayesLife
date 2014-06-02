@@ -1,4 +1,8 @@
-2.1-0 (1/21/2013)
+2.1-1 (6/2/2014)
+-----
+Time label in e0.joint.plot fixed.
+
+2.1-0 (1/21/2014) [CRAN]
 -----
 Joint female-male model made consistent with Raftery, Lalic, Gerland (2014).
 
