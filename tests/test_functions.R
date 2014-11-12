@@ -371,3 +371,21 @@ test.estimate.mcmc.with.overwrites <- function() {
 	test.ok(test.name)
 	unlink(sim.dir, recursive=TRUE)
 }
+
+test.run.mcmc.simulation.auto.parallel <- function() {
+	sim.dir <- tempfile()
+	# run MCMC
+	test.name <- 'running auto MCMC in parallel'
+	start.test(test.name)
+	m <- run.e0.mcmc(iter='auto', output.dir=sim.dir, parallel=TRUE, cltype='SOCK', thin=1,
+					auto.conf=list(iter=10, iter.incr=5, max.loops=3, nr.chains=2, thin=1, burnin=5))
+	stopifnot(get.total.iterations(m$mcmc.list, 0) == 40)
+	test.ok(test.name)
+
+	test.name <- 'continuing auto MCMC in parallel'
+	start.test(test.name)
+	m <- continue.e0.mcmc(iter='auto', output.dir=sim.dir, auto.conf=list(max.loops=2), parallel=TRUE, cltype='SOCK')
+	stopifnot(get.total.iterations(m$mcmc.list, 0) == 60)
+	test.ok(test.name)
+	unlink(sim.dir, recursive=TRUE)
+}

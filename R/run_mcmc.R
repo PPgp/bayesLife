@@ -133,10 +133,10 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
         	if (length(get(var)) == 1) {
             	assign(var, rep(get(var), nr.chains))
             } else {
-            	stop('')
+            	#stop('')
             	warning(var, ' has the wrong length. Either 1 or ', nr.chains, 
                                 ' is allowed.\nValue set to ', get(var)[1], ' for all chains.')
-                                assign(var, rep(get(var)[1], nr.chains))
+                assign(var, rep(get(var)[1], nr.chains))
             }
         }
         if (var != 'iter') starting.values[[var]] <- get(var)
@@ -168,7 +168,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
 			for(loop in 2:auto.conf$max.loops) {
 				if(!inherits(diag, "try-error") && has.mcmc.converged(diag)) break
 				mcmc.set <- continue.e0.mcmc(iter=auto.conf$iter.incr, output.dir=output.dir, nr.nodes=nr.nodes,
-										  parallel=parallel, verbose=verbose, verbose.iter=verbose.iter)
+										  parallel=parallel, verbose=verbose, verbose.iter=verbose.iter, ...)
 				diag <- try(e0.diagnose(sim.dir=output.dir, keep.thin.mcmc=TRUE, 
 							thin=auto.conf$thin, burnin=auto.conf$burnin,
 							verbose=verbose))
@@ -247,7 +247,7 @@ continue.e0.mcmc <- function(iter, chain.ids=NULL, output.dir=file.path(getwd(),
 				for(loop in 2:auto.conf$max.loops) {
 					if(!inherits(diag, "try-error") && has.mcmc.converged(diag)) break
 					mcmc.set <- continue.e0.mcmc(iter=auto.conf$iter.incr, output.dir=output.dir, nr.nodes=nr.nodes,
-												 parallel=parallel, verbose=verbose, verbose.iter=verbose.iter)
+												 parallel=parallel, verbose=verbose, verbose.iter=verbose.iter, ...)
 					diag <- try(e0.diagnose(sim.dir=output.dir, keep.thin.mcmc=TRUE, 
 											thin=auto.conf$thin, burnin=auto.conf$burnin, verbose=verbose))
 				}

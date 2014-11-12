@@ -1,3 +1,9 @@
+2.1-2 (6/2/2014)
+-----
+In run.e0.mcmc fixed bug in passing ... into continue if iter="auto".
+
+Fixed a bug in summary, so that it works for joint male object.
+
 2.1-1 (6/2/2014)
 -----
 Time label in e0.joint.plot fixed.

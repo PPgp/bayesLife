@@ -259,6 +259,7 @@ summary.bayesLife.prediction <- function(object, country=NULL, compact=TRUE, ...
 				unchanged.pars=c('burnin', 'nr.traj'), 
 				country=country, compact=compact)
 	res$sex.label <- get.sex.label(object$mcmc.set$meta)
+	res$joint.male.exist <- FALSE
 	if(res$sex.label == 'Female') 
 		res$joint.male.exist <- has.e0.jmale.prediction(object)
 	class(res) <- 'summary.bayesLife.prediction'
