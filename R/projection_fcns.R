@@ -86,7 +86,7 @@ e0.predict.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 	new.pred <- make.e0.prediction(mcmc.set, start.year=pred$start.year, end.year=pred$end.year, replace.output=FALSE,
 									nr.traj=pred$nr.traj, burnin=pred$burnin,
 									countries=countries.idx, save.as.ascii=0, output.dir=prediction.dir,
-									create.thinned.mcmc.extra=TRUE,
+									force.creating.thinned.mcmc=TRUE,
 									write.summary.files=FALSE, verbose=verbose)
 									
 	# merge the two predictions
@@ -95,8 +95,7 @@ e0.predict.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 	idx.pred.others <- (1:pred$mcmc.set$meta$nr.countries)[is.element(pred$mcmc.set$meta$regions$country_code, 
 												code.other.countries)]
 	idx.other.countries <- (1:mcmc.set$meta$nr.countries)[is.element(mcmc.set$meta$regions$country_code,
-												code.other.countries)]
-												
+												code.other.countries)]										
 	prev.pred <- pred
 	pred$quantiles <- new.pred$quantiles
 	pred$quantiles[idx.other.countries,,] <- prev.pred$quantiles[idx.pred.others,,]
@@ -132,7 +131,7 @@ e0.predict.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace.output=FALSE,
 								nr.traj = NULL, thin=NULL, burnin=0, countries = NULL,
 							    save.as.ascii=1000, output.dir = NULL, write.summary.files=TRUE, 
-							    create.thinned.mcmc.extra=FALSE,
+							    force.creating.thinned.mcmc=FALSE,
 							    verbose=verbose){
 	# if 'countries' is given, it is an index
 	present.year <- if(is.null(start.year)) mcmc.set$meta$present.year else start.year - 5
@@ -174,13 +173,8 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
 	has.thinned.mcmc <- (!is.null(thinned.mcmc) && thinned.mcmc$meta$parent.iter == total.iter 
 							&& mcmc.set$meta$nr.countries == thinned.mcmc$meta$nr.countries)
 	unblock.gtk('bDem.e0pred')
-	if(has.thinned.mcmc){
-		 if(create.thinned.mcmc.extra) 
-		 	load.mcmc.set <- create.thinned.e0.mcmc.extra(mcmc.set, thinned.mcmc, countries=countries, 
-		 									thin=thin, burnin=burnin, verbose=verbose)
-		 else
-			load.mcmc.set <-  thinned.mcmc
-	} else load.mcmc.set <- create.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin, 
+	load.mcmc.set <- if(has.thinned.mcmc && !force.creating.thinned.mcmc) thinned.mcmc
+		 			 else create.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin, 
 					 					output.dir=output.dir, verbose=verbose)
 	nr_simu <- load.mcmc.set$mcmc.list[[1]]$finished.iter	
 	if (verbose) cat('Load world-level parameters.\n')
