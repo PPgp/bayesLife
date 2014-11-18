@@ -491,7 +491,8 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, verbose=verbose)
 	e0m.data <- e0mwpp$e0.matrix
 	meta.changes <- list(sex='M', e0.matrix=e0m.data, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
-
+	meta.changes$Tc.index <- .get.Tcindex(meta.changes$e0.matrix, cnames=meta$regions$country_name)
+	meta.changes$suppl.data$Tc.index <- .get.Tcindex(meta.changes$suppl.data$e0.matrix, stop.if.less.than2=FALSE)
 	prediction.file <- file.path(e0.pred$output.directory, 'prediction.rda')
 	joint.male <- e0.pred
 	joint.male$output.directory <- file.path(e0.pred$output.directory, 'joint_male')
@@ -526,7 +527,9 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, verbose=verbose)
 	e0m.data <- e0mwpp$e0.matrix
 	meta.changes <- list(sex='M', e0.matrix=e0m.data, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
-
+	meta.changes$Tc.index <- .get.Tcindex(meta.changes$e0.matrix, cnames=meta$regions$country_name)
+	meta.changes$suppl.data$Tc.index <- .get.Tcindex(meta.changes$suppl.data$e0.matrix, stop.if.less.than2=FALSE)
+	
 	prediction.file <- file.path(e0.pred$output.directory, 'prediction.rda')
 	joint.male$e0.matrix.reconstructed <- e0m.data
 	joint.male$meta.changes <- meta.changes

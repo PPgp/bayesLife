@@ -339,17 +339,20 @@ e0.mcmc.run.chain.extra <- function(chain.id, mcmc.list, countries, posterior.sa
 init.nodes.e0 <- function() {
 	library(bayesLife)
 }
+.get.Tcindex <- function(e0.matrix,  stop.if.less.than2=TRUE, cnames=NULL) {
+	Tc.index <- list()
+	for (country in 1:ncol(e0.matrix)) {
+		Tc.index[[country]] <- which(!is.na(e0.matrix[,country]))
+    	if(stop.if.less.than2 && length(Tc.index[[country]]) < 2) stop('Problem with ', cnames[country], 
+    						". At least two data points must be observed.")
+    }
+	return(Tc.index)
+}
 
 .do.part.e0.mcmc.meta.ini <- function(data, meta) {
 	nr_countries <- ncol(data$e0.matrix)
     #T_end_c <- rep(NA, nr_countries)
-    Tc.index <- list()
-	for (country in 1:nr_countries) {
-		Tc.index[[country]] <- which(!is.na(data$e0.matrix[,country]))
-    	#T_end_c[country] <- sum(!is.na(data$e0.matrix[,country]))
-    	if(length(Tc.index[[country]]) < 2) stop('Problem with ', data$regions$country_name[country], 
-    						". At least two data points must be observed.")
-    }
+    Tc.index <- .get.Tcindex(data$e0.matrix, cnames=data$regions$country_name)
 	T <- nrow(data$e0.matrix)
 	d.ct <- loessSD <- matrix(NA, nrow=T-1, ncol=nr_countries, 
 							dimnames=list(rownames(data$e0.matrix)[1:(T-1)],
@@ -373,9 +376,7 @@ init.nodes.e0 <- function() {
 	suppl <- data$suppl.data
 	if(!is.null(suppl$e0.matrix)) {
 		nr_countries.suppl <- ncol(suppl$e0.matrix)
-		suppl$Tc.index <- list()
-		for (country in 1:nr_countries.suppl) 
-    		suppl$Tc.index[[country]] <- which(!is.na(suppl$e0.matrix[,country]))
+		suppl$Tc.index <- .get.Tcindex(suppl$e0.matrix, stop.if.less.than2=FALSE)
 		# add first time point of the observed data to get the last increment of the supplemental data
 		data.suppl <- rbind(suppl$e0.matrix, data$e0.matrix[1,suppl$index.to.all.countries])
 		T <- nrow(data.suppl)

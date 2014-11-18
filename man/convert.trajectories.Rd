@@ -13,11 +13,11 @@ convert.e0.trajectories(dir = file.path(getwd(), "bayesLife.output"),
 \arguments{
   \item{dir}{Directory containing the prediction object. It should correspond to the \code{output.dir} argument of the \code{\link{e0.predict}} function.}
   \item{n}{Number of trajectories to be stored. It can be either a single number or the word \dQuote{all} in which case all available trajectories are converted.}
-  \item{output.dir}{Directory in which the resulting files will be stored. If \code{NULL} the same directory is used as for the prediction.}
+  \item{output.dir}{Directory in which the resulting files will be stored. If \code{NULL} the same directory is used as for the prediction. Otherwise, if the directory contains joint predictions for both sexes, the ouptuts are stored into subdirectories \file{F} and \file{M}.}
   \item{verbose}{Logical switching log messages on and off.}
 }
 \details{
-The function creates two files. One is called \dQuote{ascii_trajectories.csv}, it is a comma-separated table with the following columns: 
+The function creates two files per sex. One is called \dQuote{ascii_trajectories.csv}, it is a comma-separated table with the following columns: 
 \itemize{\item{\dQuote{LocID}: }{country code} 
 		\item{\dQuote{Period}: }{prediction interval, e.g. 2015-2020} 
 		\item{\dQuote{Year}: }{middle year of the prediction interval}
