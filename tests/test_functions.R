@@ -389,3 +389,89 @@ test.run.mcmc.simulation.auto.parallel <- function() {
 	test.ok(test.name)
 	unlink(sim.dir, recursive=TRUE)
 }
+
+test.imputation <- function() {
+	sim.dir <- tempfile()
+
+	# run MCMC
+	test.name <- 'running MCMC with missing values'
+	start.test(test.name)
+	my.e0.data <- data.frame(country_code=4, last.observed=1990)
+	my.e0.file <- tempfile()
+	write.table(my.e0.data, my.e0.file, sep='\t', row.names=FALSE)
+	m <- run.e0.mcmc(iter=5, nr.chains=1, output.dir=sim.dir, my.e0.file=my.e0.file, thin=1)
+	unlink(my.e0.file)
+	cindex <- get.country.object(4, m$meta)$index
+	stopifnot(m$mcmc.list[[1]]$finished.iter == 5)
+	stopifnot(get.total.iterations(m$mcmc.list, 0) == 5)
+	stopifnot(length(m$meta$Tc.index[[cindex]]) == 8)
+	test.name <- 'running projections with imputation'
+	start.test(test.name)
+	pred <- e0.predict(m, burnin=0, verbose=FALSE)
+	stopifnot(length(pred$joint.male$meta.changes$Tc.index[[cindex]])==12)
+	spred <- summary(pred)
+	stopifnot(spred$nr.traj == 5)	
+	test.ok(test.name)
+	
+	test.name <- 'plotting imputed e0 trajectories'
+	start.test(test.name)
+	filename <- tempfile()
+	png(filename=filename)
+	e0.trajectories.plot(pred, 4, pi=c(90, 54))
+	e0.trajectories.plot(pred, 4, pi=c(90, 54), both.sexes=TRUE)
+	dev.off()
+	size <- file.info(filename)['size']
+	unlink(filename)
+	stopifnot(size > 0)
+	test.ok(test.name)
+	
+	test.name <- 'running projections with male imputation'
+	start.test(test.name)
+	my.e0.data <- data.frame(country_code=4, last.observed=1979)
+	my.e0.file <- tempfile()
+	write.table(my.e0.data, my.e0.file, sep='\t', row.names=FALSE)
+	pred <- e0.predict(m, burnin=0, my.e0.file=my.e0.file, verbose=FALSE, replace.output=TRUE)
+	unlink(my.e0.file)
+	stopifnot(length(pred$joint.male$meta.changes$Tc.index[[cindex]])==6)
+	spred <- summary(pred)
+	stopifnot(spred$nr.traj == 5)
+	test.ok(test.name)
+
+	test.name <- 'plotting imputed F&M e0 trajectories'
+	start.test(test.name)
+	filename <- tempfile()
+	png(filename=filename)
+	e0.trajectories.plot(pred, 4, pi=c(90, 54), both.sexes=TRUE)
+	dev.off()
+	size <- file.info(filename)['size']
+	unlink(filename)
+	stopifnot(size > 0)
+	test.ok(test.name)
+	
+	test.name <- 'running MCMC and prediction with missing values for extra country'
+	start.test(test.name)
+	my.e0.data <- data.frame(country_code=900, last.observed=1996)
+	my.e0.file <- tempfile()
+	write.table(my.e0.data, my.e0.file, sep='\t', row.names=FALSE)
+	m <- run.e0.mcmc.extra(sim.dir=sim.dir, countries=900, my.e0.file=my.e0.file, burnin=0)
+	my.e0M.data <- data.frame(country_code=900, last.observed=1989)
+	write.table(my.e0M.data, my.e0.file, sep='\t', row.names=FALSE)
+	pred <- e0.predict.extra(sim.dir, my.e0.file=my.e0.file, verbose=FALSE)
+	unlink(my.e0.file)
+	stopifnot(length(pred$joint.male$meta.changes$Tc.index[[cindex]])==6)
+	stopifnot(length(pred$joint.male$meta.changes$Tc.index[[get.country.object(900, m$meta)$index]])==8)
+	stopifnot(length(m$meta$Tc.index[[get.country.object(900, m$meta)$index]]) == 9)
+	test.name <- 'plotting imputed F&M e0 trajectories for extra countries'
+	start.test(test.name)
+	filename <- tempfile()
+	png(filename=filename)
+	e0.trajectories.plot(pred, 4, pi=c(90, 54), both.sexes=TRUE)
+	e0.trajectories.plot(pred, 900, pi=c(90, 54), both.sexes=TRUE)
+	dev.off()
+	size <- file.info(filename)['size']
+	unlink(filename)
+	stopifnot(size > 0)
+	test.ok(test.name)
+	
+	unlink(sim.dir, recursive=TRUE)
+}

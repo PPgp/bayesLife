@@ -526,14 +526,21 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	meta <- e0.pred$mcmc.set$meta
 	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, verbose=verbose)
 	e0m.data <- e0mwpp$e0.matrix
+	e0m.data[,idx.other.to.new] <- joint.male$meta.changes$e0.matrix[,idx.other.to.old]
+	e0mwpp$e0.matrix.all[,idx.other.to.new] <- joint.male$meta.changes$e0.matrix.all[,idx.other.to.old]
 	meta.changes <- list(sex='M', e0.matrix=e0m.data, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
-	meta.changes$Tc.index <- .get.Tcindex(meta.changes$e0.matrix, cnames=meta$regions$country_name)
-	meta.changes$suppl.data$Tc.index <- .get.Tcindex(meta.changes$suppl.data$e0.matrix, stop.if.less.than2=FALSE)
+	Tc.index <- .get.Tcindex(meta.changes$e0.matrix, cnames=meta$regions$country_name)
+	meta.changes$Tc.index <- joint.male$meta.changes$Tc.index 
+	meta.changes$Tc.index[countries.idx] <- Tc.index[countries.idx]
+	Tc.index <- .get.Tcindex(meta.changes$suppl.data$e0.matrix, stop.if.less.than2=FALSE)
+	meta.changes$suppl.data$Tc.index <- joint.male$meta.changes$suppl.data$Tc.index
+	meta.changes$suppl.data$Tc.index[countries.idx] <- Tc.index[countries.idx]
 	
 	prediction.file <- file.path(e0.pred$output.directory, 'prediction.rda')
-	joint.male$e0.matrix.reconstructed <- e0m.data
 	joint.male$meta.changes <- meta.changes
-	
+	reconstructed <- e0m.data
+	reconstructed[1:nrow(joint.male$e0.matrix.reconstructed),1:ncol(joint.male$e0.matrix.reconstructed)] <- joint.male$e0.matrix.reconstructed
+	joint.male$e0.matrix.reconstructed <- reconstructed
 	new.pred <- .do.jmale.predict(e0.pred, joint.male, countries.idx, gap.lim=joint.male$pred.pars$gap.lim, 
 									#gap.lim.eq2=joint.male$gap.lim.eq2,
 									eq2.age.start=joint.male$pred.pars$max.e0.eq1.pred, verbose=verbose)
@@ -559,6 +566,34 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 
 .do.jmale.predict <- function(e0.pred, joint.male, countries, gap.lim, #gap.lim.eq2, 
 								eq2.age.start=NULL, verbose=FALSE) {
+	predict.one.trajectory <- function(Gprev, ftraj) {
+		mtraj <- rep(NA, length(ftraj))						
+		for(time in 1:length(ftraj)) {
+			if(ftraj[time] <= maxe0) { # 1st part of Equation 3.1
+				Gtdeterm <- (estimates$eq1$coefficients[1] + # intercept
+				   			 estimates$eq1$coefficients['Gprev']*Gprev +
+				   			 estimates$eq1$coefficients['e0.1953']*e0f.data['1953',icountry] +
+				   			 estimates$eq1$coefficients['e0']*ftraj[time] +
+					   		 estimates$eq1$coefficients['e0d75']*max(0, ftraj[time]-75))
+				Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
+				while(Gt < gap.lim[1] || Gt > gap.lim[2]) 
+					Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
+			} else {  # 2nd part of Equation 3.1
+				Gtdeterm <- estimates$eq2$coefficients['Gprev']*Gprev
+				error <- if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
+			    			else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
+				Gt <- Gtdeterm + error					
+				while(Gt < gap.lim[1] || Gt > gap.lim[2]) {
+					Gt <- Gtdeterm + if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
+							else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
+				}
+			}
+			mtraj[time] <- ftraj[time] - Gt
+			Gprev <- Gt
+		}
+		return(mtraj)
+	}							
+									
 	unblock.gtk('bDem.e0pred', list(bDem.e0pred.status='predicting joint male'))
 	bayesLife.prediction <- e0.pred
 	bayesLife.prediction$joint.male <- joint.male
@@ -569,7 +604,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	dimnames(traj.mean.sd) <- dimnames(e0.pred$traj.mean.sd)
 	e0f.data <- get.e0.reconstructed(e0.pred$e0.matrix.reconstructed, meta)
 	maxe0 <- if(is.null(eq2.age.start)) max(e0f.data) else eq2.age.start
-	e0m.data <- joint.male$meta.changes$e0.matrix
+	e0m.data <- joint.male$e0.matrix.reconstructed
 	quantiles.to.keep <- as.numeric(dimnames(e0.pred$quantiles)[[2]])
 	estimates <- joint.male$fit
 	for (icountry in countries) {
@@ -580,40 +615,17 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 		trajectoriesF <- bayesTFR:::get.trajectories(e0.pred, country$code)$trajectories
 		Mtraj <- matrix(NA, nrow=nrow(trajectoriesF), ncol=ncol(trajectoriesF))
 		#G1 <- e0f.data[Tc[icountry],icountry] - e0m.data[Tc[icountry],icountry]
-		Tc <- meta$Tc.index[[icountry]][length(meta$Tc.index[[icountry]])]
+		Tc <- joint.male$meta.changes$Tc.index[[icountry]][length(joint.male$meta.changes$Tc.index[[icountry]])]
 		G1 <- e0f.data[Tc,icountry] - e0m.data[Tc,icountry]
 		last.obs.index <- if(is.null(e0.pred$present.year.index)) nrow(e0m.data) else e0.pred$present.year.index
+		if(Tc < last.obs.index) { # imputing data
+			imp.index <- (last.obs.index - Tc + 1):last.obs.index
+			e0m.data[imp.index,icountry] <- predict.one.trajectory(G1, e0f.data[imp.index, icountry])
+			G1 <- e0f.data[last.obs.index,icountry] - e0m.data[last.obs.index,icountry]
+		}
 		for (itraj in 1:dim(trajectoriesF)[2]) {
 			Mtraj[1,itraj] <- e0m.data[last.obs.index,icountry]
-			Gprev <- G1
-			for(time in 2:dim(trajectoriesF)[1]) {
-				#if(country$code==760) stop('')
-				if((Tc + time - 2 > last.obs.index) && (last.obs.index + time - 1 <= nrow(e0m.data))) {
-					Mtraj[time,itraj] <- e0m.data[last.obs.index + time - 1, icountry]
-					next
-				}
-				if(trajectoriesF[time,itraj] <= maxe0) { # 1st part of Equation 3.1
-					Gtdeterm <- (estimates$eq1$coefficients[1] + # intercept
-					   			 estimates$eq1$coefficients['Gprev']*Gprev +
-					   			 estimates$eq1$coefficients['e0.1953']*e0f.data['1953',icountry] +
-					   			 estimates$eq1$coefficients['e0']*trajectoriesF[time,itraj] +
-					   			 estimates$eq1$coefficients['e0d75']*max(0, trajectoriesF[time,itraj]-75))
-					Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
-					while(Gt < gap.lim[1] || Gt > gap.lim[2]) 
-						Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
-				} else {  # 2nd part of Equation 3.1
-					Gtdeterm <- estimates$eq2$coefficients['Gprev']*Gprev
-					error <- if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
-								else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
-					Gt <- Gtdeterm + error					
-					while(Gt < gap.lim[1] || Gt > gap.lim[2]) {
-						Gt <- Gtdeterm + if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
-								else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
-					}
-				}
-				Mtraj[time,itraj] <- trajectoriesF[time,itraj] - Gt
-				Gprev <- Gt
-			}
+			Mtraj[2:nrow(Mtraj),itraj] <- predict.one.trajectory(G1, trajectoriesF[2:nrow(trajectoriesF),itraj])
 		}
 		quantiles[icountry,,] = apply(Mtraj, 1, quantile, quantiles.to.keep, na.rm = TRUE)
  		traj.mean.sd[icountry,1,] <- apply(Mtraj, 1, mean, na.rm = TRUE)
@@ -624,6 +636,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	}
 	bayesLife.prediction$joint.male$quantiles <- quantiles
 	bayesLife.prediction$joint.male$traj.mean.sd <- traj.mean.sd
+	bayesLife.prediction$joint.male$e0.matrix.reconstructed <- e0m.data
 	return(bayesLife.prediction)
 	
 	
