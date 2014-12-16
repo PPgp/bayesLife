@@ -55,6 +55,8 @@ test.estimate.mcmc <- function(compression='None') {
 	npred <- dim(pred$e0.matrix.reconstructed)[2]
 	t <- e0.trajectories.table(pred, "Australia", pi=80, both.sexes=TRUE)
 	stopifnot(all(dim(t) == c(30, 3)))
+	smpred <- summary(get.e0.jmale.prediction(pred))
+	stopifnot(smpred$nr.traj == 20)
 	test.ok(test.name)
 	
 	# run MCMC for another aggregation

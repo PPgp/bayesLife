@@ -1,4 +1,12 @@
-2.1-2 (6/2/2014)
+2.1-3 (11/19/2014)
+-----
+Fixed bug in imputation of male e0 data - test added.
+
+Fixed bug in summary of male prediction object.
+
+Documentation to convert.e0.trajectories: added explanation about converting male trajectories.
+
+2.1-2 (11/12/2014)
 -----
 In run.e0.mcmc fixed bug in passing ... into continue if iter="auto".
 
