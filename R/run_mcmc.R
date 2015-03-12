@@ -5,7 +5,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
 							output.dir=file.path(getwd(), 'bayesLife.output'), 
                          thin=10, replace.output=FALSE,
                          start.year=1873, present.year=2010, wpp.year=2012,
-                         my.e0.file = NULL, buffer.size=100,
+                         my.e0.file = NULL, my.locations.file = NULL, buffer.size=100,
                          a=c(13.215, 41.070, 9.235, 17.605, 2.84, 0.385),
                          #a=c(15.7669391,40.9658241,0.2107961,19.8188061,2.9306625,0.400688628),
 						 delta=c(3.844, 4.035, 11.538, 5.639, 0.901, 0.4),
@@ -84,7 +84,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
 	sex <- substr(match.arg(sex), 1, 1)
 	bayesLife.mcmc.meta <- e0.mcmc.meta.ini(sex=sex, nr.chains=nr.chains,
                                    		start.year=start.year, present.year=present.year, 
-                                        wpp.year=wpp.year, my.e0.file = my.e0.file,
+                                        wpp.year=wpp.year, my.e0.file = my.e0.file, my.locations.file=my.locations.file,
                                         output.dir=output.dir,
                                         a=a, delta=delta, tau=tau, Triangle.ini=Triangle.ini,
                                         k.ini=k.ini, z.ini=z.ini, omega.ini=omega.ini, 
@@ -271,11 +271,13 @@ continue.e0.chain <- function(chain.id, mcmc.list, iter, verbose=FALSE, verbose.
 run.e0.mcmc.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'), 
 								countries = NULL, my.e0.file = NULL, iter = NULL,
 								thin=1, burnin=2000, country.overwrites = NULL, 
-								parallel=FALSE, nr.nodes=NULL, verbose=FALSE, verbose.iter=100, ...) {
+								parallel=FALSE, nr.nodes=NULL, my.locations.file = NULL,
+								verbose=FALSE, verbose.iter=100, ...) {
 									
 	mcmc.set <- get.e0.mcmc(sim.dir)
 	Eini <- e0.mcmc.meta.ini.extra(mcmc.set, countries=countries, my.e0.file=my.e0.file, 
-								burnin=burnin, country.overwrites=country.overwrites, verbose=verbose)
+								my.locations.file=my.locations.file, burnin=burnin, 
+								country.overwrites=country.overwrites, verbose=verbose)
 	meta <- Eini$meta
 	if(length(Eini$index) <= 0) {
 		cat('\nNothing to be done.\n')
@@ -446,7 +448,7 @@ init.nodes.e0 <- function() {
 }
 
 e0.mcmc.meta.ini <- function(sex="F", nr.chains=1, start.year=1950, present.year=2010, 
-								wpp.year=2012, my.e0.file = NULL,
+								wpp.year=2012, my.e0.file = NULL, my.locations.file = NULL,
 								output.dir=file.path(getwd(), 'bayesLife.output'),
 								..., verbose=FALSE) {
 	mcmc.input <- c(list(sex=sex, nr.chains=nr.chains,
@@ -455,7 +457,8 @@ e0.mcmc.meta.ini <- function(sex="F", nr.chains=1, start.year=1950, present.year
 						output.dir=output.dir), list(...))
 						
     data <- get.wpp.e0.data (sex, start.year=start.year, present.year=present.year, 
-						wpp.year=wpp.year, my.e0.file = my.e0.file, verbose=verbose)
+						wpp.year=wpp.year, my.e0.file = my.e0.file, 
+						my.locations.file=my.locations.file, verbose=verbose)
 	part.ini <- .do.part.e0.mcmc.meta.ini(data, mcmc.input)
 	return(structure(c(mcmc.input, part.ini), class='bayesLife.mcmc.meta'))
 }
@@ -492,7 +495,7 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter=100,
     return(mcmc) 
 }
 
-e0.mcmc.meta.ini.extra <- function(mcmc.set, countries=NULL, my.e0.file = NULL, 
+e0.mcmc.meta.ini.extra <- function(mcmc.set, countries=NULL, my.e0.file = NULL, my.locations.file=NULL,
 									burnin = 200, country.overwrites=NULL, verbose=FALSE) {
 	update.regions <- function(reg, ereg, id.replace, is.new, is.old) {
 		nreg <- list()
@@ -535,7 +538,8 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries=NULL, my.e0.file = NULL,
 	meta <- mcmc.set$meta
 	#create e0 matrix only for the extra countries
 	e0.with.regions <- set.e0.wpp.extra(meta, countries=countries, 
-									  my.e0.file = my.e0.file, verbose=verbose)
+									  my.e0.file = my.e0.file, my.locations.file=my.locations.file, 
+									  verbose=verbose)
 	if(is.null(e0.with.regions)) return(list(meta=meta, index=c()))
 	meta$country.overwrites <- country.overwrites
 	part.ini <- .do.part.e0.mcmc.meta.ini(e0.with.regions, meta)

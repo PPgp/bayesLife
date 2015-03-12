@@ -1,5 +1,5 @@
 get.wpp.e0.data <- function(sex='M', start.year=1950, present.year=2010, wpp.year=2012, my.e0.file=NULL, 
-							verbose=FALSE) {
+							my.locations.file=NULL, verbose=FALSE) {
 	sex <- toupper(sex)
 	if(sex != 'M' && sex != 'F')
 		stop('Allowed values for argument "sex" are "M" and "F".')
@@ -10,7 +10,8 @@ get.wpp.e0.data <- function(sex='M', start.year=1950, present.year=2010, wpp.yea
 								present.year=present.year, verbose=verbose)
 	data <- un.object$data.object$data
 	# get region and area data
-	locations <- bayesTFR:::read.UNlocations(data, wpp.year=wpp.year, package='bayesLife', verbose=verbose)
+	locations <- bayesTFR:::read.UNlocations(data, wpp.year=wpp.year, my.locations.file=my.locations.file,
+											package='bayesLife', verbose=verbose)
 	loc_data <- locations$loc_data
 	include <- locations$include
 	prediction.only <- locations$prediction.only
@@ -51,7 +52,7 @@ read.UNe0 <- function(sex, wpp.year, my.e0.file=NULL, ...) {
 	return(list(data.object=data, suppl.data.object=suppl.data))
 }
 
-set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, verbose=FALSE) {
+set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, my.locations.file=NULL, verbose=FALSE) {
 	#'countries' is a vector of country or region codes 
 	un.object <- read.UNe0(sex=meta$sex, wpp.year=meta$wpp.year, my.e0.file=my.e0.file, 
 							present.year=meta$present.year, verbose=verbose)
@@ -64,7 +65,8 @@ set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, verbose=FALS
 						  regions=extra.wpp$regions, 
 						  nr.countries.estimation=extra.wpp$nr_countries_estimation,
 						  is_processed = extra.wpp$is_processed)
-		locations <- bayesTFR:::read.UNlocations(data$data, wpp.year=meta$wpp.year, package='bayesLife', verbose=verbose)
+		locations <- bayesTFR:::read.UNlocations(data$data, wpp.year=meta$wpp.year, 
+									my.locations.file=my.locations.file, package='bayesLife', verbose=verbose)
 		suppl.wpp <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, extra.wpp, locations$loc_data, 
 									meta$start.year, meta$present.year)
 		extra.wpp$suppl.data <- bayesTFR:::.get.suppl.data.list(suppl.wpp, matrix.name='e0.matrix')
