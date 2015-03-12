@@ -74,7 +74,7 @@ set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, my.locations
 	return(extra.wpp)
 }
 
-get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, verbose=FALSE) {
+get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, my.locations.file=NULL, verbose=FALSE) {
 	sex <- toupper(sex)
 	if(sex != 'M' && sex != 'F')
 		stop('Allowed values for argument "sex" are "M" and "F".')
@@ -85,7 +85,8 @@ get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, verbos
 						my.e0.file=my.e0.file, verbose=verbose)
 	data <- un.object$data.object$data
 	# get region and area data
-	locations <- bayesTFR:::read.UNlocations(data, wpp.year=meta$wpp.year, package='bayesLife', verbose=verbose)
+	locations <- bayesTFR:::read.UNlocations(data, wpp.year=meta$wpp.year, 
+							my.locations.file=my.locations.file, package='bayesLife', verbose=verbose)
 	loc_data <- locations$loc_data
 	include <- c()
 	for (i in 1:length(meta$regions$country_code)) { # put countries into the same order as in meta

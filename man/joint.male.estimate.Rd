@@ -11,7 +11,8 @@ The function estimates the joint female-male model of life expectancy, as descri
 e0.jmale.estimate(mcmc.set, countries.index = NULL, 
     estDof.eq1 = TRUE, start.eq1 = list(dof = 2), max.e0.eq1 = 83, 
     estDof.eq2 = TRUE, start.eq2 = list(dof = 2),
-    constant.gap.eq2 = TRUE, my.e0.file = NULL, verbose = FALSE)
+    constant.gap.eq2 = TRUE, my.e0.file = NULL, 
+    my.locations.file = NULL, verbose = FALSE)
 }
 
 \arguments{
@@ -23,6 +24,7 @@ e0.jmale.estimate(mcmc.set, countries.index = NULL,
  \item{max.e0.eq1}{Maximum female life expectancy of records included in the estimation of the first equation (parameter \eqn{M} in Details below).}
  \item{constant.gap.eq2}{Logical. If \code{TRUE} the coefficient of the second equation (\eqn{\gamma_1}) is set to one and the standard deviation is estimated under the assumption of normal distribution.}
  \item{my.e0.file}{File name containing user-specified male time series for one or more countries. The function replaces the corresponding country data from the  WPP dataset by values in this file. Only columns are replaced that match column names of the WPP dataset.}
+ \item{my.locations.file}{File name containing user-specified locations if different from the default \code{\link[wpp2012]{UNlocations}} dataset. It should be the same file as passed to \code{\link{run.e0.mcmc}} for female life expectancy.}
  \item{verbose}{Logical switching log messages on and off. If \code{TRUE} summary results from the \code{\link[hett]{tlm}} function of both equations are shown.}
 }
 \details{

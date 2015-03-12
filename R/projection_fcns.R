@@ -420,13 +420,13 @@ e0.median.set <- function(sim.dir, country, values, years=NULL, joint.male=FALSE
 e0.jmale.estimate <- function(mcmc.set, countries.index=NULL, 
 								estDof.eq1 = TRUE, start.eq1 = list(dof = 2), 
 								max.e0.eq1 = 83, estDof.eq2 = TRUE, start.eq2 = list(dof = 2), 
-								constant.gap.eq2=TRUE, my.e0.file=NULL, verbose=FALSE) {
+								constant.gap.eq2=TRUE, my.e0.file=NULL, my.locations.file=NULL, verbose=FALSE) {
 	# Estimate coefficients for joint prediction of female and male e0
 	unblock.gtk('bDem.e0pred', list(bDem.e0pred.status='estimating joint male'))
 	if (is.null(countries.index)) countries.index <- 1:get.nr.countries.est(mcmc.set$meta)
 	e0f.data <- get.data.matrix(mcmc.set$meta)[,countries.index]
 	e0m.data <- get.wpp.e0.data.for.countries(mcmc.set$meta, sex='M', my.e0.file=my.e0.file,
-					verbose=verbose)$e0.matrix[,countries.index]
+					my.locations.file=my.locations.file, verbose=verbose)$e0.matrix[,countries.index]
 	T <- dim(e0f.data)[1] - 1 
 	if(verbose) {
 		cat('\nEstimating coefficients for joint female and male prediction.')
@@ -436,7 +436,7 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 
 	first.year <- max(1953, as.integer(rownames(e0f.data)[1])) # in case start.year is later than 1953
 	if(first.year > 1953)
-		warning("Data for 1950-1955 not available. Estimation of the gap model may not be correct.", immediate. = TRUE)
+		warning("Data for 1950-1955 not available. Estimation of the gap model may not be correct.")
 	e0.1953 <- rep(e0f.data[as.character(first.year),], each=T)
 	dep.var <- as.numeric(G[2:nrow(G),])
 	e0F <- as.numeric(e0f.data[2:(T+1),])
@@ -480,7 +480,8 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 }
 
 e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim.eq2=c(3,9),	
-								max.e0.eq1.pred=83, my.e0.file=NULL, save.as.ascii=1000, verbose=TRUE, ...) {
+								max.e0.eq1.pred=83, my.e0.file=NULL, my.locations.file=NULL, 
+								save.as.ascii=1000, verbose=TRUE, ...) {
 	# Predicting male e0 from female predictions. estimates is the result of 
 	# the e0.jmale.estimate function. If it is NULL, the estimation is performed 
 	# using the ... arguments
@@ -489,9 +490,11 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	meta <- e0.pred$mcmc.set$meta
 	if (meta$sex != 'F') stop('The prediction object must be a result of FEMALE projections.')
 	if(is.null(estimates)) 
-		estimates <- e0.jmale.estimate(e0.pred$mcmc.set, verbose=verbose, my.e0.file=my.e0.file, ...)
+		estimates <- e0.jmale.estimate(e0.pred$mcmc.set, verbose=verbose, 
+								my.e0.file=my.e0.file, my.locations.file=my.locations.file, ...)
 
-	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, verbose=verbose)
+	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, 
+											my.locations.file=my.locations.file, verbose=verbose)
 	e0m.data <- e0mwpp$e0.matrix
 	meta.changes <- list(sex='M', e0.matrix=e0m.data, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
 	meta.changes$Tc.index <- .get.Tcindex(meta.changes$e0.matrix, cnames=meta$regions$country_name)
@@ -612,7 +615,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	quantiles.to.keep <- as.numeric(dimnames(e0.pred$quantiles)[[2]])
 	first.year <- max(1953, as.integer(rownames(e0f.data)[1]))
 	if(first.year > 1953)
-		warning("Data for 1950-1955 not available. Projection of the gap model may not be correct.", immediate. = TRUE)
+		warning("Data for 1950-1955 not available. Projection of the gap model may not be correct.")
 	first.year <- as.character(first.year)
 	estimates <- joint.male$fit
 	for (icountry in countries) {

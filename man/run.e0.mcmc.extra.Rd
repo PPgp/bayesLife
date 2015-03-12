@@ -11,7 +11,8 @@ Run MCMC for extra countries, areas or regions. It uses the posterior distributi
 run.e0.mcmc.extra(sim.dir = file.path(getwd(), "bayesLife.output"), 
     countries = NULL, my.e0.file = NULL, 
     iter = NULL, thin = 1, burnin = 2000, country.overwrites = NULL, 
-    parallel = FALSE, nr.nodes = NULL,  verbose = FALSE, verbose.iter = 100, ...)
+    parallel = FALSE, nr.nodes = NULL,  my.locations.file = NULL,
+    verbose = FALSE, verbose.iter = 100, ...)
 }
 \arguments{
   \item{sim.dir}{
@@ -38,6 +39,7 @@ Logical determining if the simulation should run multiple chains in parallel.
   \item{nr.nodes}{
 Relevant only if \code{parallel} is \code{TRUE}. It gives the number of nodes for running the simulation in parallel. By default it equals to the number of chains contained in the existing simulation.
 }
+\item{my.locations.file}{File name containing user-specified locations. See Details below.}
   \item{verbose}{
 Logical switching log messages on and off.
 }
@@ -47,7 +49,8 @@ Logical switching log messages on and off.
 \details{
 The function can be used to make predictions for countries, areas or regions (further denoted as \sQuote{countries}) that were not included in the MCMC estimation (invoked by \code{\link{run.e0.mcmc}}). It creates MCMC traces for country-specific parameters. The purpose of this function is to have country-specific parameters available in order to be able to generate projections for additional countries or their aggregations, without having to re-run the often time-expensive MCMC simulation.
 
-The set of countries to be considered by this function can be given either by their codes, using the argument \code{countries}, in which case the countries must be included in the UN WPP \code{\link[wpp2012]{e0}} dataset. Or, it can be given by a user-specific file, using the argument \code{my.e0.file}. The function considers a union of both arguments. The function will ignore all countries that were used in the existing MCMC simulation for estimating the hyperparameters. Countries that already own country-specific parameters (e.g. because they were included in \code{my.e0.file} passed to \code{\link{run.e0.mcmc}}) get their parameters recomputed. Note that all countries must be included in the \code{\link[wpp2012]{UNlocations}} dataset, but unlike in \code{\link{run.e0.mcmc}}, their  \code{include_code} is ignored. 
+The set of countries to be considered by this function can be given either by their codes, using the argument \code{countries}, in which case the countries must be included in the UN WPP \code{\link[wpp2012]{e0}} dataset. Or, it can be given by a user-specific file, using the argument \code{my.e0.file}. The function considers a union of both arguments. The function will ignore all countries that were used in the existing MCMC simulation for estimating the hyperparameters. Countries that already own country-specific parameters (e.g. because they were included in \code{my.e0.file} passed to \code{\link{run.e0.mcmc}}) get their parameters recomputed. Note that all countries must be included in the \code{\link[wpp2012]{UNlocations}} dataset, but unlike in \code{\link{run.e0.mcmc}}, their  \code{include_code} is ignored. As in the case of \code{\link{run.e0.mcmc}}, the default dataset of locations \code{\link[wpp2012]{UNlocations}} can be overwritten using a file of the same structure as \code{\link[wpp2012]{UNlocations}} passed via the \code{my.locations.file} argument. This file should be especially used, if e0 is simulated for new locations that are not included in \code{\link[wpp2012]{UNlocations}}.
+
 }
 \note{If there is an existing projection for the directory \code{sim.dir}, use \code{\link{e0.predict.extra}} to obtain projections for the extra countries used in this function.}
 \value{

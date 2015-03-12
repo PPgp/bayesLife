@@ -14,7 +14,7 @@ run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 160000,
     output.dir = file.path(getwd(), "bayesLife.output"), 
     thin = 10, replace.output = FALSE, 
     start.year = 1873, present.year = 2010, wpp.year = 2012, 
-    my.e0.file = NULL, buffer.size = 100, 
+    my.e0.file = NULL, my.locations.file = NULL, buffer.size = 100, 
     a = c(13.215, 41.070, 9.235, 17.605, 2.84, 0.385), 
     delta = c(3.844, 4.035, 11.538, 5.639, 0.901, 0.4), 
     tau = c(15.5976503, 23.650006, 14.5056919, 
@@ -61,6 +61,7 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{present.year}{End year for using historical data.}
   \item{wpp.year}{Year for which WPP data is used. The functions loads a package called \pkg{wpp}\eqn{x} where \eqn{x} is the \code{wpp.year} and uses the \code{e0*} datasets.}
   \item{my.e0.file}{File name containing user-specified e0 time series for one or more countries. See Details below.}
+  \item{my.locations.file}{File name containing user-specified locations. See Details below.}
   \item{buffer.size}{Buffer size (in number of [thinned] iterations) for keeping data in the memory. The smaller the \code{buffer.size} the more often will the process access the hard disk and thus, the slower the run. On the other hand, the smaller the \code{buffer.size} the less data will be lost in case of failure.}
   \item{a}{A vector of the \eqn{a_1}, \dots ,\eqn{a_6} parameters, which are the prior means of the world-level parameters 
   			(\eqn{\Delta_1}{Triangle_1}, \dots, \eqn{\Delta_4}{Triangle_4}, \eqn{k}, \eqn{z}).}
@@ -110,8 +111,11 @@ continue.e0.mcmc(iter, chain.ids = NULL,
 	
 Using the function \code{continue.e0.mcmc} one can continue simulating an existing MCMCs by \code{iter} iterations for either all or selected chains.
 
-The function loads observed data (further denoted as WPP dataset) from the \code{\link[wpp2012]{e0M}} (\code{\link[wpp2012]{e0F}}) and \code{\link[wpp2012]{e0M_supplemental}} (\code{\link[wpp2012]{e0F_supplemental}}) datasets in a \pkg{wpp}\eqn{x} package where \eqn{x} is the \code{wpp.year}. It is then merged with the  \code{\link{include}} dataset that corresponds to the same \code{wpp.year}. The argument \code{my.e0.file} can be used to overwrite those default data. Such a file can include a subset of countries contained in the WPP dataset, as well as a set of new countries. In the former case,
-  	the function replaces the corresponding country data from the WPP dataset by values in this file. Only columns are replaced that match column names of the WPP dataset, and in addition, columns \sQuote{last.observed} and \sQuote{include_code} are used, if present. Countries are merged with WPP using the column \sQuote{country_code}. In addition, in order the countries to be included in the simulation, in both cases (whether they are included in the WPP dataset or not), they must be contained in the UN table of locations (\code{\link[wpp2012]{UNlocations}}). In addition, their corresponding \sQuote{include_code} must be set to 2. If the column \sQuote{include_code} is present in \code{my.e0.file}, its value overwrites the default include code, unless is -1.
+The function loads observed data (further denoted as WPP dataset), depending on the specified sex,  from the \code{\link[wpp2012]{e0F}} (\code{\link[wpp2012]{e0M}}) and \code{\link[wpp2012]{e0F_supplemental}} (\code{\link[wpp2012]{e0M_supplemental}}) datasets in a \pkg{wpp}\eqn{x} package where \eqn{x} is the \code{wpp.year}. It is then merged with the  \code{\link{include}} dataset that corresponds to the same \code{wpp.year}. The argument \code{my.e0.file} can be used to overwrite those default data. Such a file can include a subset of countries contained in the WPP dataset, as well as a set of new countries. In the former case,
+  	the function replaces the corresponding country data from the WPP dataset with values in this file. Only columns are replaced that match column names of the WPP dataset, and in addition, columns \sQuote{last.observed} and \sQuote{include_code} are used, if present. Countries are merged with WPP using the column \sQuote{country_code}. In addition, in order the countries to be included in the simulation, in both cases (whether they are included in the WPP dataset or not), they must be contained in the table of locations (\code{\link[wpp2012]{UNlocations}}). In addition, their corresponding \sQuote{include_code} must be set to 2. If the column \sQuote{include_code} is present in \code{my.e0.file}, its value overwrites the default include code, unless is -1.
+
+The default UN table of locations mentioned above can be overwritten/extended by using a file passed as the \code{my.locations.file} argument. Such a file must have the same structure as the \code{\link[wpp2012]{UNlocations}} dataset. Entries in this file will overwrite corresponding entries in \code{\link[wpp2012]{UNlocations}} matched by the column \sQuote{country_code}. If there is no such entry in the default dataset, it will be appended. This option of appending new locations is especially useful in cases when \code{my.e0.file} contains new countries/regions that are not included in \code{\link[wpp2012]{UNlocations}}. In such a case, one must provide a \code{my.locations.file} with a definition of those countries/regions.
+
 
 For simulation of the hyperparameters of the Bayesian hierarchical model, all countries are used that are included in the WPP dataset, possibly complemented by the \code{my.e0.file}, that have \code{include_code} equal to 2. The hyperparameters are used to simulate country-specific parameters, which is done for all countries with \code{include_code} equal 1 or 2.  The following values of \code{include_code} in \code{my.e0.file} are recognized: -1 (do not overwrite the default include code), 0 (ignore), 1 (include in prediction but not estimation), 2 (include in both, estimation and prediction). Thus, the set of countries included in the estimation and prediction can be fully specified by the user.
 

@@ -1,3 +1,14 @@
+2.2-0 (03/12/2015)
+-----
+Analog to bayesTFR, added option of overwriting UNlocations file, i.e. easily include new countries in simulations. 
+For this, function run.e0.mcmc and e0.jmale.predict got an argument "my.locations.file".
+
+Fixed bug in e0.jmale.predict that caused crashing when no supplemmental data were used 
+(thanks to Simona Toti and Luca Mancini).
+
+Allow estimation of the gap model for situations when no data for 1950-55 are available. 
+In such case, a warning is given.
+
 2.1-3 (11/19/2014)
 -----
 Fixed bug in imputation of male e0 data - test added.
