@@ -434,7 +434,10 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 	}
 	G <- e0f.data - e0m.data # observed gap
 
-	e0.1953 <- rep(e0f.data['1953',], each=T)
+	first.year <- max(1953, as.integer(rownames(e0f.data)[1])) # in case start.year is later than 1953
+	if(first.year > 1953)
+		warning("Data for 1950-1955 not available. Estimation of the gap model may not be correct.", immediate. = TRUE)
+	e0.1953 <- rep(e0f.data[as.character(first.year),], each=T)
 	dep.var <- as.numeric(G[2:nrow(G),])
 	e0F <- as.numeric(e0f.data[2:(T+1),])
 	data <- data.frame(
@@ -486,13 +489,14 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	meta <- e0.pred$mcmc.set$meta
 	if (meta$sex != 'F') stop('The prediction object must be a result of FEMALE projections.')
 	if(is.null(estimates)) 
-		estimates <- e0.jmale.estimate(e0.pred$mcmc.set, verbose=verbose, ...)
+		estimates <- e0.jmale.estimate(e0.pred$mcmc.set, verbose=verbose, my.e0.file=my.e0.file, ...)
 
 	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, verbose=verbose)
 	e0m.data <- e0mwpp$e0.matrix
 	meta.changes <- list(sex='M', e0.matrix=e0m.data, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
 	meta.changes$Tc.index <- .get.Tcindex(meta.changes$e0.matrix, cnames=meta$regions$country_name)
-	meta.changes$suppl.data$Tc.index <- .get.Tcindex(meta.changes$suppl.data$e0.matrix, stop.if.less.than2=FALSE)
+	if(!is.null(meta.changes$suppl.data$e0.matrix))
+		meta.changes$suppl.data$Tc.index <- .get.Tcindex(meta.changes$suppl.data$e0.matrix, stop.if.less.than2=FALSE)
 	prediction.file <- file.path(e0.pred$output.directory, 'prediction.rda')
 	joint.male <- e0.pred
 	joint.male$output.directory <- file.path(e0.pred$output.directory, 'joint_male')
@@ -572,7 +576,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 			if(ftraj[time] <= maxe0) { # 1st part of Equation 3.1
 				Gtdeterm <- (estimates$eq1$coefficients[1] + # intercept
 				   			 estimates$eq1$coefficients['Gprev']*Gprev +
-				   			 estimates$eq1$coefficients['e0.1953']*e0f.data['1953',icountry] +
+				   			 estimates$eq1$coefficients['e0.1953']*e0f.data[first.year,icountry] +
 				   			 estimates$eq1$coefficients['e0']*ftraj[time] +
 					   		 estimates$eq1$coefficients['e0d75']*max(0, ftraj[time]-75))
 				Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
@@ -606,6 +610,10 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	maxe0 <- if(is.null(eq2.age.start)) max(e0f.data) else eq2.age.start
 	e0m.data <- joint.male$e0.matrix.reconstructed
 	quantiles.to.keep <- as.numeric(dimnames(e0.pred$quantiles)[[2]])
+	first.year <- max(1953, as.integer(rownames(e0f.data)[1]))
+	if(first.year > 1953)
+		warning("Data for 1950-1955 not available. Projection of the gap model may not be correct.", immediate. = TRUE)
+	first.year <- as.character(first.year)
 	estimates <- joint.male$fit
 	for (icountry in countries) {
 		country <- get.country.object(icountry, meta, index=TRUE)
