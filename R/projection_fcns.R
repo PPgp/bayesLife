@@ -526,16 +526,27 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 
 .do.e0.jmale.predict.extra <- function(e0.pred, countries.idx, idx.other.to.new, idx.other.to.old,
 									gap.lim.eq1=c(0,18),  gap.lim.eq2=c(3,9), max.e0.eq1.pred=83, my.e0.file=NULL, 
-									verbose=TRUE) {
+									my.locations.file=NULL, verbose=TRUE) {
 	# called from e0.predict.extra
 	if (!has.e0.jmale.prediction(e0.pred)) stop('Joint female-male prediction must be available for e0.pred. Use e0.jmale.predict.')
 	joint.male <- get.e0.jmale.prediction(e0.pred)
-	meta <- e0.pred$mcmc.set$meta
-	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, verbose=verbose)
-	e0m.data <- e0mwpp$e0.matrix
-	e0m.data[,idx.other.to.new] <- joint.male$meta.changes$e0.matrix[,idx.other.to.old]
-	e0mwpp$e0.matrix.all[,idx.other.to.new] <- joint.male$meta.changes$e0.matrix.all[,idx.other.to.old]
-	meta.changes <- list(sex='M', e0.matrix=e0m.data, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
+	meta <- e0.pred$mcmc.set$meta # from female sim
+	male.meta <- joint.male$mcmc.set$meta.changes
+	meta$sex <- "M"
+	e0mwpp <- set.e0.wpp.extra(meta, meta$regions$country_code[countries.idx], my.e0.file=my.e0.file, my.locations.file=my.locations.file)
+	# merge e0 matrices
+	for(mat in c("e0.matrix", "e0.matrix.all")) {
+		tmp <- meta[[mat]] # the right size
+		tmp[,idx.other.to.new] <- male.meta[[mat]][,idx.other.to.old] # replace by the male original (non-extra) data
+		tmp[,countries.idx] <- e0mwpp[[mat]]
+		e0mwpp[[mat]] <- tmp
+	}
+	#e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, verbose=verbose)
+	#e0m.data <- e0mwpp$e0.matrix
+	#e0m.data[,idx.other.to.new] <- joint.male$meta.changes$e0.matrix[,idx.other.to.old]
+	#e0mwpp$e0.matrix.all[,idx.other.to.new] <- joint.male$meta.changes$e0.matrix.all[,idx.other.to.old]
+	#meta.changes <- list(sex='M', e0.matrix=e0m.data, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
+	meta.changes <- list(sex='M', e0.matrix=e0mwpp$e0.matrix, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
 	Tc.index <- .get.Tcindex(meta.changes$e0.matrix, cnames=meta$regions$country_name)
 	meta.changes$Tc.index <- joint.male$meta.changes$Tc.index 
 	meta.changes$Tc.index[countries.idx] <- Tc.index[countries.idx]
