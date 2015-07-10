@@ -526,26 +526,37 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 
 .do.e0.jmale.predict.extra <- function(e0.pred, countries.idx, idx.other.to.new, idx.other.to.old,
 									gap.lim.eq1=c(0,18),  gap.lim.eq2=c(3,9), max.e0.eq1.pred=83, my.e0.file=NULL, 
-									verbose=TRUE) {
+									my.locations.file=NULL, verbose=TRUE) {
 	# called from e0.predict.extra
 	if (!has.e0.jmale.prediction(e0.pred)) stop('Joint female-male prediction must be available for e0.pred. Use e0.jmale.predict.')
 	joint.male <- get.e0.jmale.prediction(e0.pred)
-	meta <- e0.pred$mcmc.set$meta
-	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, verbose=verbose)
-	e0m.data <- e0mwpp$e0.matrix
-	e0m.data[,idx.other.to.new] <- joint.male$meta.changes$e0.matrix[,idx.other.to.old]
-	e0mwpp$e0.matrix.all[,idx.other.to.new] <- joint.male$meta.changes$e0.matrix.all[,idx.other.to.old]
-	meta.changes <- list(sex='M', e0.matrix=e0m.data, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
-	Tc.index <- .get.Tcindex(meta.changes$e0.matrix, cnames=meta$regions$country_name)
-	meta.changes$Tc.index <- joint.male$meta.changes$Tc.index 
-	meta.changes$Tc.index[countries.idx] <- Tc.index[countries.idx]
-	Tc.index <- .get.Tcindex(meta.changes$suppl.data$e0.matrix, stop.if.less.than2=FALSE)
-	meta.changes$suppl.data$Tc.index <- joint.male$meta.changes$suppl.data$Tc.index
-	meta.changes$suppl.data$Tc.index[countries.idx] <- Tc.index[countries.idx]
+	meta <- e0.pred$mcmc.set$meta # from female sim
+	male.meta <- joint.male$meta.changes
+	meta$sex <- "M"
+	e0mwpp <- set.e0.wpp.extra(meta, meta$regions$country_code[countries.idx], my.e0.file=my.e0.file, my.locations.file=my.locations.file)
+	# merge e0 matrices
+	for(mat in c("e0.matrix", "e0.matrix.all")) {
+		tmp <- meta[[mat]] # the right size
+		tmp[,idx.other.to.new] <- male.meta[[mat]][,idx.other.to.old] # replace by the male original (non-extra) data
+		tmp[,countries.idx] <- e0mwpp[[mat]] # replace by data from extra countries
+		joint.male$meta.changes[[mat]] <- tmp
+	}
+	#e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, verbose=verbose)
+	#e0m.data <- e0mwpp$e0.matrix
+	#e0m.data[,idx.other.to.new] <- joint.male$meta.changes$e0.matrix[,idx.other.to.old]
+	#e0mwpp$e0.matrix.all[,idx.other.to.new] <- joint.male$meta.changes$e0.matrix.all[,idx.other.to.old]
+	#meta.changes <- list(sex='M', e0.matrix=e0m.data, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
+	Tc.index <- .get.Tcindex(joint.male$meta.changes$e0.matrix, cnames=meta$regions$country_name)
+	#meta.changes$Tc.index <- joint.male$meta.changes$Tc.index 
+	joint.male$meta.changes$Tc.index[countries.idx] <- Tc.index[countries.idx]
+	# We don't need to get the supplemental data for extra countries since they are not used for estimation
+	#Tc.index <- .get.Tcindex(meta.changes$suppl.data$e0.matrix, stop.if.less.than2=FALSE)
+	#meta.changes$suppl.data$Tc.index <- joint.male$meta.changes$suppl.data$Tc.index
+	#meta.changes$suppl.data$Tc.index[countries.idx] <- Tc.index[countries.idx]
 	
 	prediction.file <- file.path(e0.pred$output.directory, 'prediction.rda')
-	joint.male$meta.changes <- meta.changes
-	reconstructed <- e0m.data
+	#joint.male$meta.changes <- meta.changes
+	reconstructed <- joint.male$meta.changes$e0.matrix
 	reconstructed[1:nrow(joint.male$e0.matrix.reconstructed),1:ncol(joint.male$e0.matrix.reconstructed)] <- joint.male$e0.matrix.reconstructed
 	joint.male$e0.matrix.reconstructed <- reconstructed
 	new.pred <- .do.jmale.predict(e0.pred, joint.male, countries.idx, gap.lim=joint.male$pred.pars$gap.lim, 
