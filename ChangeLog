@@ -1,3 +1,7 @@
+2.2-1
+-----
+Fixed a bug in predict.extra for male e0.
+
 2.2-0 (03/12/2015)
 -----
 Analog to bayesTFR, added option of overwriting UNlocations file, i.e. easily include new countries in simulations. 
