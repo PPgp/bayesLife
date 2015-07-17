@@ -24,7 +24,7 @@ The package is implemented in a similar way as the \pkg{bayesTFR} package and th
 \itemize{
 \item \link{run.e0.mcmc}: Evokes running a Markov Chain Monte Carlo (MCMC) simulation for one or more chains, possibly in parallel.  It results in a posterior sample of the mcmc parameters.  Existing simulation runs can be resumed using \link{continue.e0.mcmc}.
 \item \link{e0.predict}: Using the posterior parameter samples it derives posterior trajectories of the life expectancy for all countries.
-\item link{e0.jmale.predict}: Given existing outputs of \link{e0.predict} for female life expectancy, this function estimates and predicts a joint male life expectancy as described in Lalic 2011.
+\item \link{e0.jmale.predict}: Given existing outputs of \link{e0.predict} for female life expectancy, this function estimates and predicts a joint male life expectancy as described in Lalic 2011.
 }
 A number of functions analyzing results are included in the package:
 \itemize{
