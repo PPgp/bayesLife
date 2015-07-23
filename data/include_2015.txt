@@ -3,14 +3,20 @@
 "More developed regions"	901	0
 "Less developed regions"	902	0
 "Least developed countries"	941	0
-"Other less developed countries"	934	0
+"Less developed regions, excluding least developed countries"	934	0
 "Less developed regions, excluding China"	948	0
+"World Bank Income Groups"	1802	0
+"High-income countries"	1503	0
+"Middle-income countries"	1517	0
+"Upper-middle-income countries"	1502	0
+"Lower-middle-income countries"	1501	0
+"Low-income countries"	1500	0
 "Sub-Saharan Africa"	947	0
 "AFRICA"	903	0
 "Eastern Africa"	910	0
 "Burundi"	108	3
 "Comoros"	174	2
-"Djibouti"	262	3
+"Djibouti"	262	2
 "Eritrea"	232	2
 "Ethiopia"	231	3
 "Kenya"	404	3
@@ -19,11 +25,11 @@
 "Mauritius"	480	2
 "Mayotte"	175	2
 "Mozambique"	508	3
-"Reunion"	638	2
+"Réunion"	638	2
 "Rwanda"	646	3
 "Seychelles"	690	2
 "Somalia"	706	2
-"South Sudan"	728	3
+"South Sudan"	728	2
 "Uganda"	800	3
 "United Republic of Tanzania"	834	3
 "Zambia"	894	3
@@ -32,7 +38,7 @@
 "Angola"	24	3
 "Cameroon"	120	3
 "Central African Republic"	140	3
-"Chad"	148	3
+"Chad"	148	2
 "Congo"	178	3
 "Democratic Republic of the Congo"	180	2
 "Equatorial Guinea"	226	3
@@ -41,7 +47,7 @@
 "Northern Africa"	912	0
 "Algeria"	12	2
 "Egypt"	818	2
-"Libyan Arab Jamahiriya"	434	2
+"Libya"	434	2
 "Morocco"	504	2
 "Sudan"	729	2
 "Tunisia"	788	2
@@ -53,19 +59,19 @@
 "South Africa"	710	3
 "Swaziland"	748	3
 "Western Africa"	914	0
-"Benin"	204	3
-"Burkina Faso"	854	3
-"Cape Verde"	132	2
-"Cote d'Ivoire"	384	3
+"Benin"	204	2
+"Burkina Faso"	854	2
+"Cabo Verde"	132	2
+"Côte d'Ivoire"	384	3
 "Gambia"	270	2
-"Ghana"	288	3
-"Guinea"	324	3
+"Ghana"	288	2
+"Guinea"	324	2
 "Guinea-Bissau"	624	2
-"Liberia"	430	3
+"Liberia"	430	2
 "Mali"	466	2
 "Mauritania"	478	2
 "Niger"	562	2
-"Nigeria"	566	3
+"Nigeria"	566	2
 "Saint Helena"	654	2
 "Senegal"	686	2
 "Sierra Leone"	694	2
@@ -79,7 +85,7 @@
 "Japan"	392	2
 "Mongolia"	496	2
 "Republic of Korea"	410	2
-"Taiwan, Province of China"	158	2
+"Other non-specified areas"	158	2
 "South-Central Asia"	921	0
 "Central Asia"	5500	0
 "Kazakhstan"	398	2
@@ -106,7 +112,7 @@
 "Myanmar"	104	2
 "Philippines"	608	2
 "Singapore"	702	2
-"Thailand"	764	3
+"Thailand"	764	2
 "Timor-Leste"	626	2
 "Viet Nam"	704	2
 "Western Asia"	922	0
@@ -120,10 +126,10 @@
 "Jordan"	400	2
 "Kuwait"	414	2
 "Lebanon"	422	2
-"State of Palestine"	275	2
 "Oman"	512	2
 "Qatar"	634	2
 "Saudi Arabia"	682	2
+"State of Palestine"	275	2
 "Syrian Arab Republic"	760	2
 "Turkey"	792	2
 "United Arab Emirates"	784	2
@@ -186,19 +192,19 @@
 "Anguilla"	660	2
 "Antigua and Barbuda"	28	2
 "Aruba"	533	2
-"Bahamas"	44	3
+"Bahamas"	44	2
 "Barbados"	52	2
 "British Virgin Islands"	92	2
 "Caribbean Netherlands"	535	2
 "Cayman Islands"	136	2
 "Cuba"	192	2
-"Curacao"	531	2
+"Curaçao"	531	2
 "Dominica"	212	2
 "Dominican Republic"	214	2
 "Grenada"	308	2
 "Guadeloupe"	312	2
-"Haiti"	332	3
-"Jamaica"	388	3
+"Haiti"	332	2
+"Jamaica"	388	2
 "Martinique"	474	2
 "Montserrat"	500	2
 "Puerto Rico"	630	2
@@ -210,11 +216,11 @@
 "Turks and Caicos Islands"	796	2
 "United States Virgin Islands"	850	2
 "Central America"	916	0
-"Belize"	84	3
+"Belize"	84	2
 "Costa Rica"	188	2
 "El Salvador"	222	2
 "Guatemala"	320	2
-"Honduras"	340	3
+"Honduras"	340	2
 "Mexico"	484	2
 "Nicaragua"	558	2
 "Panama"	591	2
@@ -230,7 +236,7 @@
 "Guyana"	328	2
 "Paraguay"	600	2
 "Peru"	604	2
-"Suriname"	740	3
+"Suriname"	740	2
 "Uruguay"	858	2
 "Venezuela (Bolivarian Republic of)"	862	2
 "NORTHERN AMERICA"	905	0
@@ -262,7 +268,6 @@
 "Cook Islands"	184	2
 "French Polynesia"	258	2
 "Niue"	570	2
-"Pitcairn"	612	2
 "Samoa"	882	2
 "Tokelau"	772	2
 "Tonga"	776	2
