@@ -1,7 +1,7 @@
 library(bayesLife)
 source('test_functions.R')
 
-test.get.wpp.data(2008)
+test.get.wpp.data(2015)
 test.get.wpp.data(2010)
 test.get.wpp.data(2012)
 test.existing.simulation()

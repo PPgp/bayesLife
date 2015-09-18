@@ -3,15 +3,14 @@ library(bayesLife)
 start.test <- function(name) cat('\n<=== Starting test of', name,'====\n')
 test.ok <- function(name) cat('\n==== Test of', name, 'OK.===>\n')
 
-test.get.wpp.data <- function(wpp.year=2008) {
+test.get.wpp.data <- function(wpp.year=2010) {
 	test.name <- 'getting WPP data'
 	start.test(test.name)
-	ncountries <- list('2008'=158, '2010'=159, '2012'=162)
-	data <- bayesLife:::get.wpp.e0.data(wpp.year=wpp.year)
+	ncountries <- list('2008'=158, '2010'=159, '2012'=162, '2015'=210)
+	data <- bayesLife:::get.wpp.e0.data(wpp.year=wpp.year, present.year=if(wpp.year>2012) 2015 else 2010)
 	stopifnot(length(dim(data$e0.matrix))==2)
 	stopifnot(ncol(data$e0.matrix)==ncountries[[as.character(wpp.year)]])
-	stopifnot(nrow(data$e0.matrix)==12)
-	stopifnot(rownames(data$e0.matrix[12])==as.character(wpp.year))
+	stopifnot(nrow(data$e0.matrix)==if(wpp.year>2012) 13 else 12)
 	test.ok(test.name)
 }
 
@@ -51,7 +50,7 @@ test.estimate.mcmc <- function(compression='None') {
 	stopifnot(spred$nr.traj == 20)
 	stopifnot(!is.element(903, pred$mcmc.set$regions$country_code))
 	stopifnot(all(dim(pred$joint.male$quantiles) == dim(pred$quantiles)))
-	stopifnot(dim(pred$joint.male$quantiles)[3] == 19)
+	stopifnot(dim(pred$joint.male$quantiles)[3] == 18)
 	npred <- dim(pred$e0.matrix.reconstructed)[2]
 	t <- e0.trajectories.table(pred, "Australia", pi=80, both.sexes=TRUE)
 	stopifnot(all(dim(t) == c(30, 3)))
@@ -69,7 +68,7 @@ test.estimate.mcmc <- function(compression='None') {
 	stopifnot(is.element(903, pred$mcmc.set$meta$regions$country_code))
 	stopifnot(!is.null(bayesTFR:::get.trajectories(pred, 903)$trajectories))
 	stopifnot(all(dim(pred$joint.male$quantiles) == dim(pred$quantiles)))
-	stopifnot(dim(pred$joint.male$quantiles)[1] == 164)
+	stopifnot(dim(pred$joint.male$quantiles)[1] == 212)
 	test.ok(test.name)
     
 	test.name <- 'shifting the median'
@@ -80,8 +79,8 @@ test.estimate.mcmc <- function(compression='None') {
     e0.median.shift(sim.dir, country=country, shift=5.3, from=2051, to=2080)
 	shifted.pred <- get.e0.prediction(sim.dir)
 	shifted.projs <- summary(shifted.pred, country=country)$projections
-	stopifnot(all(projs[10:15,c(1,3:dim(projs)[2])]+5.3 == shifted.projs[10:15,c(1,3:dim(projs)[2])]))
-	stopifnot(all(projs[c(1:9, 16:19),c(1,3:dim(projs)[2])] == shifted.projs[c(1:9, 16:19),
+	stopifnot(all(projs[9:14,c(1,3:dim(projs)[2])]+5.3 == shifted.projs[9:14,c(1,3:dim(projs)[2])]))
+	stopifnot(all(projs[c(1:8, 15:18),c(1,3:dim(projs)[2])] == shifted.projs[c(1:8, 15:18),
 								c(1,3:dim(projs)[2])]))
 	test.ok(test.name)
 	
@@ -95,11 +94,11 @@ test.estimate.mcmc <- function(compression='None') {
 	test.name <- 'setting the median'
 	start.test(test.name)
 	expert.values <- c(90.5, 91, 93.8)
-    shift <- expert.values - pred$quantiles[country.idx, '0.5',4:6] # Netherlands has index 106
+    shift <- expert.values - pred$quantiles[country.idx, '0.5',3:5] # Netherlands has index 106
 	mod.pred <- e0.median.set(sim.dir, country=country, values=expert.values, years=2024)
 	mod.projs <- summary(mod.pred, country=country)$projections
-	stopifnot(all(mod.projs[4:6, c(1,3:dim(projs)[2])]==projs[4:6, c(1,3:dim(projs)[2])]+shift))
-	stopifnot(all(mod.projs[c(1:3,7:19), c(1,3:dim(projs)[2])]==projs[c(1:3,7:19), c(1,3:dim(projs)[2])]))
+	stopifnot(all(mod.projs[3:5, c(1,3:dim(projs)[2])]==projs[3:5, c(1,3:dim(projs)[2])]+shift))
+	stopifnot(all(mod.projs[c(1:2,6:18), c(1,3:dim(projs)[2])]==projs[c(1:2,6:18), c(1,3:dim(projs)[2])]))
 	test.ok(test.name)
 	
 	test.name <- 'converting trajectories'
@@ -170,7 +169,7 @@ test.existing.simulation <- function() {
 	pred <- get.e0.prediction(sim.dir)
 	s <- summary(pred, country='Japan')
 	stopifnot(s$nr.traj == 26)
-	stopifnot(all(dim(s$projections)==c(19,11)))
+	stopifnot(all(dim(s$projections)==c(18,11)))
 	# comment out if thinned mcmcs are not included in the package
 	#mb <- get.thinned.e0.mcmc(m, thin=2, burnin=30)
 	#s <- summary(mb, meta.only=TRUE)
@@ -352,7 +351,7 @@ test.estimate.mcmc.with.overwrites <- function() {
 	stopifnot(all(traces.Niger[,'k.c_c562'] <= 5) && all(traces.Niger[,'Triangle.c_3_c562'] <= 0))
 	traces.Sen <- get.e0.parameter.traces.cs(m$mcmc.list, get.country.object('Senegal', m$meta), 
     					par.names=c('Triangle.c', 'k.c'))
-	stopifnot(any(traces.Sen[,'k.c_c686'] > 5) && all(traces.Sen[,'k.c_c686'] < 7) && all(traces.Sen[,'Triangle.c_3_c686'] >= 0))
+	stopifnot(all(traces.Sen[,'k.c_c686'] < 7) && all(traces.Sen[,'Triangle.c_3_c686'] >= 0))
 	test.ok(test.name)
 	
 	test.name <- 'estimating MCMC for extra countries with country overwrites'

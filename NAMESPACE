@@ -1,9 +1,12 @@
 
 # import
 import(
-    bayesTFR, hett, coda, wpp2012
+    bayesTFR, hett, coda, wpp2015
 )
 importFrom(car, dataEllipse)
+importFrom("graphics", "abline", "grid", "legend", "lines", "plot", "points")
+importFrom("grDevices", "rainbow")
+importFrom("stats", "dgamma", "dnorm", "dunif", "median", "pnorm", "quantile", "rexp", "rgamma", "rnorm", "rt", "runif", "sd")
 
 #exportPattern("^[[:alpha:]]+")
 useDynLib(bayesLife)

@@ -25,7 +25,7 @@
 "Mauritius"	480	2
 "Mayotte"	175	2
 "Mozambique"	508	3
-"Réunion"	638	2
+"Reunion"	638	2
 "Rwanda"	646	3
 "Seychelles"	690	2
 "Somalia"	706	2
@@ -62,7 +62,7 @@
 "Benin"	204	2
 "Burkina Faso"	854	2
 "Cabo Verde"	132	2
-"Côte d'Ivoire"	384	3
+"Cote d'Ivoire"	384	3
 "Gambia"	270	2
 "Ghana"	288	2
 "Guinea"	324	2
@@ -198,7 +198,7 @@
 "Caribbean Netherlands"	535	2
 "Cayman Islands"	136	2
 "Cuba"	192	2
-"Curaçao"	531	2
+"Curacao"	531	2
 "Dominica"	212	2
 "Dominican Republic"	214	2
 "Grenada"	308	2

@@ -13,8 +13,8 @@ using a Bayesian hierarchical model and the United Nations demographic time seri
 \tabular{ll}{
 Package: \tab bayesLife\cr
 Type: \tab Package\cr
-Version: \tab 2.1-3\cr
-Date: \tab 2014-11-19\cr
+Version: \tab 2.3-0\cr
+Date: \tab 2015-9-18\cr
 License: \tab GPL (>= 2)\cr
 URL: \tab \url{http://bayespop.csss.washington.edu}\cr
 }
