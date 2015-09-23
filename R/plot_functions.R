@@ -494,7 +494,7 @@ e0.get.dlcurves <- function(x, mcmc.list, country.code, country.index, burnin, n
 
 e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim = NULL, 
     nr.curves = 20, predictive.distr=FALSE, ylim = NULL, xlab = "e(0)", ylab = "5-year gains", 
-    main = NULL, ...
+    main = NULL, show.legend=TRUE, col=c('black', 'red', "#00000020"), ...
     ) 
 {	
 	if(class(mcmc.list) == 'bayesLife.prediction') {
@@ -502,6 +502,7 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
 			warning('Prediction was generated with different burnin. Burnin set to ', mcmc.list$burnin)
 		burnin <- 0 # because burnin was already cut of the traces
 	}
+	col <- bayesTFR:::.match.colors.with.default(col, c('black', 'red', "#00000020"))
 	if(is.null(burnin)) burnin <- 0
     mcmc.list <- get.mcmc.list(mcmc.list)
     meta <- mcmc.list[[1]]$meta
@@ -537,25 +538,26 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
     if (is.null(main)) main <- country$name
     if (is.null(ylim)) ylim <- c(miny, maxy)
 
-    plot(dlc[thincurves$index[1], ] ~ x, col = "grey", 
+    plot(dlc[thincurves$index[1], ] ~ x, col = col[3], 
         type = ltype, xlim = c(min(x), max(x)), 
         ylim = ylim, ylab = ylab, xlab = xlab, main = main, ...
         )
     if (thincurves$nr.points > 1) {
         for (i in 2:thincurves$nr.points) {
-            lines(dlc[thincurves$index[i], ] ~ x, col = "grey")
+            lines(dlc[thincurves$index[i], ] ~ x, col = col[3])
         }
     }
-    lines(dl50 ~ x, col = "red", lwd = 2)
+    lines(dl50 ~ x, col = col[2], lwd = 2)
     lty <- 2:(length(pi) + 1)
     for (i in 1:length(pi)) {
-        lines(dlpi[i,1, ] ~ x, col = "red", lty = lty[i], lwd = 2)
-        lines(dlpi[i,2, ] ~ x, col = "red", lty = lty[i], lwd = 2)
+        lines(dlpi[i,1, ] ~ x, col = col[2], lty = lty[i], lwd = 2)
+        lines(dlpi[i,2, ] ~ x, col = col[2], lty = lty[i], lwd = 2)
     }
-
-    points(incr ~ obs.data, pch = 19)
-    legend("topright", legend = c("median", paste("PI", pi)), 
-        lty = c(1, lty), bty = "n", col = "red")
+    points(incr ~ obs.data, pch = 19, col=col[1])
+    if(show.legend)
+    	legend("topright", legend = c("median", paste("PI", pi), "observed"), 
+        	lty = c(1, lty, 0), bty = "n", col = c(rep(col[2], length(pi)+1), col[1]),
+        	pch=c(rep(-1,length(pi)+1), 19))
 }
 
 e0.partraces.plot <- function(mcmc.list=NULL, sim.dir=file.path(getwd(), 'bayesLife.output'),

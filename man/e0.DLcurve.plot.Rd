@@ -11,7 +11,8 @@ The functions plot the posterior distribution of the double logistic function us
 \usage{
 e0.DLcurve.plot(mcmc.list, country, burnin = NULL, pi = 80, 
     e0.lim = NULL, nr.curves = 20, predictive.distr = FALSE, ylim = NULL, 
-    xlab = "e(0)", ylab = "5-year gains", main = NULL, \dots)
+    xlab = "e(0)", ylab = "5-year gains", main = NULL, show.legend=TRUE, 
+    col=c('black', 'red', "#00000020"), \dots)
     
 e0.DLcurve.plot.all(mcmc.list = NULL, sim.dir = NULL, 
     output.dir = file.path(getwd(), "DLcurves"),
@@ -26,6 +27,8 @@ e0.DLcurve.plot.all(mcmc.list = NULL, sim.dir = NULL,
   \item{nr.curves}{Number of curves to be plotted. If \code{NULL}, all curves are plotted.}
   \item{predictive.distr}{Logical. If \code{TRUE}, an error term is added to each trajectory.}
   \item{ylim, xlab, ylab, main}{Graphical parameters passed to the \code{plot} function.}
+  \item{show.legend}{Logical determining if the legend should be shown.}
+  \item{col}{Vector of colors in this order: 1. observed data points, 2. quantiles, 3. trajectories}
   \item{\dots}{Additional graphical parameters. In addition, any arguments from \code{e0.DLcurve.plot} except \code{country} can be passed to \code{e0.DLcurve.plot.all}.}
   \item{sim.dir}{Directory with the simulation results. Only relevant, if \code{mcmc.list} is \code{NULL}.}
   \item{output.dir}{Directory into which resulting graphs are stored.}

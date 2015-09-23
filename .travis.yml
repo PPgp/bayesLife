@@ -25,7 +25,7 @@ notifications:
 
 env:
   matrix:
-    - RVERSION=oldrel
+##    - RVERSION=oldrel # the car package is missing from this version
     - RVERSION=release
     - RVERSION=devel
   global:
