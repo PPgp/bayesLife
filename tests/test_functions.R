@@ -6,7 +6,7 @@ test.ok <- function(name) cat('\n==== Test of', name, 'OK.===>\n')
 test.get.wpp.data <- function(wpp.year=2010) {
 	test.name <- 'getting WPP data'
 	start.test(test.name)
-	ncountries <- list('2008'=158, '2010'=159, '2012'=162, '2015'=210)
+	ncountries <- list('2008'=158, '2010'=159, '2012'=162, '2015'=178)
 	data <- bayesLife:::get.wpp.e0.data(wpp.year=wpp.year, present.year=if(wpp.year>2012) 2015 else 2010)
 	stopifnot(length(dim(data$e0.matrix))==2)
 	stopifnot(ncol(data$e0.matrix)==ncountries[[as.character(wpp.year)]])
@@ -68,7 +68,7 @@ test.estimate.mcmc <- function(compression='None') {
 	stopifnot(is.element(903, pred$mcmc.set$meta$regions$country_code))
 	stopifnot(!is.null(bayesTFR:::get.trajectories(pred, 903)$trajectories))
 	stopifnot(all(dim(pred$joint.male$quantiles) == dim(pred$quantiles)))
-	stopifnot(dim(pred$joint.male$quantiles)[1] == 212)
+	stopifnot(dim(pred$joint.male$quantiles)[1] == 180)
 	test.ok(test.name)
     
 	test.name <- 'shifting the median'
