@@ -78,5 +78,5 @@ summary(pred, country="Canada")
 unlink(sim.dir, recursive=TRUE)}
 }
 % exact commands to create data in ex-data directory
-% m <- run.e0.mcmc(sex='F', nr.chains=2, iter=60, seed=1, thin=2, verbose=TRUE, compression.type='bz', start.year=1950)
-% pred <- e0.predict(m, burnin=35, verbose=TRUE, predict.jmale=FALSE) 
+% m <- run.e0.mcmc(sex='F', nr.chains=1, iter=60, seed=1, thin=1, verbose=TRUE, compression.type='bz', start.year=1950)
+% pred <- e0.predict(m, burnin=30, verbose=TRUE, predict.jmale=FALSE, save.as.ascii=0) 

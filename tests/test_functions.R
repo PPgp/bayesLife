@@ -154,21 +154,21 @@ test.existing.simulation <- function() {
 	test.name <- 'retrieving MCMC results'
 	start.test(test.name)
 	sim.dir <- file.path(find.package("bayesLife"), "ex-data", 'bayesLife.output')
-	m <- get.e0.mcmc(sim.dir, low.memory=FALSE, chain.ids=c(1,2))
-	stopifnot(length(m$mcmc.list)==2)
-	stopifnot(dim(m$mcmc.list[[1]]$traces)[1]==31) # because the chains are thinned by two + init value (i.e. 60/2 + 1)
+	m <- get.e0.mcmc(sim.dir, low.memory=FALSE)
+	stopifnot(length(m$mcmc.list)==1)
+	stopifnot(dim(m$mcmc.list[[1]]$traces)[1]==60) 
 	m <- get.e0.mcmc(sim.dir)
 	#summary(m)
 	#summary(e0.mcmc(m, 1), par.names.cs=NULL)
-	stopifnot(bayesTFR:::get.total.iterations(m$mcmc.list) == 120)
-	stopifnot(bayesTFR:::get.stored.mcmc.length(m$mcmc.list, burnin=31) == 30)
+	stopifnot(bayesTFR:::get.total.iterations(m$mcmc.list) == 60)
+	stopifnot(bayesTFR:::get.stored.mcmc.length(m$mcmc.list, burnin=35) == 25)
 	test.ok(test.name)
 	
 	test.name <- 'retrieving projection results'
 	start.test(test.name)
 	pred <- get.e0.prediction(sim.dir)
 	s <- summary(pred, country='Japan')
-	stopifnot(s$nr.traj == 26)
+	stopifnot(s$nr.traj == 30)
 	stopifnot(all(dim(s$projections)==c(18,11)))
 	# comment out if thinned mcmcs are not included in the package
 	#mb <- get.thinned.e0.mcmc(m, thin=2, burnin=30)
@@ -290,19 +290,19 @@ test.get.parameter.traces <- function() {
 	start.test(test.name)
 	sim.dir <- file.path(find.package("bayesLife"), "ex-data", 'bayesLife.output')
 	m <- get.e0.mcmc(sim.dir, low.memory=TRUE)
-	traces <- get.e0.parameter.traces(m$mcmc.list, burnin=21, 
+	traces <- get.e0.parameter.traces(m$mcmc.list, burnin=20, 
 					thinning.index=c(4, 21, 39))
 	stopifnot(nrow(traces)==3)
-	m.check <- get.e0.mcmc(sim.dir, low.memory=FALSE, burnin=21)
+	m.check <- get.e0.mcmc(sim.dir, low.memory=FALSE, burnin=20)
 	stopifnot(traces[1,'omega']==m.check$mcmc.list[[1]]$traces[4,'omega'])
+	# the following is from the time when there were two chains in the example data
 	# indices 21 and 39 in the collapsed traces correspond to indices 1 and 19, respectively, in chain 2
-	stopifnot(all(traces[c(2,3),'omega']==m.check$mcmc.list[[2]]$traces[c(1,19),'omega']))
+	# stopifnot(all(traces[c(2,3),'omega']==m.check$mcmc.list[[2]]$traces[c(1,19),'omega']))
 	
-	traces <- get.e0.parameter.traces(m$mcmc.list, burnin=21, thin=8)
-	# original thin is 2, so here we thin additionally by 4 (2*20/4=10) 
-	stopifnot(nrow(traces)==10)
-	stopifnot(traces[2,'z']==m.check$mcmc.list[[1]]$traces[5,'z']) #(4+1)
-	stopifnot(traces[9,'z']==m.check$mcmc.list[[2]]$traces[13,'z']) #(3*4 + 1)
+	traces <- get.e0.parameter.traces(m$mcmc.list, burnin=20, thin=8) 
+	stopifnot(nrow(traces)==5)
+	#stopifnot(traces[2,'z']==m.check$mcmc.list[[1]]$traces[5,'z']) #(4+1)
+	#stopifnot(traces[9,'z']==m.check$mcmc.list[[2]]$traces[13,'z']) #(3*4 + 1)
 	test.ok(test.name)
 }
 
@@ -409,7 +409,7 @@ test.imputation <- function() {
 	test.name <- 'running projections with imputation'
 	start.test(test.name)
 	pred <- e0.predict(m, burnin=0, verbose=FALSE)
-	stopifnot(length(pred$joint.male$meta.changes$Tc.index[[cindex]])==12)
+	stopifnot(length(pred$joint.male$meta.changes$Tc.index[[cindex]])==13)
 	spred <- summary(pred)
 	stopifnot(spred$nr.traj == 5)	
 	test.ok(test.name)
