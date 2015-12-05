@@ -3,7 +3,6 @@
 \alias{include_2015}
 \alias{include_2010}
 \alias{include_2012}
-\alias{include_2008}
 
 \docType{data}
 \title{
@@ -16,7 +15,6 @@ Data sets containing codes that determine which countries are to be included int
 data(include_2015)
 data(include_2012)
 data(include_2010)
-data(include_2008)
 }
 
 \format{

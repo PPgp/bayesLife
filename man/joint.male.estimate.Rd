@@ -5,7 +5,7 @@
 Estimation of the Joint Female-Male Model
 }
 \description{
-The function estimates the joint female-male model of life expectancy, as described in Raftery et al. (2012) and Lalic (2011). It consist of two equations with t-distributed errors, see Details below.
+The function estimates the joint female-male model of life expectancy, as described in Raftery et al. (2014, 2012) and Lalic (2011). It consist of two equations with t-distributed errors, see Details below.
 }
 \usage{
 e0.jmale.estimate(mcmc.set, countries.index = NULL, 
@@ -58,6 +58,8 @@ List with the components, \code{eq1} and \code{eq2}, each containing estimation 
     \item{dof}{Degrees of freedom \eqn{\nu_j}{nu_j}. If \code{estDof.eq1} (\code{estDof.eq2}) is \code{TRUE} this parameter is estimated, otherwise it is set to the value of \code{start.eq1$dof} (\code{start.eq2$dof}).}
 }
 \references{
+A. E. Raftery,  N. Lalic, P. Gerland (2014). Joint Probabilistic Projection of Female and Male Life Expectancy. Demographic Research, 30:795-822.
+	
 A. E. Raftery,  N. Li, H. Sevcikova , P. Gerland, G. K. Heilig (2012). Bayesian probabilistic population projections for all countries. Proceedings of the National Academy of Sciences 109:13915-13921.	
 	
 Lalic, N. (2011). Master's thesis at the Department of Statistics, University of Washington. 

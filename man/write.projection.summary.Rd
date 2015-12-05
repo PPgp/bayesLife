@@ -21,8 +21,8 @@ The first file that the function creates is called \file{projection_summary_user
 \itemize{\item{\dQuote{country_name}: }{country name}
 		 \item{\dQuote{country_code}: }{country code}
 		 \item{\dQuote{variant}: }{name of the variant, such as \dQuote{median}, \dQuote{lower 80}, \dQuote{upper 80}, \dQuote{lower 95}, \dQuote{upper 95}, \dQuote{constant}}
-		\item{period1: }{e.g. \dQuote{2005-2010}: life expectancy for the first time period}
-		\item{period2: }{e.g. \dQuote{2010-2015}: life expectancy for the second time period}
+		\item{period1: }{e.g. \dQuote{2010-2015}: life expectancy for the first time period}
+		\item{period2: }{e.g. \dQuote{2015-2020}: life expectancy for the second time period}
 		\item{... }{further columns with life expectancy projections}
 	}
 

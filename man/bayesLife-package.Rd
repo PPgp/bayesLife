@@ -13,18 +13,18 @@ using a Bayesian hierarchical model and the United Nations demographic time seri
 \tabular{ll}{
 Package: \tab bayesLife\cr
 Type: \tab Package\cr
-Version: \tab 2.3-0\cr
-Date: \tab 2015-9-18\cr
+Version: \tab 3.0-0\cr
+Date: \tab 2015-12-4\cr
 License: \tab GPL (>= 2)\cr
 URL: \tab \url{http://bayespop.csss.washington.edu}\cr
 }
-The projection follows a method developed by Chunn et al.  It uses historical data provided by the United Nations (included in the package) to simulate a posterior distribution of the life expectancy for all countries in the world simultaneously. 
+The projection follows a method developed by Chunn et al (2010).  It uses historical data provided by the United Nations to simulate a posterior distribution of the life expectancy for all countries in the world simultaneously. 
 
 The package is implemented in a similar way as the \pkg{bayesTFR} package and thus, many functions have their equivalents in \pkg{bayesTFR}. The main functions of the \pkg{bayesLife} package are:
 \itemize{
-\item \link{run.e0.mcmc}: Evokes running a Markov Chain Monte Carlo (MCMC) simulation for one or more chains, possibly in parallel.  It results in a posterior sample of the mcmc parameters.  Existing simulation runs can be resumed using \link{continue.e0.mcmc}.
+\item \link{run.e0.mcmc}: Runs a Markov Chain Monte Carlo (MCMC) simulation for one or more chains, possibly in parallel.  It results in a posterior sample of the MCMC parameters.  Existing simulation runs can be resumed using \link{continue.e0.mcmc}.
 \item \link{e0.predict}: Using the posterior parameter samples it derives posterior trajectories of the life expectancy for all countries.
-\item \link{e0.jmale.predict}: Given existing outputs of \link{e0.predict} for female life expectancy, this function estimates and predicts a joint male life expectancy as described in Lalic 2011.
+\item \link{e0.jmale.predict}: Given existing outputs of \link{e0.predict} for female life expectancy, this function estimates and predicts a joint male life expectancy as described in Raftery et al (2014).
 }
 A number of functions analyzing results are included in the package:
 \itemize{
@@ -41,14 +41,14 @@ For MCMC diagnostics, function \link{e0.coda.list.mcmc} creates an object of typ
 
 Existing simulation results can be accessed using the \link{get.e0.mcmc} function.  An existing prediction can be accessed via \link{get.e0.prediction}.
 
-Historical data are taken from one of the packages \pkg{wpp2008}, \pkg{wpp2010} or \pkg{wpp2012}, depending on users settings.
+Historical data are taken from one of the packages \pkg{wpp2015} (default), \pkg{wpp2012} or \pkg{wpp2010}, depending on users settings.
 
 }
 
 \note{
-There is a directory \code{ex-data} shipped with the package which contains results from an example simulation, containing two chains with 60 iterations each, thinned by two.  The Example section below shows how these results were created.  These data are used in Example sections throughout the manual.  The user can either reproduce the data in her/his local directory, or use the ones from the package.
+There is a directory \code{ex-data} shipped with the package which contains results from an example simulation, containing one chain with 60 iterations.  The Example section below shows how these results were created.  These data are used in Example sections throughout the manual.  The user can either reproduce the data in her/his local directory, or use the ones from the package.
 
-A \sQuote{real} (converged) simulation including predictions can be downloaded from \url{http://bayespop.csss.washington.edu}.   
+%A \sQuote{real} (converged) simulation including predictions can be downloaded from \url{http://bayespop.csss.washington.edu}.   
 }
 
 \author{
@@ -61,6 +61,8 @@ J. L. Chunn, A. E. Raftery, P. Gerland (2010): Bayesian Probabilistic Projection
 
 A. E. Raftery,  N. Li, H. Sevcikova , P. Gerland, G. K. Heilig (2012). Bayesian probabilistic population projections for all countries. Proceedings of the National Academy of Sciences 109:13915-13921.
 
+A. E. Raftery,  N. Lalic, P. Gerland (2014). Joint Probabilistic Projection of Female and Male Life Expectancy. Demographic Research, 30:795-822.
+
 %Lalic, N. (2011). Master's thesis at the Department of Statistics, University of Washington.
 }
 
@@ -71,9 +73,9 @@ A. E. Raftery,  N. Li, H. Sevcikova , P. Gerland, G. K. Heilig (2012). Bayesian 
 \examples{
 \dontrun{
 sim.dir <- tempfile()
-m <- run.e0.mcmc(sex='F', nr.chains=2, iter=60, seed=1, thin=2, 
+m <- run.e0.mcmc(sex='F', nr.chains=1, iter=60, seed=1, thin=1, 
      output.dir=sim.dir, verbose=TRUE)
-pred <- e0.predict(m, burnin=35, verbose=TRUE)
+pred <- e0.predict(m, burnin=30, verbose=TRUE)
 summary(pred, country="Canada")
 unlink(sim.dir, recursive=TRUE)}
 }

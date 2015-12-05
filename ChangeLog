@@ -1,8 +1,16 @@
-2.2-1
+3.0-0 (12/4/2015)
 -----
+Added support for wpp2015 (changed imports, dependencies, defaults).
+
+Added include_2015.
+
+Added argument "col" and "show.legend" into e0.DLcurve.plot.
+
+Example data re-created with wpp2015.
+
 Fixed a bug in predict.extra for male e0.
 
-2.2-0 (03/12/2015)
+2.2-0 (03/12/2015) [CRAN]
 -----
 Analog to bayesTFR, added option of overwriting UNlocations file, i.e. easily include new countries in simulations. 
 For this, function run.e0.mcmc and e0.jmale.predict got an argument "my.locations.file".

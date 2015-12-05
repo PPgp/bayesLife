@@ -15,7 +15,7 @@ e0.trajectories.plot(e0.pred, country, pi = c(80, 95), both.sexes = FALSE,
     type = "b", xlab = "Year", ylab = "Life expectancy at birth", main = NULL, 
     lwd = c(2, 2, 2, 2, 1), col = c('black', 'green', 'red', 'red', 'gray'),
     col2 = c('gray39', 'greenyellow', 'hotpink', 'hotpink', 'gray'),
-	show.legend = TRUE, add = FALSE, \dots)
+    show.legend = TRUE, add = FALSE, \dots)
     
 e0.trajectories.plot.all(e0.pred, 
     output.dir = file.path(getwd(), 'e0trajectories'),
@@ -33,7 +33,8 @@ e0.trajectories.table(e0.pred, country, pi = c(80, 95),
   \item{nr.traj}{Number of trajectories to be plotted. If \code{NULL}, all trajectories are plotted, otherwise they are thinned evenly. If \code{both.sexes} is \code{TRUE} the default is zero.}
   \item{typical.trajectory}{Logical. If \code{TRUE} one trajectory is shown that has the smallest distance to the median.}
   \item{xlim, ylim, type, xlab, ylab, main}{Graphical parameters passed to the \code{plot} function.}
-  \item{lwd, col, col2}{Vector of five elements giving the line width and color for: 1. observed data, 2. imputed missing data, 3. median, 4. quantiles, 5. trajectories. \code{col2} is only used if \code{both.sexes} is \code{TRUE}. In such a case, \code{col2} is used for female lines and \code{col} is used for male lines, which in this case defaults to \code{c('black', 'green', 'darkgreen', 'darkgreen', 'gray')}.}
+  \item{lwd, col, col2}{Vector of five elements giving the line width and color for: 1. observed data, 2. imputed missing data, 3. median, 4. quantiles, 5. trajectories. \code{col2} is only used if \code{both.sexes} is \code{TRUE}. In such a case, \code{col2} is used for female lines and \code{col} is used for male lines, which in this case defaults to 
+  	\code{c('black', 'green', 'darkgreen', 'darkgreen', 'gray')}.}
   \item{show.legend}{Logical controlling whether the legend should be drawn.}
   \item{add}{Logical controlling whether the trajectories should be plotted into a new graphic device (\code{FALSE}) or into an existing device (\code{TRUE}). One can use this argument to plot trajectories from multiple countries into one graphics.}
   \item{\dots}{Additional graphical parameters. In addition, for \code{e0.trajectories.plot.all}, \code{\dots} 

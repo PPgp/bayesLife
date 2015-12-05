@@ -5,7 +5,7 @@
 Prediction of the Joint Female-Male Model
 }
 \description{
-Prediction of the joint female-male model of life expectancy, as described in Raftery et al. (2012) and Lalic (2011).
+Prediction of the joint female-male model of life expectancy, as described in Raftery et al. (2014, 2012) and Lalic (2011).
 }
 \usage{
 e0.jmale.predict(e0.pred, estimates = NULL, gap.lim = c(0, 18), 
@@ -35,6 +35,8 @@ The predicted gaps can be viewed using the \code{\link{e0.gap.plot}} function.
 	Updated \code{e0.pred} object where a new component was added, called \code{joint.male}. It is also an object of class \code{\link{bayesLife.prediction}} and it contains results from this prediction.
 }
 \references{
+A. E. Raftery,  N. Lalic, P. Gerland (2014). Joint Probabilistic Projection of Female and Male Life Expectancy. Demographic Research, 30:795-822.
+	
 A. E. Raftery,  N. Li, H. Sevcikova , P. Gerland, G. K. Heilig (2012). Bayesian probabilistic population projections for all countries. Proceedings of the National Academy of Sciences 109:13915-13921.
 	
 Lalic, N. (2011). Master's thesis at the Department of Statistics, University of Washington. 
