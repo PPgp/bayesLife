@@ -1,3 +1,7 @@
+3.0-1 (10/27/2016)
+-----
+Fixed a bug that caused run.e0.mcmc.extra not being able to pass my.locations.file (thanks to Yicheng Li).
+
 3.0-0 (12/4/2015)
 -----
 Added support for wpp2015 (changed imports, dependencies, defaults).

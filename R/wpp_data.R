@@ -58,7 +58,7 @@ set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, my.locations
 							present.year=meta$present.year, verbose=verbose)
 	data <- un.object$data.object
 	extra.wpp <- bayesTFR:::.extra.matrix.regions(data=data, countries=countries, meta=meta, 
-							package="bayesLife", verbose=verbose)
+							package="bayesLife", my.locations.file=my.locations.file, verbose=verbose)
 	if(!is.null(extra.wpp)) {
 		extra.wpp <- list(e0.matrix=extra.wpp$tfr_matrix, 
 						  e0.matrix.all=extra.wpp$tfr_matrix_all, 

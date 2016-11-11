@@ -13,8 +13,8 @@ using a Bayesian hierarchical model and the United Nations demographic time seri
 \tabular{ll}{
 Package: \tab bayesLife\cr
 Type: \tab Package\cr
-Version: \tab 3.0-0\cr
-Date: \tab 2015-12-4\cr
+Version: \tab 3.0-1\cr
+Date: \tab 2016-10-27\cr
 License: \tab GPL (>= 2)\cr
 URL: \tab \url{http://bayespop.csss.washington.edu}\cr
 }
@@ -52,7 +52,7 @@ There is a directory \code{ex-data} shipped with the package which contains resu
 }
 
 \author{
-Hana Sevcikova, Adrian Raftery; original code written by Jennifer Chunn
+Hana Sevcikova, Adrian Raftery, Jennifer Chunn
 
 Maintainer: Hana Sevcikova <hanas@uw.edu>
 }
