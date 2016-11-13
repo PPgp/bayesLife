@@ -1,6 +1,8 @@
-3.0-1 (10/27/2016)
+3.0-1 (11/12/2016)
 -----
 Fixed a bug that caused run.e0.mcmc.extra not being able to pass my.locations.file (thanks to Yicheng Li).
+
+Added functions for obtaining world and country-specific DL curves (e0.world.dlcurves, e0.country.dlcurves).
 
 3.0-0 (12/4/2015)
 -----

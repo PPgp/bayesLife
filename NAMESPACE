@@ -48,6 +48,8 @@ export(
 	e0.DLcurve.plot.all,
 	e0.DLcurve.plot,
 	e0.get.dlcurves,
+	e0.world.dlcurves,
+	e0.country.dlcurves,
 	e0.DLisDecrement,
 	e0.trajectories.table,
 	e0.trajectories.plot.all,
