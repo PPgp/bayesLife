@@ -378,7 +378,7 @@ get.traj.ascii.header.bayesLife.mcmc.meta <- function(meta, ...)
 get.data.imputed.bayesLife.prediction <- function(pred, ...)
 	return(get.e0.reconstructed(pred$e0.matrix.reconstructed, pred$mcmc.set$meta))
 	
-get.data.imputed.for.country.bayesLife.prediction <- function(pred, country.index, ...)
+get.data.for.country.imputed.bayesLife.prediction <- function(pred, country.index, ...)
 	return(bayesTFR:::get.observed.with.supplemental(country.index, pred$e0.matrix.reconstructed, 
 					pred$mcmc.set$meta$suppl.data, 'e0.matrix'))
 	
@@ -423,7 +423,7 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 								constant.gap.eq2=TRUE, my.e0.file=NULL, my.locations.file=NULL, verbose=FALSE) {
 	# Estimate coefficients for joint prediction of female and male e0
 	unblock.gtk('bDem.e0pred', list(bDem.e0pred.status='estimating joint male'))
-	if (is.null(countries.index)) countries.index <- 1:get.nr.countries.est(mcmc.set$meta)
+	if (is.null(countries.index)) countries.index <- 1:get.nrest.countries(mcmc.set$meta)
 	e0f.data <- get.data.matrix(mcmc.set$meta)[,countries.index]
 	e0m.data <- get.wpp.e0.data.for.countries(mcmc.set$meta, sex='M', my.e0.file=my.e0.file,
 					my.locations.file=my.locations.file, verbose=verbose)$e0.matrix[,countries.index]

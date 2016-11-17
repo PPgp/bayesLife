@@ -16,7 +16,7 @@ Type: \tab Package\cr
 Version: \tab 3.0-1\cr
 Date: \tab 2016-10-27\cr
 License: \tab GPL (>= 2)\cr
-URL: \tab \url{http://bayespop.csss.washington.edu}\cr
+URL: \tab \url{https://bayespop.csss.washington.edu}\cr
 }
 The projection follows a method developed by Chunn et al (2010).  It uses historical data provided by the United Nations to simulate a posterior distribution of the life expectancy for all countries in the world simultaneously. 
 

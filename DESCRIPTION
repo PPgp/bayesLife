@@ -10,4 +10,4 @@ Depends: bayesTFR (>= 4.1-2)
 Imports: wpp2015, hett, car, coda
 Suggests: wpp2012, wpp2010
 License: GPL (>= 2)
-URL: http://bayespop.csss.washington.edu
+URL: https://bayespop.csss.washington.edu

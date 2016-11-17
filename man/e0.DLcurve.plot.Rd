@@ -1,6 +1,8 @@
 \name{e0.DLcurve.plot}
 \alias{e0.DLcurve.plot}
 \alias{e0.DLcurve.plot.all}
+\alias{e0.world.dlcurves}
+\alias{e0.country.dlcurves}
 
 \title{
 Plotting  Posterior Distribution of the Double Logistic Function of Life Expectancy

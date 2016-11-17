@@ -190,6 +190,17 @@ test.DLcurve <- function() {
 	unlink(filename)
 	stopifnot(size > 0)
 	test.ok(test.name)
+	test.name <- 'obtaining DL curves'
+	start.test(test.name)
+	e0 <- seq(40, 90, length=100)
+	dl <- e0.country.dlcurves(e0, m, "Slovenia", burnin=10)
+	stopifnot(all(dim(dl)==c(50,100)))
+	# world distribution
+	dlw <- e0.world.dlcurves(e0, m, burnin=10)
+	stopifnot(all(dim(dlw)==c(50,100)))
+	# median of the world DL in the e0 range of 60-70 is larger than the country-specific median in that range
+	stopifnot(all(apply(dlw[, e0 > 60 & e0 < 70], 2, median) > apply(dl[, e0 > 60 & e0 < 70], 2, median)))
+	test.ok(test.name)
 }
 
 test.e0trajectories <- function() {

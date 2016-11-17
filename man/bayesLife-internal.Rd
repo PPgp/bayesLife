@@ -9,7 +9,7 @@
 \alias{get.friendly.variant.names.bayesLife.prediction}
 \alias{get.new.e0.colnames}
 \alias{get.nr.countries.bayesLife.mcmc.meta}
-\alias{get.nr.countries.est.bayesLife.mcmc.meta}
+\alias{get.nrest.countries.bayesLife.mcmc.meta}
 \alias{get.projection.summary.header.bayesLife.prediction}
 \alias{get.traj.ascii.header.bayesLife.mcmc.meta}
 \alias{get.UN.variant.names.bayesLife.prediction}
