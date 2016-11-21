@@ -6,7 +6,7 @@ Date: 2016-11-21
 Author: Hana Sevcikova, Adrian Raftery, Jennifer Chunn 
 Maintainer: Hana Sevcikova <hanas@uw.edu>
 Description: Making probabilistic projections of life expectancy for all countries of the world, using a Bayesian hierarchical model.
-Depends: bayesTFR (>= 4.1-2)
+Depends: bayesTFR (>= 5.0-4)
 Imports: wpp2015, hett, car, coda
 Suggests: wpp2012, wpp2010
 License: GPL (>= 2)
