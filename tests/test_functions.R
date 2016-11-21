@@ -190,6 +190,17 @@ test.DLcurve <- function() {
 	unlink(filename)
 	stopifnot(size > 0)
 	test.ok(test.name)
+	test.name <- 'obtaining DL curves'
+	start.test(test.name)
+	e0 <- seq(40, 90, length=100)
+	dl <- e0.country.dlcurves(e0, m, "Slovenia", burnin=10)
+	stopifnot(all(dim(dl)==c(50,100)))
+	# world distribution
+	dlw <- e0.world.dlcurves(e0, m, burnin=10)
+	stopifnot(all(dim(dlw)==c(50,100)))
+	# median of the world DL in the e0 range of 60-70 is larger than the country-specific median in that range
+	stopifnot(all(apply(dlw[, e0 > 60 & e0 < 70], 2, median) > apply(dl[, e0 > 60 & e0 < 70], 2, median)))
+	test.ok(test.name)
 }
 
 test.e0trajectories <- function() {
@@ -475,4 +486,29 @@ test.imputation <- function() {
 	test.ok(test.name)
 	
 	unlink(sim.dir, recursive=TRUE)
+}
+
+test.my.locations.extra <- function() {
+	sim.dir <- tempfile()
+    # run MCMC
+    test.name <- 'using my.locations.file in extra estimation'
+	start.test(test.name)
+    m <- run.e0.mcmc(nr.chains=1, iter=10, thin=1, output.dir=sim.dir)
+    data.dim <- dim(m$meta$e0.matrix)
+    # prepare data and locations
+    my.e0.file <- file.path(find.package("bayesLife"), 'extdata', 'my_e0_template.txt')
+    e0 <- bayesTFR:::read.tfr.file(file=my.e0.file)
+    e0['country_code'] <- 9999
+    fdata <- tempfile()
+    write.table(e0, file=fdata, sep='\t', row.names=FALSE)
+    new.locations <- data.frame(country_code=9999, name='my location', reg_code=9999, area_code=8888, reg_name='my region', area_name='my area', location_type=4)
+    flocs <- tempfile()
+    write.table(new.locations, file=flocs, sep='\t', row.names=FALSE)
+    m <- run.e0.mcmc.extra(sim.dir=sim.dir, my.e0.file=fdata, my.locations.file=flocs, burnin=0)
+    stopifnot(all(dim(m$meta$e0.matrix) == c(data.dim[1], data.dim[2]+1)))
+	stopifnot(m$meta$regions$country_code[m$meta$nr.countries] == 9999)
+	unlink(flocs)
+	unlink(fdata)
+	unlink(sim.dir, recursive=TRUE)
+	test.ok(test.name)
 }

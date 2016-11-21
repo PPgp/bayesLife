@@ -1,3 +1,13 @@
+3.0-1 (11/21/2016)
+-----
+Fixed a bug that caused run.e0.mcmc.extra not being able to pass my.locations.file (thanks to Yicheng Li).
+
+Added functions for obtaining world and country-specific DL curves (e0.world.dlcurves, e0.country.dlcurves).
+
+Renamed two methods due to changes in bayesTFR.
+
+Website changed http -> https. 
+
 3.0-0 (12/4/2015)
 -----
 Added support for wpp2015 (changed imports, dependencies, defaults).

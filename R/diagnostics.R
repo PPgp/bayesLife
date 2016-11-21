@@ -73,7 +73,7 @@ e0.DLisDecrement <- function() {
     			valid.time.all <- c(suppl.data.idx, valid.time.all)
    			}
     	}
-		dlc <- e0.get.dlcurves(x, mcmc.set$mcmc.list, country.code, icountry, burnin=burnin, 
+		dlc <- e0.get.dlcurves(x, mcmc.set$mcmc.list, country.code, burnin=burnin, 
 							nr.curves=2000, predictive.distr=TRUE)
 		counter[valid.time.all,icountry] <- counter[valid.time.all,icountry] + 1
 		for (i in 1:length(pi)) {

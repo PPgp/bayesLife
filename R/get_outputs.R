@@ -402,7 +402,7 @@ get.e0.trajectories.object <- function(e0.pred, country, nr.traj=NULL, typical.t
 }
 
 get.nr.countries.bayesLife.mcmc.meta <- function(meta, ...) return (meta$nr.countries)
-get.nr.countries.est.bayesLife.mcmc.meta <- function(meta, ...) return (meta$nr.countries.estimation)
+get.nrest.countries.bayesLife.mcmc.meta <- function(meta, ...) return (meta$nr.countries.estimation)
 
 get.data.matrix.bayesLife.mcmc.meta <- function(meta, ...) return (meta$e0.matrix)
 

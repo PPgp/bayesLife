@@ -453,18 +453,49 @@ e0.DLcurve.plot.all <- function (mcmc.list = NULL, sim.dir = NULL,
 		file.prefix='DLplot', plot.type='DL graph', verbose=verbose, mcmc.list = mcmc.list, burnin = burnin, ...)
 }
 
-e0.get.dlcurves <- function(x, mcmc.list, country.code, country.index, burnin, nr.curves, predictive.distr=FALSE) {
+e0.world.dlcurves <- function(x, mcmc.list, burnin=NULL, ...) {
+	# Get the hierarchical DL curves
+	if(class(mcmc.list) == 'bayesLife.prediction') {
+		if(!is.null(burnin) && burnin != mcmc.list$burnin)
+			warning('Prediction was generated with different burnin. Burnin set to ', mcmc.list$burnin)
+		burnin <- 0 # because burnin was already cut of the traces
+	}
+	if(is.null(burnin)) burnin <- 0
+    mcmc.list <- get.mcmc.list(mcmc.list)
+	return(e0.get.dlcurves(x, mcmc.list, country.code=NULL,  burnin=burnin, ...))
+}
+
+e0.country.dlcurves <- function(x, mcmc.list, country, burnin=NULL, ...) {
+	# Get country-specific DL curves.
+	# It's a wrapper around e0.get.dlcurves for easier usage.
+	if(class(mcmc.list) == 'bayesLife.prediction') {
+		if(!is.null(burnin) && burnin != mcmc.list$burnin)
+			warning('Prediction was generated with different burnin. Burnin set to ', mcmc.list$burnin)
+		burnin <- 0 # because burnin was already cut of the traces
+	}
+	if(is.null(burnin)) burnin <- 0
+    mcmc.list <- get.mcmc.list(mcmc.list)
+    country.obj <- get.country.object(country, mcmc.list[[1]]$meta)
+    if(is.null(country.obj$code))
+	stop("Country ", country, " not found.")
+    return(e0.get.dlcurves(x, mcmc.list, country.code=country.obj$code,  burnin=burnin, ...))
+}
+
+e0.get.dlcurves <- function(x, mcmc.list, country.code, burnin, nr.curves=2000, predictive.distr=FALSE) {
 	dlc <- c()
     nr.curves.from.mc <- if (!is.null(nr.curves)) ceiling(max(nr.curves, 2000)/length(mcmc.list))
     						else NULL
-    postfix <- paste('_c', country.code, sep='')
-    dl.par.names <- c(paste('Triangle.c_1', postfix,sep=''),
-						paste('Triangle.c_2', postfix,sep=''), 
-						paste('Triangle.c_3', postfix,sep=''), 
-						paste('Triangle.c_4', postfix,sep=''), 
-						paste('k.c', postfix,sep=''),
-						paste('z.c', postfix,sep=''))
-	T <- length(mcmc.list[[1]]$meta$loessSD[,country.index])
+    if(!is.null(country.code)) {
+    	postfix <- paste0('_c', country.code)
+    	dl.par.names <- c(paste0('Triangle.c_1', postfix),
+						paste0('Triangle.c_2', postfix), 
+						paste0('Triangle.c_3', postfix), 
+						paste0('Triangle.c_4', postfix), 
+						paste0('k.c', postfix),
+						paste0('z.c', postfix))
+	} else {
+		dl.par.names <- c('Triangle_1', 'Triangle_2', 'Triangle_3', 'Triangle_4', 'k', 'z')
+	}
 	if(predictive.distr) {
 		loessSD <- loess.lookup(x)
 		if(!is.null(mcmc.list[[1]]$meta$constant.variance) && mcmc.list[[1]]$meta$constant.variance)
@@ -474,9 +505,12 @@ e0.get.dlcurves <- function(x, mcmc.list, country.code, country.index, burnin, n
     	th.burnin <- bayesTFR:::get.thinned.burnin(mcmc,burnin)
     	thincurves.mc <- bayesTFR:::get.thinning.index(nr.curves.from.mc, 
             all.points=mcmc$length - th.burnin)
-        traces <- load.e0.parameter.traces.cs(mcmc, country.code, 
+        if(!is.null(country.code))  # country-specific curves
+        	traces <- load.e0.parameter.traces.cs(mcmc, country.code, 
         						burnin=th.burnin, 
 								thinning.index=thincurves.mc$index)
+		else traces <- load.e0.parameter.traces(mcmc, burnin=th.burnin, 
+								thinning.index=thincurves.mc$index)				
 		dl.pars <- traces[,dl.par.names, drop=FALSE]
 		omegas <- load.e0.parameter.traces(mcmc, par.names='omega', burnin=th.burnin, 
 								thinning.index=thincurves.mc$index)
@@ -519,7 +553,7 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
     }
     if (is.null(e0.lim)) e0.lim <- c(min(40, obs.data), max(90, obs.data))
     x <- seq(e0.lim[1], e0.lim[2], length=1000)
-    dlc <- e0.get.dlcurves(x, mcmc.list, country$code, country$index, burnin, nr.curves, 
+    dlc <- e0.get.dlcurves(x, mcmc.list, country$code,  burnin, nr.curves, 
     						predictive.distr=predictive.distr)
     thincurves <- bayesTFR:::get.thinning.index(nr.curves, dim(dlc)[1])
     ltype <- "l"

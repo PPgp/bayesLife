@@ -13,10 +13,10 @@ using a Bayesian hierarchical model and the United Nations demographic time seri
 \tabular{ll}{
 Package: \tab bayesLife\cr
 Type: \tab Package\cr
-Version: \tab 3.0-0\cr
-Date: \tab 2015-12-4\cr
+Version: \tab 3.0-1\cr
+Date: \tab 2016-11-21\cr
 License: \tab GPL (>= 2)\cr
-URL: \tab \url{http://bayespop.csss.washington.edu}\cr
+URL: \tab \url{https://bayespop.csss.washington.edu}\cr
 }
 The projection follows a method developed by Chunn et al (2010).  It uses historical data provided by the United Nations to simulate a posterior distribution of the life expectancy for all countries in the world simultaneously. 
 
@@ -52,7 +52,7 @@ There is a directory \code{ex-data} shipped with the package which contains resu
 }
 
 \author{
-Hana Sevcikova, Adrian Raftery; original code written by Jennifer Chunn
+Hana Sevcikova, Adrian Raftery, Jennifer Chunn
 
 Maintainer: Hana Sevcikova <hanas@uw.edu>
 }

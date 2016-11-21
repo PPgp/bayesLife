@@ -48,6 +48,8 @@ export(
 	e0.DLcurve.plot.all,
 	e0.DLcurve.plot,
 	e0.get.dlcurves,
+	e0.world.dlcurves,
+	e0.country.dlcurves,
 	e0.DLisDecrement,
 	e0.trajectories.table,
 	e0.trajectories.plot.all,
@@ -96,12 +98,12 @@ S3method(print, summary.bayesLife.mcmc.set.meta)
 
 S3method(get.traj.ascii.header, bayesLife.mcmc.meta)
 S3method(get.nr.countries, bayesLife.mcmc.meta)
-S3method(get.nr.countries.est, bayesLife.mcmc.meta)
+S3method(get.nrest.countries, bayesLife.mcmc.meta)
 S3method(get.data.matrix, bayesLife.mcmc.meta)
 S3method(get.countries.index, bayesLife.mcmc.meta)
 
 S3method(get.data.imputed, bayesLife.prediction)
-S3method(get.data.imputed.for.country, bayesLife.prediction)
+S3method(get.data.for.country.imputed, bayesLife.prediction)
 S3method(get.projection.summary.header, bayesLife.prediction)
 S3method(get.UN.variant.names, bayesLife.prediction)
 S3method(get.friendly.variant.names, bayesLife.prediction)
