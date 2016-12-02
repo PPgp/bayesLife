@@ -4,7 +4,7 @@ import(
     bayesTFR, hett, coda, wpp2015
 )
 importFrom(car, dataEllipse)
-importFrom("graphics", "abline", "grid", "legend", "lines", "plot", "points")
+importFrom("graphics", "abline", "grid", "legend", "lines", "plot", "points", "text")
 importFrom("grDevices", "rainbow")
 importFrom("stats", "dgamma", "dnorm", "dunif", "median", "pnorm", "quantile", "rexp", "rgamma", "rnorm", "rt", "runif", "sd")
 
@@ -50,6 +50,7 @@ export(
 	e0.get.dlcurves,
 	e0.world.dlcurves,
 	e0.country.dlcurves,
+	e0.parDL.plot,
 	e0.DLisDecrement,
 	e0.trajectories.table,
 	e0.trajectories.plot.all,

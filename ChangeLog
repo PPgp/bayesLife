@@ -1,3 +1,9 @@
+3.0-2 (12/01/2016)
+-----
+Function e0.parDL.plot added.
+
+Argument adjusted.only added to e0.trajectories.plot.
+
 3.0-1 (11/21/2016)
 -----
 Fixed a bug that caused run.e0.mcmc.extra not being able to pass my.locations.file (thanks to Yicheng Li).

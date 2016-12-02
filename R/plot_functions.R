@@ -185,11 +185,11 @@ e0.trajectories.plot.all <- function(e0.pred,
 }
 
 e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALSE,
-								  nr.traj=NULL, typical.trajectory=FALSE,
+								  nr.traj=NULL, adjusted.only = TRUE, typical.trajectory=FALSE,
 								  xlim=NULL, ylim=NULL, type='b', 
 								  xlab='Year', ylab='Life expectancy at birth', main=NULL, 
-								  lwd=c(2,2,2,2,1), col=c('black', 'green', 'red', 'red', 'gray'),
-								  col2=c('gray39', 'greenyellow', 'hotpink', 'hotpink', 'gray'),
+								  lwd=c(2,2,2,2,1), col=c('black', 'green', 'red', 'red', '#00000020'),
+								  col2=c('gray39', 'greenyellow', 'hotpink', 'hotpink', '#00000020'),
 								  show.legend=TRUE, add=FALSE, ...
 								  ) {
 	# lwd/col is a vector of 5 line widths/colors for: 
@@ -220,7 +220,7 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 	if(length(col) < 5) {
 		lcol <- length(col)
 		col <- rep(col, 5)
-		col[(lcol+1):5] <- c('black', 'green', 'red', 'red', 'gray')[(lcol+1):5]
+		col[(lcol+1):5] <- c('black', 'green', 'red', 'red', '#00000020')[(lcol+1):5]
 	}
 	country <- get.country.object(country, e0.pred$mcmc.set$meta)
 	pred <- list(e0.pred)
@@ -251,10 +251,10 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 			if(length(col2) < 5) {
 				lcol <- length(col2)
 				col2 <- rep(col2, 5)
-				col2[(lcol+1):5] <- c('gray39', 'greenyellow', 'hotpink', 'hotpink', 'gray')[(lcol+1):5]
+				col2[(lcol+1):5] <- c('gray39', 'greenyellow', 'hotpink', 'hotpink', '#00000020')[(lcol+1):5]
 			}
 			if(missing.col) {
-				col <- c('black', 'green', 'darkgreen', 'darkgreen', 'gray')
+				col <- c('black', 'green', 'darkgreen', 'darkgreen', '#00000020')
 				plotcols <- list(col)
 			}
 			plotcols <- c(list(col2), plotcols)
@@ -368,7 +368,7 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 		}
 		# plot median	
 		lines(plot.data[[ipred]]$pred.x, e0.median, type='l', col=this.col[3], lwd=lwd[3])
-		legend <- 'median'
+		legend <- if(adjusted.only) 'median' else 'adj. median'
 		if(do.both.sexes) legend <- paste(lowerize(get.sex.label(meta)), legend)
 		lty <- 1
 		# plot given CIs
@@ -388,6 +388,16 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 		pch <- c(rep(-1, length(legend)-1), 1)
 		lwds <- c(lwd[3], rep(lwd[4], length(pi)), lwd[1])
 		cols <- c(this.col[3], rep(this.col[4], length(pi)), this.col[1])
+		if(!adjusted.only) { # plot unadjusted median
+			bhm.median <- bayesTFR::get.median.from.prediction(e0pred, country$index, country$code, adjusted=FALSE)
+			lines(plot.data[[ipred]]$pred.x, bhm.median, type='l', col=this.col[3], lwd=lwd[3], lty=max(lty)+1)
+			bhm.leg <- 'BHM median'
+			if(do.both.sexes) bhm.leg <- paste(lowerize(get.sex.label(meta)), bhm.leg)
+			legend <- c(legend, bhm.leg)
+			cols <- c(cols, this.col[3])
+			lwds <- c(lwds, lwd[3])
+			lty <- c(lty, max(lty)+1)
+		}
 		if(lpart2 > 0) {
 			legend <- c(legend, paste('imputed', if(do.both.sexes) paste(lowerize(get.sex.label(meta)), 'e0') else 'e0'))
 			cols <- c(cols, this.col[2])
@@ -593,6 +603,43 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
         	lty = c(1, lty, 0), bty = "n", col = c(rep(col[2], length(pi)+1), col[1]),
         	pch=c(rep(-1,length(pi)+1), 19))
 }
+
+e0.parDL.plot <- function(mcmc.set, country=NULL, burnin = NULL, lty=2, ann=TRUE, ...) {
+	if(class(mcmc.set) == 'bayesLife.prediction') {
+		if(!is.null(burnin) && burnin != mcmc.set$burnin)
+			warning('Prediction was generated with different burnin. Burnin set to ', mcmc.set$burnin)
+		burnin <- 0 # because burnin was already cut of the traces
+		mcmc.set <- mcmc.set$mcmc.set
+	}
+	if(is.null(burnin)) burnin <- 0
+    country.obj <- get.country.object(country, mcmc.set$meta)
+    if(!is.null(country) && is.null(country.obj$code))
+    	stop('Country ', country, 'not found.')
+    con <- textConnection("sout", "w", local=TRUE) # redirect output
+    sink(con, type='output')
+    parmeans <- summary(mcmc.set, country=country.obj$code, burnin=burnin)$statistics[,'Mean']
+    sink(type='output')
+    close(con)
+	parnames.all <- if(is.null(country)) e0.parameter.names.extended() else e0.parameter.names.cs.extended(country.obj$code)
+	parnames <- grep("^Triangle|k", parnames.all, value=TRUE)
+	k <- parmeans[parnames[5]]
+	xDelta1 <- parmeans[parnames[1]]
+	xDelta2 <- xDelta1+parmeans[parnames[2]]
+	xDelta3 <- xDelta2+parmeans[parnames[3]]
+	xDelta4 <- xDelta3+parmeans[parnames[4]]
+	abline(h=k, lty=lty, ...)
+	abline(v=xDelta1, lty=lty, ...)
+	abline(v=xDelta2, lty=lty, ...)
+	abline(v=xDelta3, lty=lty, ...)
+	abline(v=xDelta4, lty=lty, ...)
+	if(ann) {
+		text(xDelta4-(xDelta4-xDelta3)/2, k, labels='k', pos=3, ...)
+		text(c(xDelta1, xDelta2, xDelta3, xDelta4), y=rep(k, 4), 
+				labels=c(expression(Delta[1]), expression(Delta[2]), 
+						expression(Delta[3]), expression(Delta[4])), adj=c(1,1), ...)
+	}
+}
+
 
 e0.partraces.plot <- function(mcmc.list=NULL, sim.dir=file.path(getwd(), 'bayesLife.output'),
 								chain.ids=NULL, par.names=e0.parameter.names(), 

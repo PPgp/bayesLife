@@ -11,10 +11,11 @@ The functions plot/tabulate the posterior distribution of trajectories of the li
 }
 \usage{
 e0.trajectories.plot(e0.pred, country, pi = c(80, 95), both.sexes = FALSE,
-    nr.traj = NULL, typical.trajectory = FALSE, xlim = NULL, ylim = NULL, 
-    type = "b", xlab = "Year", ylab = "Life expectancy at birth", main = NULL, 
-    lwd = c(2, 2, 2, 2, 1), col = c('black', 'green', 'red', 'red', 'gray'),
-    col2 = c('gray39', 'greenyellow', 'hotpink', 'hotpink', 'gray'),
+    nr.traj = NULL, adjusted.only = TRUE, typical.trajectory = FALSE, 
+    xlim = NULL, ylim = NULL, type = "b", 
+    xlab = "Year", ylab = "Life expectancy at birth", main = NULL, 
+    lwd = c(2, 2, 2, 2, 1), col = c('black', 'green', 'red', 'red', '#00000020'),
+    col2 = c('gray39', 'greenyellow', 'hotpink', 'hotpink', '#00000020'),
     show.legend = TRUE, add = FALSE, \dots)
     
 e0.trajectories.plot.all(e0.pred, 
@@ -31,7 +32,8 @@ e0.trajectories.table(e0.pred, country, pi = c(80, 95),
   \item{pi}{Probability interval. It can be a single number or an array. If \code{both.sexes} is \code{TRUE} the default is 95.}
   \item{both.sexes}{Logical or the character \dQuote{A}. If \code{TRUE} the distribution of both sexes is plotted into one graphics (or tabulated), provided the \code{e0.pred} is a female prediction and contains a joint male prediction as a result of running the function \code{\link{e0.jmale.predict}}. For \dQuote{A} it plots/tabulates the distribution of the average life expectancy over both sexes.}
   \item{nr.traj}{Number of trajectories to be plotted. If \code{NULL}, all trajectories are plotted, otherwise they are thinned evenly. If \code{both.sexes} is \code{TRUE} the default is zero.}
-  \item{typical.trajectory}{Logical. If \code{TRUE} one trajectory is shown that has the smallest distance to the median.}
+  \item{adjusted.only}{Logical. By default, if the projection median is adjusted using e.g. \code{\link{e0.median.set}}, the function plots the adjusted median. If \code{adjusted.only=FALSE} the original (non-adjusted) median is plotted as well.}
+  \item{typical.trajectory}{Logical. If \code{TRUE} one trajectory is shown  for which the median absolute deviation from the median e0 projection is the median among all the trajectories.}
   \item{xlim, ylim, type, xlab, ylab, main}{Graphical parameters passed to the \code{plot} function.}
   \item{lwd, col, col2}{Vector of five elements giving the line width and color for: 1. observed data, 2. imputed missing data, 3. median, 4. quantiles, 5. trajectories. \code{col2} is only used if \code{both.sexes} is \code{TRUE}. In such a case, \code{col2} is used for female lines and \code{col} is used for male lines, which in this case defaults to 
   	\code{c('black', 'green', 'darkgreen', 'darkgreen', 'gray')}.}
