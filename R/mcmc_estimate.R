@@ -44,28 +44,22 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
 			}
 		}
 		ntries <- 1
+		current.delta <- mcenv$Triangle
 		while(ntries <= 50) {
 			for (i in 1:4) {
-				# Triangle is truncated normal in [0,100]
-				# Triangle.prop[i] <- rnorm.trunc(mean=Tr.mean[i], sd=Tr.sd[i], 
-									# low=meta$Triangle.prior.low[i], high=meta$Triangle.prior.up[i])
-				# accept.prob <- ((par.integral(Triangle.prop[i], lambdas.sqrt[i], 
-								# low=meta$Triangle.c.prior.low[i], up=meta$Triangle.c.prior.up[i]))^(-C))/wpar.integral.to.mC[i]
-				# if (runif(1) >= accept.prob) { # not accepted
-					# Triangle.prop[i] <- mcenv$Triangle[i] # replace the proposal by the old value
-                    # recompute.par.integral[i] <- FALSE
-                    # #cat('\nnot accepted Delta ', i, ' iter ', iter)
-                # } else recompute.par.integral[i] <- TRUE
-                Triangle.prop[i] <- slice.sampling(mcenv$Triangle[i], logdensity.Triangle.k.z, meta$Triangle.width[i], 
-										low=meta$Triangle.prior.low[i], up=meta$Triangle.prior.up[i],
+            Triangle.prop[i] <- slice.sampling(mcenv$Triangle[i], logdensity.Triangle.k.z, meta$Triangle.width[i], 
+										low=max(meta$Triangle.prior.low[i], meta$sumTriangle.lim[1]-sum(current.delta[-i])),
+										up=min(meta$Triangle.prior.up[i], meta$sumTriangle.lim[2]-sum(current.delta[-i])),
 										alpha=meta$a[i], delta=meta$delta[i], par.c=mcenv$Triangle.c[i], sd=1/lambdas.sqrt[i], 
 										c.low=meta$Triangle.c.prior.low[i], c.up=meta$Triangle.c.prior.up[i])
+            current.delta[i] <- Triangle.prop[i]
 			}
 			sT <- sum(Triangle.prop)
 			# discard samples for which the sum(Triangle) is outside of given interval.
+			# (this check should not be necessary due to the low and up condition above)
 			if(sT <= meta$sumTriangle.lim[2] && sT >= meta$sumTriangle.lim[1]) break
 			ntries <- ntries + 1
-		}		
+		}
 		mcenv$Triangle <- Triangle.prop
 		# k is truncated normal in [0,10]
 		k.prop <- rnorm.trunc(mean=Tr.mean[5], sd=Tr.sd[5], low=meta$k.prior.low, high=meta$k.prior.up)
