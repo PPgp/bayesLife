@@ -315,8 +315,9 @@ Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
 										logdensity.Triangle.k.z.c, mcmc$meta$Triangle.c.width[i], 
 										mean=mcmc$Triangle[i], 
 										sd=sigmas[i], dlx=dlx,
-										low=Triangle.c.low[i], 
-										up=Triangle.c.up[i], par.idx=i, 
+										low=min(max(Triangle.c.low[i], mcmc$meta$sumTriangle.lim[1]-sum(dlx[1:4][-i])),mcmc$Triangle.c[i, country]), 
+										up=max(min(Triangle.c.up[i], mcmc$meta$sumTriangle.lim[2]-sum(dlx[1:4][-i])),mcmc$Triangle.c[i, country]),
+										par.idx=i, 
 										p1=mcmc$meta$dl.p1, p2=mcmc$meta$dl.p2, omega=mcmc$omega,
 										DLdata=DLdata[[country]])
 			dlx[i] <- Triangle.prop[i]

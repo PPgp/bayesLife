@@ -483,8 +483,8 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter=100,
         				meta = mcmc.meta), class='bayesLife.mcmc')
     samplpars <- mcmc.meta$country.bounds
     mcmc[['Triangle.c']] <- matrix(0, ncol=nr_countries, nrow=4)
-    for (i in 1:4)		
-		mcmc[['Triangle.c']][i,] <- pmin(pmax(rnorm(nr_countries, mean=mcmc.meta$Triangle.c.ini.norm[[1]][i], 
+    for (i in 1:4)
+		    mcmc[['Triangle.c']][i,] <- pmin(pmax(rnorm(nr_countries, mean=mcmc.meta$Triangle.c.ini.norm[[1]][i], 
 										sd=mcmc.meta$Triangle.c.ini.norm[[2]][i]), 
 										samplpars[[paste('Triangle_', i, '.c.prior.low', sep='')]]), 
 										samplpars[[paste('Triangle_', i, '.c.prior.up', sep='')]])
