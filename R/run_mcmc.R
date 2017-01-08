@@ -29,7 +29,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
 						 Triangle.c.prior.low=c(0, 0, -20, 0), Triangle.c.prior.up=c(100, 100, 100, 100),
 						 k.c.prior.low=0, k.c.prior.up=10, z.c.prior.low=0, z.c.prior.up=0.653,
 						 country.overwrites = NULL,
-						 nu=4, dl.p1=9, dl.p2=9, sumTriangle.lim = c(30, 110), constant.variance=FALSE,
+						 nu=4, dl.p1=9, dl.p2=9, sumTriangle.lim = c(30, 110), constant.variance=FALSE, outliers=c(-5,10),
                          seed = NULL, parallel=FALSE, nr.nodes=nr.chains, compression.type='None',
                          auto.conf = list(max.loops=5, iter=160000, iter.incr=20000, nr.chains=3, thin=225, burnin=10000),
 						 verbose=FALSE, verbose.iter = 100, ...) {
@@ -106,7 +106,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
                                         z.c.prior.low=z.c.prior.low, z.c.prior.up=z.c.prior.up,
                                         country.overwrites=country.overwrites, 
                                         nu=nu, dl.p1=dl.p1, dl.p2=dl.p2, sumTriangle.lim=sumTriangle.lim, 
-                                        constant.variance=constant.variance,
+                                        constant.variance=constant.variance, outliers=outliers,
                                         buffer.size=buffer.size, compression.type=compression.type, 
                                         auto.conf=auto.conf, verbose=verbose)
     store.bayesLife.meta.object(bayesLife.mcmc.meta, output.dir)
@@ -366,7 +366,7 @@ init.nodes.e0 <- function() {
 		nisna2 <- nisna1 & nisna0
 		if (sum(nisna2) > 0) {
 			d.ct[i-1,nisna2] <- data$e0.matrix[i,nisna2] - data$e0.matrix[i-1,nisna2]
-			outliers <- nisna2 & ((d.ct[i-1,] < -5) | (d.ct[i-1,] > 10))
+			outliers <- nisna2 & ((d.ct[i-1,] < meta$outliers[1]) | (d.ct[i-1,] > meta$outliers[2]))
 			d.ct[i-1,outliers] <- NA
 		}
 		if (sum(nisna0) > 0 && !meta$constant.variance)
@@ -389,7 +389,7 @@ init.nodes.e0 <- function() {
 			nisna2 <- nisna1 & nisna0
 			if (sum(nisna2) > 0) {
 				d.suppl.ct[i-1,nisna2] <- data.suppl[i,nisna2] - data.suppl[i-1,nisna2]
-				outliers <- nisna2 & ((d.suppl.ct[i-1,] < -5) | (d.suppl.ct[i-1,] > 10))
+				outliers <- nisna2 & ((d.suppl.ct[i-1,] < meta$outliers[1]) | (d.suppl.ct[i-1,] > meta$outliers[2]))
 				d.suppl.ct[i-1,outliers] <- NA
 			}
 			if (sum(nisna0) > 0)

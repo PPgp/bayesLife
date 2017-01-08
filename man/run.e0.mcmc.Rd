@@ -38,7 +38,8 @@ run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 160000,
     Triangle.c.prior.low = c(0, 0, -20, 0), Triangle.c.prior.up = c(100, 100, 100, 100),
     k.c.prior.low = 0, k.c.prior.up = 10, z.c.prior.low = 0, z.c.prior.up = 0.653,
     country.overwrites = NULL, nu = 4, dl.p1 = 9, dl.p2 = 9, 
-    sumTriangle.lim = c(30, 110), constant.variance = FALSE, seed = NULL, 
+    sumTriangle.lim = c(30, 110), constant.variance = FALSE, 
+    outliers=c(-5, 10), seed = NULL, 
     parallel = FALSE, nr.nodes = nr.chains, compression.type = 'None',
     auto.conf = list(max.loops=5, iter=160000, iter.incr=20000, 
         nr.chains=3, thin=225, burnin=10000),
@@ -96,6 +97,7 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{dl.p1, dl.p2}{Values of the parameters \eqn{p_1} and \eqn{p_2} of the double logistic function.}
   \item{sumTriangle.lim}{Lower and upper limits for the sum of the \eqn{\Delta_i}{Triangle_i} parameters. MCMC proposals that are outside of this limit are rejected. It is applied to both, the world parameters as well as the country specific parameters.}
   \item{constant.variance}{Logical indicating if the model should be estimated using constant variance.}
+  \item{outliers}{Ranges for determining outliers in the historical data. If \code{outliers=c(x, y)} then any increase in life expectancy smaller than \code{x} or larger than \code{y} is considered as an outlier and removed from the estimation.}
   \item{seed}{Seed of the random number generator. If \code{NULL} no seed is set. It can be used to generate reproducible results.}
   \item{parallel}{Logical determining if the simulation should run multiple chains in parallel. If it is \code{TRUE}, the package \pkg{\link[snowFT]{snowFT}} is required.}
   \item{nr.nodes}{Relevant only if \code{parallel} is \code{TRUE}. It gives the number of nodes for running the simulation in parallel. By default it equals to the number of chains.}

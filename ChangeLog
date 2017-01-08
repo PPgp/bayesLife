@@ -1,4 +1,12 @@
-3.0-3 (12/02/2016
+3.0-4 (01/07/2017)
+-----
+Changed the way Deltas are drawn from a distribution with 
+a restriction on sum(Delta) (made more efficient).
+
+Argument outliers added to run.e0.mcmc for configuring outlier ranges. 
+Defaults to c(-5, 10).
+
+3.0-3 (12/02/2016) [CRAN]
 -----
 Added DOI to DESCRIPTION. 
 
@@ -8,7 +16,7 @@ Function e0.parDL.plot added.
 
 Argument adjusted.only added to e0.trajectories.plot.
 
-3.0-1 (11/21/2016)
+3.0-1 (11/21/2016) [CRAN]
 -----
 Fixed a bug that caused run.e0.mcmc.extra not being able to pass my.locations.file (thanks to Yicheng Li).
 
@@ -18,7 +26,7 @@ Renamed two methods due to changes in bayesTFR.
 
 Website changed http -> https. 
 
-3.0-0 (12/4/2015)
+3.0-0 (12/4/2015) [CRAN]
 -----
 Added support for wpp2015 (changed imports, dependencies, defaults).
 
