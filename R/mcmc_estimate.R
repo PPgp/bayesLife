@@ -50,7 +50,7 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
             Triangle.prop[i] <- slice.sampling(mcenv$Triangle[i], logdensity.Triangle.k.z, meta$Triangle.width[i], 
 										low=max(meta$Triangle.prior.low[i], meta$sumTriangle.lim[1]-sum(current.delta[-i])),
 										up=min(meta$Triangle.prior.up[i], meta$sumTriangle.lim[2]-sum(current.delta[-i])),
-										alpha=meta$a[i], delta=meta$delta[i], par.c=mcenv$Triangle.c[i], sd=1/lambdas.sqrt[i], 
+										alpha=meta$a[i], delta=meta$delta[i], par.c=mcenv$Triangle.c[i,], sd=1/lambdas.sqrt[i], 
 										c.low=meta$Triangle.c.prior.low[i], c.up=meta$Triangle.c.prior.up[i])
             current.delta[i] <- Triangle.prop[i]
 			}
@@ -278,6 +278,7 @@ slice.sampling <- function(x0, fun, width,  ..., low, up, maxit=50) {
 	# Shrink interval to lower and upper bounds.
 	if (L<low) L <- low
   	if (R>up) R <- up
+	if(L > R) return(x0) # x0 is outside of the L-R interval
  	#if(debug) print(c('Slice sampling begin:', L, R, z, x0))
 	# Sample from the interval, shrinking it on each rejection.
 	i<-1
