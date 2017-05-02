@@ -467,9 +467,19 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter=100,
                      Triangle.ini = NULL, k.ini=NULL, z.ini=NULL,
 				     lambda.ini=NULL, lambda.k.ini = NULL, lambda.z.ini=NULL, omega.ini = NULL,
 				     verbose=FALSE) {
-                                                        
+    Triangle.lim <- mcmc.meta$sumTriangle.lim
+    scale.Triangle <- function(Triangle) {
+        # scale Triangle.ini if needed
+        sTscale <- NULL
+        sT <- sum(Triangle)
+        if(sT > Triangle.lim[2]) sTscale <- Triangle.lim[2]
+        if(sT < Triangle.lim[1]) sTscale <- Triangle.lim[1]
+        if(!is.null(sTscale)) Triangle <- Triangle/sT * sTscale
+        return(Triangle)
+    }                            
 	nr_countries <- mcmc.meta$nr.countries
     if (!exists(".Random.seed")) runif(1)
+	Triangle.ini <- scale.Triangle(Triangle.ini)
 	mcmc <- structure(list(
 						Triangle.ini=Triangle.ini,
                         k.ini=k.ini, z.ini=z.ini, omega.ini=omega.ini,
@@ -488,6 +498,7 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter=100,
 										sd=mcmc.meta$Triangle.c.ini.norm[[2]][i]), 
 										samplpars[[paste('Triangle_', i, '.c.prior.low', sep='')]]), 
 										samplpars[[paste('Triangle_', i, '.c.prior.up', sep='')]])
+    mcmc[['Triangle.c']] <- apply(mcmc[['Triangle.c']], 2, scale.Triangle)
 	mcmc[['k.c']] <- pmin(pmax(rnorm(nr_countries, mcmc.meta$k.c.ini.norm[1], 
 							sd=mcmc.meta$k.c.ini.norm[2]), samplpars$k.c.prior.low), samplpars$k.c.prior.up)
 	mcmc[['z.c']] <- pmin(pmax(rnorm(nr_countries, mcmc.meta$z.c.ini.norm[1], 
