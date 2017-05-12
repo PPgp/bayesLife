@@ -1,3 +1,9 @@
+3.0-5 (05/11/2017)
+-----
+Restriction on sum(Delta) for initial values.
+
+Minor fix in MCMCs.
+
 3.0-4 (01/07/2017)
 -----
 Changed the way Deltas are drawn from a distribution with 
