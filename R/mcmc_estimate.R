@@ -1,3 +1,4 @@
+##3.0.72: deltanonART, wpp2015
 e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.iter=10) {
 	if (!is.null(mcmc$rng.state)) .Random.seed <- mcmc$rng.state
 	niter <- mcmc$iter
@@ -6,12 +7,12 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
 	mcmc$thin <- thin	
 	delta.sq <- mcmc$meta$delta^2	
 	if (start.iter > niter) return(mcmc)
-	
+
 	mcenv <- new.env() # Create an environment for the mcmc stuff in order to avoid 
 						# copying of the mcmc list 
     for (item in names(mcmc)) mcenv[[item]] <- mcmc[[item]]
+	
     Triangle.prop <- rep(0,4)
-    
     set.slice.sampling.width(mcenv)
     meta <- mcenv$meta
     
@@ -19,11 +20,65 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
     DLdata <- get.DLdata.for.estimation(meta, 1:C)
     Tm1.sum <- 0
     for(country in 1:C) Tm1.sum <- Tm1.sum + dim(DLdata[[country]])[2]
+
     psi.shape <- (Tm1.sum-1)/2
 	recompute.par.integral <- rep(TRUE, 6)
 	wpar.integral.to.mC <- sapply(1:6, compute.par.integral.to.mC, mcenv=mcenv, meta=meta, 
-								lambdas.sqrt= sqrt(c(mcenv$lambda, mcenv$lambda.k, mcenv$lambda.z)), C=C)
+								lambdas.sqrt= sqrt(c(mcenv$lambda, mcenv$lambda.k, mcenv$lambda.z)), C=C)						
+								
+				
+	#get regression data
+	#################################
+	data(regdata.index.wpp2015.40.avg.2)
+	data(country.data.index.wpp2015.40.avg)
+	#data(deltaHIV.long.index)
+	#data(deltaHIV.short.index)
+	data(deltanonART.short.index.wpp2015.40.avg)
+	data(deltanonART.long.index.wpp2015.40.avg)
+	#library(mvtnorm)
+	#get.sd.beta <- function(pred){
+		#x <- regdata.index[,pred]
+		#y <- regdata.index[,'prelim.Y']
+		#sdbeta1 <- 0.5*sd(y)/sd(x)
+		#sdbeta2 <- 0.5sd(y)/sd(regdata.index[,'ART'])
+		
+		#return(c(sdbeta1,sdbeta2))
+	#}
+	
+	#sdbeta <- c((0.5*sd(regdata.index[,'prelim.Y'])/sd(regdata.index[,'HIV'])),(0.5*sd(regdata.index[,'prelim.Y'])/sd(regdata.index[,'ART'])))
+	sdbeta <- c((0.5*sd(regdata.index.wpp2015.40.avg.2[,'prelim.Y'])/sd(deltanonART.long.index.wpp2015.40.avg[,'deltanonART'])))
+	sigbetainv <- 1/sdbeta[1]^2
+	X <- deltanonART.long.index.wpp2015.40.avg[,'deltanonART']
+	
+	#le.long <- c(country.data.index[,4],country.data.index[,5],country.data.index[,6],country.data.index[,7],country.data.index[,8],country.data.index[,9],country.data.index[,10],country.data.index[,11],country.data.index[,12],country.data.index[,13],country.data.index[,14])
+
+##Get rid of Cambodia outliers
+
+camb <- DLdata[[81]]
+gain <- camb[1,7] - camb[1,4]
+camb <- camb[,-c(6)]
+camb[1,5] <- camb[1,4] + gain/2
+camb[2,4] <- camb[4,4] <- camb[1,5]-camb[1,4]
+camb[2,5] <- camb[4,5] <- camb[1,6] - camb[1,5]
+
+DLdata[[81]] <- camb
+camb <- NULL
+
+#Get rid of Rwanda outliers
+rwanda <- DLdata[[13]]
+gain <- rwanda[1,10] - rwanda[1,7]
+rwanda <- rwanda[,-c(9)]
+rwanda[1,8] <- rwanda[1,7]+gain/2
+rwanda[2,7] <- rwanda[4,7] <- rwanda[1,8]-rwanda[1,7]
+rwanda[2,8] <- rwanda[4,8] <- rwanda[1,9] - rwanda[1,8]
+DLdata[[13]] <- rwanda
+rwanda <- gain <- NULL
+
+
+		
+					
 	for(iter in start.iter:niter) {
+	
 		if(verbose.iter > 0 && (iter %% verbose.iter == 0))
 			cat('\nIteration:', iter, '--', date())
 		unblock.gtk('bDem.e0mcmc')
@@ -44,22 +99,28 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
 			}
 		}
 		ntries <- 1
-		current.delta <- mcenv$Triangle
 		while(ntries <= 50) {
 			for (i in 1:4) {
-            Triangle.prop[i] <- slice.sampling(mcenv$Triangle[i], logdensity.Triangle.k.z, meta$Triangle.width[i], 
-										low=max(meta$Triangle.prior.low[i], meta$sumTriangle.lim[1]-sum(current.delta[-i])),
-										up=min(meta$Triangle.prior.up[i], meta$sumTriangle.lim[2]-sum(current.delta[-i])),
-										alpha=meta$a[i], delta=meta$delta[i], par.c=mcenv$Triangle.c[i,], sd=1/lambdas.sqrt[i], 
+				# Triangle is truncated normal in [0,100]
+				# Triangle.prop[i] <- rnorm.trunc(mean=Tr.mean[i], sd=Tr.sd[i], 
+									# low=meta$Triangle.prior.low[i], high=meta$Triangle.prior.up[i])
+				# accept.prob <- ((par.integral(Triangle.prop[i], lambdas.sqrt[i], 
+								# low=meta$Triangle.c.prior.low[i], up=meta$Triangle.c.prior.up[i]))^(-C))/wpar.integral.to.mC[i]
+				# if (runif(1) >= accept.prob) { # not accepted
+					# Triangle.prop[i] <- mcenv$Triangle[i] # replace the proposal by the old value
+                    # recompute.par.integral[i] <- FALSE
+                    # #cat('\nnot accepted Delta ', i, ' iter ', iter)
+                # } else recompute.par.integral[i] <- TRUE
+                Triangle.prop[i] <- slice.sampling(mcenv$Triangle[i], logdensity.Triangle.k.z, meta$Triangle.width[i], 
+										low=meta$Triangle.prior.low[i], up=meta$Triangle.prior.up[i],
+										alpha=meta$a[i], delta=meta$delta[i], par.c=mcenv$Triangle.c[i], sd=1/lambdas.sqrt[i], 
 										c.low=meta$Triangle.c.prior.low[i], c.up=meta$Triangle.c.prior.up[i])
-            current.delta[i] <- Triangle.prop[i]
 			}
 			sT <- sum(Triangle.prop)
 			# discard samples for which the sum(Triangle) is outside of given interval.
-			# (this check should not be necessary due to the low and up condition above)
 			if(sT <= meta$sumTriangle.lim[2] && sT >= meta$sumTriangle.lim[1]) break
 			ntries <- ntries + 1
-		}
+		}		
 		mcenv$Triangle <- Triangle.prop
 		# k is truncated normal in [0,10]
 		k.prop <- rnorm.trunc(mean=Tr.mean[5], sd=Tr.sd[5], low=meta$k.prior.low, high=meta$k.prior.up)
@@ -91,18 +152,142 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
 		sum.term.for.omega <- 0
 		# Update Triangle.c, k.c and z.c using slice sampling
 		###########################################
+		grid <- seq(15,90,0.1)
+
 		for(country in 1:C) {
 			Triangle.k.z.c.update(mcenv, country, DLdata=DLdata)
 			dlf[[country]] <- g.dl6(c(mcenv$Triangle.c[,country], 
 								mcenv$k.c[country], mcenv$z.c[country]), 
 								DLdata[[country]]['e0',], meta$dl.p1, meta$dl.p2)
+			if(country %in% c(6,19,20,23,28,37,38,39,40,41,45)){
+				ntries <- 1
+				while(ntries <=10){
+			test <- g.dl6(c(mcenv$Triangle.c[,country], 
+								mcenv$k.c[country], mcenv$z.c[country]), 
+								grid, meta$dl.p1, meta$dl.p2)
+			if(any(test < 0)){
+				Triangle.k.z.c.update(mcenv, country, DLdata=DLdata)
+				dlf[[country]] <- g.dl6(c(mcenv$Triangle.c[,country], 
+								mcenv$k.c[country], mcenv$z.c[country]), 
+								DLdata[[country]]['e0',], meta$dl.p1, meta$dl.p2)
+				ntries <- ntries + 1				
+		}
+		else{break}
+		}}					
 			sum.term.for.omega <- sum.term.for.omega + sum(((DLdata[[country]]['dct',]-dlf[[country]])^2)/(DLdata[[country]]['loess',])^2)
 		}
+
+		grid <- NULL
 		# Update omega - Gibbs sampler
 		###########################################
 		mcenv$omega <- 1/sqrt(rgamma.ltrunc(shape=psi.shape, rate=0.5*sum.term.for.omega, low=0.01))
-		#omega.update(mcenv, dlf, DLdata=DLdata)
 		
+		#omega.update(mcenv, dlf, DLdata=DLdata)
+
+		# Update beta - Gibbs Sampler
+		##########################################
+		
+    #	X <- cbind(deltaHIV.long.index[,4],regdata.index[,'ART'])
+    	XX <- tcrossprod(t(X)%*%diag(1/sqrt(mcenv$omega^2*regdata.index.wpp2015.40.avg.2[,'loess.long2'])))
+    	#det <- (XX + sigbetainv)[1,1]*(XX + sigbetainv)[2,2] - (XX + sigbetainv)[1,2]^2
+    	#XXinv <- (1/det)*matrix(c((XX + sigbetainv)[2,2],-(XX + sigbetainv)[1,2],-(XX + sigbetainv)[1,2],(XX + sigbetainv)[1,1]),nrow=2,ncol=2)
+	
+	
+		#var <- (t(regdata.index[,pred])%*%diag(1/(mcenv$omega^2*regdata.index[,'loess.long']))%*%regdata.index[,pred] + 1/(sdbeta^2))
+		
+##Do this so that I can
+##use vector "newDL" in 
+##vectorized calculation on 
+##line 260 to get sxy = \sum x*y like 
+##in a typical regression
+		
+		newDL <- rep(0,(C*12 - 2))
+		for(j in 1:5){
+			for(country in 1:C){
+
+				newDL[C*(j-1)+country] <- dlf[[country]][j]			
+		}
+		}
+		
+		for(j in 6:6){
+			for(country in 1:C){
+				if(country < 81){
+				newDL[(C)*(j-1)+country] <- dlf[[country]][j]
+				}
+				if(country > 81){
+					newDL[(C)*(j-1)+(country-1)] <- dlf[[country]][j]
+				}
+
+
+			}
+		}
+		for(j in 7:8){
+			for(country in 1:C){
+				if(country==81){
+					newDL[C*(j-1)-1 + country] <- dlf[[country]][j-1]
+				}
+				else{
+					newDL[C*(j-1)-1 + country] <- dlf[[country]][j]	
+				}
+			}
+		}
+		for(j in 9:9){
+			for(country in 1:C){
+				if(country < 13){
+				newDL[C*(j-1)-1+country] <- dlf[[country]][j]
+				}
+				if(country > 13){
+					if(country==81){
+					newDL[C*(j-1)-1+(country-1)] <- dlf[[country]][j-1]	
+					}
+					newDL[C*(j-1)-1+(country-1)] <- dlf[[country]][j]
+				}
+
+			}
+		}	
+		for(j in 10:12){
+			for(country in 1:C){
+				if(country==13 | country == 81){
+					newDL[C*(j-1)-2 + country] <- dlf[[country]][j-1]
+				}
+				else{
+				newDL[C*(j-1)-2 + country] <- dlf[[country]][j]
+				}
+			}
+		}
+		
+		
+	
+		sxy <- t(X)%*%(diag(1/(mcenv$omega^2*regdata.index.wpp2015.40.avg.2[,'loess.long2']))%*%(regdata.index.wpp2015.40.avg.2[,'prelim.Y']-newDL))
+
+		mcenv$betanonART <- rnorm(1,mean=sxy/(XX+sigbetainv),sd=sqrt(1/(XX+sigbetainv)))
+
+		
+	
+##Update DLdata update the working 
+##decrement incorporating the regression coefficient
+##hence, could not use your function
+
+for(country in 1:C){
+			
+	if(country == 81){ ##For Cambodia
+				#new <- DLdata[[country]]['observed.dct',1:10]- t(matrix(c(as.numeric(deltaHIV.short.index[country,4:13]),as.numeric(country.data.index[country,c(28:37)])),nrow=10,ncol=2)%*%matrix(c(mcenv$betaHIV,mcenv$betaART),nrow=2,ncol=1))
+				new <- DLdata[[country]]['observed.dct',1:11]- mcenv$betanonART*deltanonART.short.index.wpp2015.40.avg[country,4:14]
+			DLdata[[country]]['dct',1:11] <- as.numeric(new)
+			
+				
+	}else if(country == 13){ ##For Rwanda
+	
+		   new <- DLdata[[country]]['observed.dct',1:11]- mcenv$betanonART*deltanonART.short.index.wpp2015.40.avg[country,4:14]
+			DLdata[[country]]['dct',1:11] <- as.numeric(new)		
+	}else{
+			new <- DLdata[[country]]['observed.dct',1:12]-mcenv$betanonART*deltanonART.short.index.wpp2015.40.avg[country,3:14]
+					
+			DLdata[[country]]['dct',1:12] <- as.numeric(new)
+			
+			}	
+		}
+
 		# Update lambdas using MH-algorithm
 		###########################################
 		for (i in 1:6) {
@@ -233,6 +418,8 @@ get.DLdata.for.estimation <- function(meta, countries) {
     	DLdata[[country]][1,] <- meta$e0.matrix[idx,country]
     	DLdata[[country]][2,] <- meta$d.ct[idx,country]
     	DLdata[[country]][3,] <- meta$loessSD[idx,country]
+    	DLdata[[country]] <- rbind(DLdata[[country]],DLdata[[country]][2,])
+    rownames(DLdata[[country]])[4] <- "observed.dct"
     }
     if(T.suppl.end > 0) {
     	for(country in 1:ncol(meta$suppl.data$e0.matrix)) {
@@ -242,15 +429,18 @@ get.DLdata.for.estimation <- function(meta, countries) {
     		if(length(idx) <= 0) next
     		start.col <- ncol(DLdata[[cidx]]) + 1
     		DLdata[[cidx]] <- cbind(DLdata[[cidx]], 
-    								matrix(NA, nrow=3, ncol=length(idx),
+    								matrix(NA, nrow=4, ncol=length(idx),
     										dimnames=list(rownames(DLdata[[cidx]]), 
     											rownames(meta$suppl.data$d.ct[idx,country]))))
     		end.col <- ncol(DLdata[[cidx]])
     		DLdata[[cidx]][1,start.col:end.col] <- meta$suppl.data$e0.matrix[idx,country]
        		DLdata[[cidx]][2,start.col:end.col] <- meta$suppl.data$d.ct[idx,country]
           	DLdata[[cidx]][3,start.col:end.col] <- meta$suppl.data$loessSD[idx,country]  
+          			
   		}
     }
+
+    
 	return(DLdata=DLdata)	
 }
 
@@ -278,7 +468,6 @@ slice.sampling <- function(x0, fun, width,  ..., low, up, maxit=50) {
 	# Shrink interval to lower and upper bounds.
 	if (L<low) L <- low
   	if (R>up) R <- up
-	if(L > R) return(x0) # x0 is outside of the L-R interval
  	#if(debug) print(c('Slice sampling begin:', L, R, z, x0))
 	# Sample from the interval, shrinking it on each rejection.
 	i<-1
@@ -316,9 +505,8 @@ Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
 										logdensity.Triangle.k.z.c, mcmc$meta$Triangle.c.width[i], 
 										mean=mcmc$Triangle[i], 
 										sd=sigmas[i], dlx=dlx,
-										low=min(max(Triangle.c.low[i], mcmc$meta$sumTriangle.lim[1]-sum(dlx[1:4][-i])),mcmc$Triangle.c[i, country]), 
-										up=max(min(Triangle.c.up[i], mcmc$meta$sumTriangle.lim[2]-sum(dlx[1:4][-i])),mcmc$Triangle.c[i, country]),
-										par.idx=i, 
+										low=Triangle.c.low[i], 
+										up=Triangle.c.up[i], par.idx=i, 
 										p1=mcmc$meta$dl.p1, p2=mcmc$meta$dl.p2, omega=mcmc$omega,
 										DLdata=DLdata[[country]])
 			dlx[i] <- Triangle.prop[i]
@@ -327,7 +515,8 @@ Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
 		if(sT <= mcmc$meta$sumTriangle.lim[2] && sT >= mcmc$meta$sumTriangle.lim[1]) break
 		dlx <- c(mcmc$Triangle.c[,country], mcmc$k.c[country], mcmc$z.c[country])
 		ntries <- ntries + 1
-	}
+	} 
+
 	mcmc$Triangle.c[, country] <- Triangle.prop
 	#print('k')
 	mcmc$k.c[country] <- slice.sampling(mcmc$k.c[country],
@@ -337,6 +526,7 @@ Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
 										up=mcmc$meta$country.bounds$k.c.prior.up[country], 
 										par.idx=5, p1=mcmc$meta$dl.p1, p2=mcmc$meta$dl.p2, 
 										omega=mcmc$omega, DLdata=DLdata[[country]])
+
 	dlx[5] <- mcmc$k.c[country]
 	#print('z')
 	mcmc$z.c[country] <- slice.sampling(mcmc$z.c[country],
@@ -346,6 +536,7 @@ Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
 										up=mcmc$meta$country.bounds$z.c.prior.up[country], 
 										par.idx=6, p1=mcmc$meta$dl.p1, p2=mcmc$meta$dl.p2, 
 										omega=mcmc$omega, DLdata=DLdata[[country]])
+	
 	return()
 }
 
