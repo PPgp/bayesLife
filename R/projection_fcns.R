@@ -262,7 +262,7 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
 		#use.traj <- which(sum.delta <= 110)
 		trajectories <- matrix(NA, this.nr_project+1, nr_simu)
 		#trajectories <- matrix(NA, this.nr_project+1, length(use.traj))
-    	for(j in 1:nr.traj){
+    	for(j in 1:nr_simu){
     	#for(j in 1:length(use.traj)){
     		#k <- use.traj[j]
     		trajectories[1,j] <- all.e0[this.T_end]
@@ -396,7 +396,7 @@ get.traj.ascii.header.bayesLife.mcmc.meta <- function(meta, ...)
 get.data.imputed.bayesLife.prediction <- function(pred, ...)
 	return(get.e0.reconstructed(pred$e0.matrix.reconstructed, pred$mcmc.set$meta))
 	
-get.data.imputed.for.country.bayesLife.prediction <- function(pred, country.index, ...)
+get.data.for.country.imputed.bayesLife.prediction <- function(pred, country.index, ...)
 	return(bayesTFR:::get.observed.with.supplemental(country.index, pred$e0.matrix.reconstructed, 
 					pred$mcmc.set$meta$suppl.data, 'e0.matrix'))
 	
@@ -438,13 +438,13 @@ e0.median.set <- function(sim.dir, country, values, years=NULL, joint.male=FALSE
 e0.jmale.estimate <- function(mcmc.set, countries.index=NULL, 
 								estDof.eq1 = TRUE, start.eq1 = list(dof = 2), 
 								max.e0.eq1 = 83, estDof.eq2 = TRUE, start.eq2 = list(dof = 2), 
-								constant.gap.eq2=TRUE, my.e0.file=NULL, verbose=FALSE) {
+								constant.gap.eq2=TRUE, my.e0.file=NULL, my.locations.file=NULL, verbose=FALSE) {
 	# Estimate coefficients for joint prediction of female and male e0
 	unblock.gtk('bDem.e0pred', list(bDem.e0pred.status='estimating joint male'))
-	if (is.null(countries.index)) countries.index <- 1:get.nr.countries.est(mcmc.set$meta)
+	if (is.null(countries.index)) countries.index <- 1:get.nrest.countries(mcmc.set$meta)
 	e0f.data <- get.data.matrix(mcmc.set$meta)[,countries.index]
 	e0m.data <- get.wpp.e0.data.for.countries(mcmc.set$meta, sex='M', my.e0.file=my.e0.file,
-					verbose=verbose)$e0.matrix[,countries.index]
+					 my.locations.file=my.locations.file, verbose=verbose)$e0.matrix[,countries.index]
 	T <- dim(e0f.data)[1] - 1 
 	if(verbose) {
 		cat('\nEstimating coefficients for joint female and male prediction.')
@@ -452,7 +452,10 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 	}
 	G <- e0f.data - e0m.data # observed gap
 
-	e0.1953 <- rep(e0f.data['1953',], each=T)
+	first.year <- max(1953, as.integer(rownames(e0f.data)[1])) # in case start.year is later than 1953
+	if(first.year > 1953)
+		warning("Data for 1950-1955 not available. Estimation of the gap model may not be correct.")
+	e0.1953 <- rep(e0f.data[as.character(first.year),], each=T)
 	dep.var <- as.numeric(G[2:nrow(G),])
 	e0F <- as.numeric(e0f.data[2:(T+1),])
 	data <- data.frame(
@@ -495,7 +498,8 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 }
 
 e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim.eq2=c(3,9),	
-								max.e0.eq1.pred=83, my.e0.file=NULL, save.as.ascii=1000, verbose=TRUE, ...) {
+								max.e0.eq1.pred=83, my.e0.file=NULL, my.locations.file=NULL, 
+								save.as.ascii=1000, verbose=TRUE, ...) {
 	# Predicting male e0 from female predictions. estimates is the result of 
 	# the e0.jmale.estimate function. If it is NULL, the estimation is performed 
 	# using the ... arguments
@@ -504,13 +508,16 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	meta <- e0.pred$mcmc.set$meta
 	if (meta$sex != 'F') stop('The prediction object must be a result of FEMALE projections.')
 	if(is.null(estimates)) 
-		estimates <- e0.jmale.estimate(e0.pred$mcmc.set, verbose=verbose, ...)
+		estimates <- e0.jmale.estimate(e0.pred$mcmc.set, verbose=verbose, 
+								my.e0.file=my.e0.file, my.locations.file=my.locations.file, ...)
 
-	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, verbose=verbose)
+	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, 
+											my.locations.file=my.locations.file, verbose=verbose)
 	e0m.data <- e0mwpp$e0.matrix
 	meta.changes <- list(sex='M', e0.matrix=e0m.data, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
 	meta.changes$Tc.index <- .get.Tcindex(meta.changes$e0.matrix, cnames=meta$regions$country_name)
-	meta.changes$suppl.data$Tc.index <- .get.Tcindex(meta.changes$suppl.data$e0.matrix, stop.if.less.than2=FALSE)
+	if(!is.null(meta.changes$suppl.data$e0.matrix))
+		meta.changes$suppl.data$Tc.index <- .get.Tcindex(meta.changes$suppl.data$e0.matrix, stop.if.less.than2=FALSE)
 	prediction.file <- file.path(e0.pred$output.directory, 'prediction.rda')
 	joint.male <- e0.pred
 	joint.male$output.directory <- file.path(e0.pred$output.directory, 'joint_male')
@@ -537,26 +544,37 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 
 .do.e0.jmale.predict.extra <- function(e0.pred, countries.idx, idx.other.to.new, idx.other.to.old,
 									gap.lim.eq1=c(0,18),  gap.lim.eq2=c(3,9), max.e0.eq1.pred=83, my.e0.file=NULL, 
-									verbose=TRUE) {
+									my.locations.file=NULL, verbose=TRUE) {
 	# called from e0.predict.extra
 	if (!has.e0.jmale.prediction(e0.pred)) stop('Joint female-male prediction must be available for e0.pred. Use e0.jmale.predict.')
 	joint.male <- get.e0.jmale.prediction(e0.pred)
-	meta <- e0.pred$mcmc.set$meta
-	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, verbose=verbose)
-	e0m.data <- e0mwpp$e0.matrix
-	e0m.data[,idx.other.to.new] <- joint.male$meta.changes$e0.matrix[,idx.other.to.old]
-	e0mwpp$e0.matrix.all[,idx.other.to.new] <- joint.male$meta.changes$e0.matrix.all[,idx.other.to.old]
-	meta.changes <- list(sex='M', e0.matrix=e0m.data, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
-	Tc.index <- .get.Tcindex(meta.changes$e0.matrix, cnames=meta$regions$country_name)
-	meta.changes$Tc.index <- joint.male$meta.changes$Tc.index 
-	meta.changes$Tc.index[countries.idx] <- Tc.index[countries.idx]
-	Tc.index <- .get.Tcindex(meta.changes$suppl.data$e0.matrix, stop.if.less.than2=FALSE)
-	meta.changes$suppl.data$Tc.index <- joint.male$meta.changes$suppl.data$Tc.index
-	meta.changes$suppl.data$Tc.index[countries.idx] <- Tc.index[countries.idx]
+	meta <- e0.pred$mcmc.set$meta # from female sim
+	male.meta <- joint.male$meta.changes
+	meta$sex <- "M"
+	e0mwpp <- set.e0.wpp.extra(meta, meta$regions$country_code[countries.idx], my.e0.file=my.e0.file, my.locations.file=my.locations.file)
+	# merge e0 matrices
+	for(mat in c("e0.matrix", "e0.matrix.all")) {
+		tmp <- meta[[mat]] # the right size
+		tmp[,idx.other.to.new] <- male.meta[[mat]][,idx.other.to.old] # replace by the male original (non-extra) data
+		tmp[,countries.idx] <- e0mwpp[[mat]] # replace by data from extra countries
+		joint.male$meta.changes[[mat]] <- tmp
+	}
+	# e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, verbose=verbose)
+	# e0m.data <- e0mwpp$e0.matrix
+	# e0m.data[,idx.other.to.new] <- joint.male$meta.changes$e0.matrix[,idx.other.to.old]
+	# e0mwpp$e0.matrix.all[,idx.other.to.new] <- joint.male$meta.changes$e0.matrix.all[,idx.other.to.old]
+	# meta.changes <- list(sex='M', e0.matrix=e0m.data, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
+	Tc.index <- .get.Tcindex(joint.male$meta.changes$e0.matrix, cnames=meta$regions$country_name)
+	#meta.changes$Tc.index <- joint.male$meta.changes$Tc.index 
+	joint.male$meta.changes$Tc.index[countries.idx] <- Tc.index[countries.idx]
+	# We don't need to get the supplemental data for extra countries since they are not used for estimation
+	#Tc.index <- .get.Tcindex(meta.changes$suppl.data$e0.matrix, stop.if.less.than2=FALSE)
+	#meta.changes$suppl.data$Tc.index <- joint.male$meta.changes$suppl.data$Tc.index
+	#meta.changes$suppl.data$Tc.index[countries.idx] <- Tc.index[countries.idx]
 	
 	prediction.file <- file.path(e0.pred$output.directory, 'prediction.rda')
-	joint.male$meta.changes <- meta.changes
-	reconstructed <- e0m.data
+	#joint.male$meta.changes <- meta.changes
+	reconstructed <- joint.male$meta.changes$e0.matrix
 	reconstructed[1:nrow(joint.male$e0.matrix.reconstructed),1:ncol(joint.male$e0.matrix.reconstructed)] <- joint.male$e0.matrix.reconstructed
 	joint.male$e0.matrix.reconstructed <- reconstructed
 	new.pred <- .do.jmale.predict(e0.pred, joint.male, countries.idx, gap.lim=joint.male$pred.pars$gap.lim, 
@@ -586,13 +604,12 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 								eq2.age.start=NULL, verbose=FALSE) {
 	predict.one.trajectory <- function(Gprev, ftraj) {
 		mtraj <- rep(NA, length(ftraj))	
-						print(ftraj)
 		for(time in 1:length(ftraj)) {
 			
 			if(ftraj[time] <= maxe0) { # 1st part of Equation 3.1
 				Gtdeterm <- (estimates$eq1$coefficients[1] + # intercept
 				   			 estimates$eq1$coefficients['Gprev']*Gprev +
-				   			 estimates$eq1$coefficients['e0.1953']*e0f.data['1953',icountry] +
+				   			 estimates$eq1$coefficients['e0.1953']*e0f.data[first.year,icountry] +
 				   			 estimates$eq1$coefficients['e0']*ftraj[time] +
 					   		 estimates$eq1$coefficients['e0d75']*max(0, ftraj[time]-75))
 				Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
@@ -626,6 +643,10 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	maxe0 <- if(is.null(eq2.age.start)) max(e0f.data) else eq2.age.start
 	e0m.data <- joint.male$e0.matrix.reconstructed
 	quantiles.to.keep <- as.numeric(dimnames(e0.pred$quantiles)[[2]])
+	first.year <- max(1953, as.integer(rownames(e0f.data)[1]))
+	if(first.year > 1953)
+		warning("Data for 1950-1955 not available. Projection of the gap model may not be correct.")
+	first.year <- as.character(first.year)
 	estimates <- joint.male$fit
 	for (icountry in countries) {
 		country <- get.country.object(icountry, meta, index=TRUE)

@@ -7,8 +7,8 @@ data(country.data.index.wpp2015.40.avg, envir=environment())
 run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000, 
 							output.dir=file.path(getwd(), 'bayesLife.output'), 
                          thin=10, replace.output=FALSE,
-                         start.year=1873, present.year=2010, wpp.year=2012,
-                         my.e0.file = NULL, buffer.size=100, 
+                         start.year=1873, present.year=2015, wpp.year=2015,
+                         my.e0.file = NULL, my.locations.file = NULL, buffer.size=100, 
                          a=c(13.215, 41.070, 9.235, 17.605, 2.84, 0.385),
                          #a=c(15.7669391,40.9658241,0.2107961,19.8188061,2.9306625,0.400688628),
 						 delta=c(3.844, 4.035, 11.538, 5.639, 0.901, 0.4),
@@ -32,7 +32,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
 						 Triangle.c.prior.low=c(0, 0, -20, 0), Triangle.c.prior.up=c(100, 100, 100, 100),
 						 k.c.prior.low=0, k.c.prior.up=10, z.c.prior.low=0, z.c.prior.up=0.653,
 						 country.overwrites = NULL,
-						 nu=4, dl.p1=9, dl.p2=9, sumTriangle.lim = c(30, 110), constant.variance=FALSE,
+						 nu=4, dl.p1=9, dl.p2=9, sumTriangle.lim = c(30, 110), constant.variance=FALSE, outliers=c(-5,10),
                          seed = NULL, parallel=FALSE, nr.nodes=nr.chains, compression.type='None',
                          auto.conf = list(max.loops=5, iter=160000, iter.incr=20000, nr.chains=3, thin=225, burnin=10000),
 						 verbose=FALSE, verbose.iter = 100, ...) {
@@ -93,7 +93,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
 	sex <- substr(match.arg(sex), 1, 1)
 	bayesLife.mcmc.meta <- e0.mcmc.meta.ini(sex=sex, nr.chains=nr.chains,
                                    		start.year=start.year, present.year=present.year, 
-                                        wpp.year=wpp.year, my.e0.file = my.e0.file,
+                                        wpp.year=wpp.year, my.e0.file = my.e0.file, my.locations.file=my.locations.file,
                                         output.dir=output.dir,
                                         a=a, delta=delta, tau=tau, Triangle.ini=Triangle.ini,
                                         k.ini=k.ini, z.ini=z.ini, omega.ini=omega.ini, betanonART.ini=betanonART.ini, 
@@ -115,7 +115,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
                                         z.c.prior.low=z.c.prior.low, z.c.prior.up=z.c.prior.up,
                                         country.overwrites=country.overwrites, 
                                         nu=nu, dl.p1=dl.p1, dl.p2=dl.p2, sumTriangle.lim=sumTriangle.lim, 
-                                        constant.variance=constant.variance,
+                                        constant.variance=constant.variance, outliers=outliers,
                                         buffer.size=buffer.size, compression.type=compression.type, 
                                         auto.conf=auto.conf, verbose=verbose)
     store.bayesLife.meta.object(bayesLife.mcmc.meta, output.dir)
@@ -175,7 +175,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
 			for(loop in 2:auto.conf$max.loops) {
 				if(!inherits(diag, "try-error") && has.mcmc.converged(diag)) break
 				mcmc.set <- continue.e0.mcmc(iter=auto.conf$iter.incr, output.dir=output.dir, nr.nodes=nr.nodes,
-										  parallel=parallel, verbose=verbose, verbose.iter=verbose.iter)
+										  parallel=parallel, verbose=verbose, verbose.iter=verbose.iter, ...)
 				diag <- try(e0.diagnose(sim.dir=output.dir, keep.thin.mcmc=TRUE, 
 							thin=auto.conf$thin, burnin=auto.conf$burnin,
 							verbose=verbose))
@@ -253,7 +253,7 @@ continue.e0.mcmc <- function(iter, chain.ids=NULL, output.dir=file.path(getwd(),
 				for(loop in 2:auto.conf$max.loops) {
 					if(!inherits(diag, "try-error") && has.mcmc.converged(diag)) break
 					mcmc.set <- continue.e0.mcmc(iter=auto.conf$iter.incr, output.dir=output.dir, nr.nodes=nr.nodes,
-												 parallel=parallel, verbose=verbose, verbose.iter=verbose.iter)
+												 parallel=parallel, verbose=verbose, verbose.iter=verbose.iter, ...)
 					diag <- try(e0.diagnose(sim.dir=output.dir, keep.thin.mcmc=TRUE, 
 											thin=auto.conf$thin, burnin=auto.conf$burnin, verbose=verbose))
 				}
@@ -277,11 +277,13 @@ continue.e0.chain <- function(chain.id, mcmc.list, iter, verbose=FALSE, verbose.
 run.e0.mcmc.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'), 
 								countries = NULL, my.e0.file = NULL, iter = NULL,
 								thin=1, burnin=2000, country.overwrites = NULL, 
-								parallel=FALSE, nr.nodes=NULL, verbose=FALSE, verbose.iter=100, ...) {
+								parallel=FALSE, nr.nodes=NULL, my.locations.file = NULL,
+								verbose=FALSE, verbose.iter=100, ...) {
 									
 	mcmc.set <- get.e0.mcmc(sim.dir)
 	Eini <- e0.mcmc.meta.ini.extra(mcmc.set, countries=countries, my.e0.file=my.e0.file, 
-								burnin=burnin, country.overwrites=country.overwrites, verbose=verbose)
+								my.locations.file=my.locations.file, burnin=burnin, 
+								country.overwrites=country.overwrites, verbose=verbose)
 	meta <- Eini$meta
 	if(length(Eini$index) <= 0) {
 		cat('\nNothing to be done.\n')
@@ -346,12 +348,11 @@ init.nodes.e0 <- function() {
 	library(bayesLife)
 }
 
-.get.Tcindex <- function(e0.matrix, stop.if.less.than2=TRUE,cnames=NULL){
+.get.Tcindex <- function(e0.matrix, stop.if.less.than2=TRUE, cnames=NULL){
 	Tc.index <- list()
 	for (country in 1:ncol(e0.matrix)) {
 		Tc.index[[country]] <- which(!is.na(e0.matrix[,country]))
-    	#T_end_c[country] <- sum(!is.na(data$e0.matrix[,country]))
-    	if(stop.if.less.than2 && length(Tc.index[[country]]) < 2) stop('Problem with ', data$regions$country_name[country], 
+    	if(stop.if.less.than2 && length(Tc.index[[country]]) < 2) stop('Problem with ', cnames[country], 
     						". At least two data points must be observed.")
     }
 	return(Tc.index)
@@ -361,7 +362,7 @@ init.nodes.e0 <- function() {
 .do.part.e0.mcmc.meta.ini <- function(data, meta) {
 	nr_countries <- ncol(data$e0.matrix)
     #T_end_c <- rep(NA, nr_countries)
-    Tc.index <- .get.Tcindex(data$e0.matrix,cnames=data$regions$country_name)
+    Tc.index <- .get.Tcindex(data$e0.matrix, cnames=data$regions$country_name)
 	T <- nrow(data$e0.matrix)
 	d.ct <- loessSD <- matrix(NA, nrow=T-1, ncol=nr_countries, 
 							dimnames=list(rownames(data$e0.matrix)[1:(T-1)],
@@ -373,8 +374,8 @@ init.nodes.e0 <- function() {
 		nisna2 <- nisna1 & nisna0
 		if (sum(nisna2) > 0) {
 			d.ct[i-1,nisna2] <- data$e0.matrix[i,nisna2] - data$e0.matrix[i-1,nisna2]
-			#outliers <- nisna2 & ((d.ct[i-1,] > 19.88)|(d.ct[i-1,] < -20))
-			#d.ct[i-1,outliers] <- NA
+			outliers <- nisna2 & ((d.ct[i-1,] < meta$outliers[1]) | (d.ct[i-1,] > meta$outliers[2]))
+			d.ct[i-1,outliers] <- NA
 		}
 		if (sum(nisna0) > 0 && !meta$constant.variance)
 			loessSD[i-1,nisna0]<- loess.lookup4.2015.avg(data$e0.matrix[i-1,nisna0],country.data.index.wpp2015.40.avg$epi.index)
@@ -385,7 +386,7 @@ init.nodes.e0 <- function() {
 	suppl <- data$suppl.data
 	if(!is.null(suppl$e0.matrix)) {
 		nr_countries.suppl <- ncol(suppl$e0.matrix)
-    		suppl$Tc.index <- .get.Tcindex(suppl$e0.matrix,stop.if.less.than2=FALSE)
+    		suppl$Tc.index <- .get.Tcindex(suppl$e0.matrix, stop.if.less.than2=FALSE)
 		# add first time point of the observed data to get the last increment of the supplemental data
 		data.suppl <- rbind(suppl$e0.matrix, data$e0.matrix[1,suppl$index.to.all.countries])
 		T <- nrow(data.suppl)
@@ -396,7 +397,7 @@ init.nodes.e0 <- function() {
 			nisna2 <- nisna1 & nisna0
 			if (sum(nisna2) > 0) {
 				d.suppl.ct[i-1,nisna2] <- data.suppl[i,nisna2] - data.suppl[i-1,nisna2]
-				outliers <- nisna2 & ((d.suppl.ct[i-1,] < -5) | (d.suppl.ct[i-1,] > 10))
+				outliers <- nisna2 & ((d.suppl.ct[i-1,] < meta$outliers[1]) | (d.suppl.ct[i-1,] > meta$outliers[2]))
 				d.suppl.ct[i-1,outliers] <- NA
 			}
 			if (sum(nisna0) > 0)
@@ -454,17 +455,18 @@ init.nodes.e0 <- function() {
 	return(list(country.bounds = samplpars))
 }
 
-e0.mcmc.meta.ini <- function(sex="F", nr.chains=1, start.year=1950, present.year=2010, 
-								wpp.year=2012, my.e0.file = NULL,
+e0.mcmc.meta.ini <- function(sex="F", nr.chains=1, start.year=1950, present.year=2015, 
+								wpp.year=2015, my.e0.file = NULL, my.locations.file = NULL,
 								output.dir=file.path(getwd(), 'bayesLife.output'),
 								..., verbose=FALSE) {
 	mcmc.input <- c(list(sex=sex, nr.chains=nr.chains,
 						start.year=start.year, present.year=present.year, 
 						wpp.year=wpp.year, my.e0.file = my.e0.file,
 						output.dir=output.dir), list(...))
-						
+	if(present.year-3 > wpp.year) warning("present.year is much larger then wpp.year. Make sure WPP data for present.year are available.")					
     data <- get.wpp.e0.data (sex, start.year=start.year, present.year=present.year, 
-						wpp.year=wpp.year, my.e0.file = my.e0.file, verbose=verbose)
+						wpp.year=wpp.year, my.e0.file = my.e0.file, 
+						my.locations.file=my.locations.file, verbose=verbose)
 	part.ini <- .do.part.e0.mcmc.meta.ini(data, mcmc.input)
 	return(structure(c(mcmc.input, part.ini), class='bayesLife.mcmc.meta'))
 }
@@ -473,9 +475,19 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter=100,
                      Triangle.ini = NULL, k.ini=NULL, z.ini=NULL,
 				     lambda.ini=NULL, lambda.k.ini = NULL, lambda.z.ini=NULL, omega.ini = NULL, betanonART.ini = NULL, 
 				     verbose=FALSE) {
-                                                        
+	Triangle.lim <- mcmc.meta$sumTriangle.lim
+	scale.Triangle <- function(Triangle) {
+		# scale Triangle.ini if needed
+		sTscale <- NULL
+		sT <- sum(Triangle)
+		if(sT > Triangle.lim[2]) sTscale <- Triangle.lim[2]
+		if(sT < Triangle.lim[1]) sTscale <- Triangle.lim[1]
+		if(!is.null(sTscale)) Triangle <- Triangle/sT * sTscale
+		return(Triangle)
+	}                                                    
 	nr_countries <- mcmc.meta$nr.countries
     if (!exists(".Random.seed")) runif(1)
+    Triangle.ini <- scale.Triangle(Triangle.ini)
 	mcmc <- structure(list(
 						Triangle.ini=Triangle.ini,
                         k.ini=k.ini, z.ini=z.ini, omega.ini=omega.ini, betanonART.ini=betanonART.ini, 
@@ -489,11 +501,12 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter=100,
         				meta = mcmc.meta), class='bayesLife.mcmc')
     samplpars <- mcmc.meta$country.bounds
     mcmc[['Triangle.c']] <- matrix(0, ncol=nr_countries, nrow=4)
-    for (i in 1:4)		
+    for (i in 1:4)
 		mcmc[['Triangle.c']][i,] <- pmin(pmax(rnorm(nr_countries, mean=mcmc.meta$Triangle.c.ini.norm[[1]][i], 
 										sd=mcmc.meta$Triangle.c.ini.norm[[2]][i]), 
 										samplpars[[paste('Triangle_', i, '.c.prior.low', sep='')]]), 
 										samplpars[[paste('Triangle_', i, '.c.prior.up', sep='')]])
+	mcmc[['Triangle.c']] <- apply(mcmc[['Triangle.c']], 2, scale.Triangle)
 	mcmc[['k.c']] <- pmin(pmax(rnorm(nr_countries, mcmc.meta$k.c.ini.norm[1], 
 							sd=mcmc.meta$k.c.ini.norm[2]), samplpars$k.c.prior.low), samplpars$k.c.prior.up)
 	mcmc[['z.c']] <- pmin(pmax(rnorm(nr_countries, mcmc.meta$z.c.ini.norm[1], 
@@ -501,7 +514,7 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter=100,
     return(mcmc) 
 }
 
-e0.mcmc.meta.ini.extra <- function(mcmc.set, countries=NULL, my.e0.file = NULL, 
+e0.mcmc.meta.ini.extra <- function(mcmc.set, countries=NULL, my.e0.file = NULL, my.locations.file=NULL,
 									burnin = 200, country.overwrites=NULL, verbose=FALSE) {
 	update.regions <- function(reg, ereg, id.replace, is.new, is.old) {
 		nreg <- list()
@@ -544,7 +557,8 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries=NULL, my.e0.file = NULL,
 	meta <- mcmc.set$meta
 	#create e0 matrix only for the extra countries
 	e0.with.regions <- set.e0.wpp.extra(meta, countries=countries, 
-									  my.e0.file = my.e0.file, verbose=verbose)
+									  my.e0.file = my.e0.file, my.locations.file=my.locations.file,
+									  verbose=verbose)
 	if(is.null(e0.with.regions)) return(list(meta=meta, index=c()))
 	meta$country.overwrites <- country.overwrites
 	part.ini <- .do.part.e0.mcmc.meta.ini(e0.with.regions, meta)
