@@ -9,7 +9,7 @@ importFrom("grDevices", "rainbow")
 importFrom("stats", "dgamma", "dnorm", "dunif", "median", "pnorm", "quantile", "rexp", "rgamma", "rnorm", "rt", "runif", "sd")
 
 #exportPattern("^[[:alpha:]]+")
-useDynLib(bayesLife)
+useDynLib(bayesLife, .registration = TRUE)
 
 # export functions
 export(
