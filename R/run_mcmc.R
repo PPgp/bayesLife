@@ -4,7 +4,7 @@ data(loess_sd, envir=environment())
 run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000, 
 							output.dir=file.path(getwd(), 'bayesLife.output'), 
                          thin=10, replace.output=FALSE,
-                         start.year=1873, present.year=2015, wpp.year=2015,
+                         start.year=1873, present.year=2015, wpp.year=2017,
                          my.e0.file = NULL, my.locations.file = NULL, buffer.size=100,
                          a=c(13.215, 41.070, 9.235, 17.605, 2.84, 0.385),
                          #a=c(15.7669391,40.9658241,0.2107961,19.8188061,2.9306625,0.400688628),
@@ -448,7 +448,7 @@ init.nodes.e0 <- function() {
 }
 
 e0.mcmc.meta.ini <- function(sex="F", nr.chains=1, start.year=1950, present.year=2015, 
-								wpp.year=2015, my.e0.file = NULL, my.locations.file = NULL,
+								wpp.year=2017, my.e0.file = NULL, my.locations.file = NULL,
 								output.dir=file.path(getwd(), 'bayesLife.output'),
 								..., verbose=FALSE) {
 	mcmc.input <- c(list(sex=sex, nr.chains=nr.chains,

@@ -16,7 +16,9 @@ e0.gap.plot <- function(e0.pred, country, e0.pred2=NULL, pi=c(80, 95), nr.traj=0
 	if (missing(country)) {
 		stop('Argument "country" must be given.')
 	}
-	country <- get.country.object(country, e0.pred$mcmc.set$meta)
+	country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
+	if(is.null(country.obj$code)) stop("Country ", country, " not found.")
+	country <- country.obj
 	if(is.null(e0.pred2)) e0.pred2 <- get.e0.jmale.prediction(e0.pred)
 	e0.mtx <- e0.pred$e0.matrix.reconstructed[1:e0.pred$present.year.index,]
 	e0.mtx2 <- e0.pred2$e0.matrix.reconstructed[1:e0.pred$present.year.index,]
@@ -111,6 +113,7 @@ e0.joint.plot <- function(e0.pred, country, pi=95, years, nr.points=500,
 		warning('Some years invalid. Valid range: [', bayesTFR:::get.estimation.years(e0.pred$mcmc.set$meta)[1], ',', e0.pred$end.year, '].')
 		
 	country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
+	if(is.null(country.obj$code)) stop("Country ", country, " not found.")
 	e0M.pred <- get.e0.jmale.prediction(e0.pred)
 	obsF <- obsM <- NULL
 	if(length(years.obs.idx) > 0) { # observed data
@@ -222,7 +225,9 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 		col <- rep(col, 5)
 		col[(lcol+1):5] <- c('black', 'green', 'red', 'red', '#00000020')[(lcol+1):5]
 	}
-	country <- get.country.object(country, e0.pred$mcmc.set$meta)
+	country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
+	if(is.null(country.obj$code)) stop("Country ", country, " not found.")
+	country <- country.obj
 	pred <- list(e0.pred)
 	plotcols <- list(col)
 	do.both.sexes <- FALSE
@@ -435,6 +440,7 @@ e0.trajectories.table <- function(e0.pred, country, pi=c(80, 95), both.sexes=FAL
 					mdata <- get.data.imputed(mpred)
 					data.matrix <- fdata - (fdata - mdata)/2.
 					country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
+					if(is.null(country.obj$code)) stop("Country ", country, " not found.")
 					traj.object <- get.e0.trajectories.object(list(e0.pred, mpred), country.obj$code, pi=pi)
 					return(bayesTFR:::.get.trajectories.table(e0.pred, country.obj, data.matrix[,country.obj$index], pi, 
 								pred.median=traj.object$median, cqp=traj.object$quantiles, half.child.variant=FALSE))
@@ -487,7 +493,7 @@ e0.country.dlcurves <- function(x, mcmc.list, country, burnin=NULL, ...) {
     mcmc.list <- get.mcmc.list(mcmc.list)
     country.obj <- get.country.object(country, mcmc.list[[1]]$meta)
     if(is.null(country.obj$code))
-	stop("Country ", country, " not found.")
+	    stop("Country ", country, " not found.")
     return(e0.get.dlcurves(x, mcmc.list, country.code=country.obj$code,  burnin=burnin, ...))
 }
 
@@ -550,7 +556,9 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
 	if(is.null(burnin)) burnin <- 0
     mcmc.list <- get.mcmc.list(mcmc.list)
     meta <- mcmc.list[[1]]$meta
-    country <- get.country.object(country, meta)
+    country.obj <- get.country.object(country, meta)
+    if(is.null(country.obj$code)) stop("Country ", country, " not found.")
+    country <- country.obj
     data.idx <- which(!is.na(meta$d.ct[,country$index]))
     incr <- meta$d.ct[data.idx, country$index]
     obs.data <- meta$e0.matrix[data.idx, country$index]

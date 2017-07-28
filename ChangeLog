@@ -1,3 +1,11 @@
+3.1-0 (7/27/2017)
+-----
+Support for wpp2017 added. wpp.year=2017 is the new default in run.e0.mcmc.
+Examples re-created with new defaults.
+Note two changes in country names in wpp2017:
+    "Czech Republic" -> "Czechia"
+    "Other non-specified areas" -> "China, Taiwan Province of China"
+
 3.0-5 (05/11/2017)
 -----
 Restriction on sum(Delta) for initial values.

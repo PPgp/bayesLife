@@ -13,8 +13,8 @@ using a Bayesian hierarchical model and the United Nations demographic time seri
 \tabular{ll}{
 Package: \tab bayesLife\cr
 Type: \tab Package\cr
-Version: \tab 3.0-5\cr
-Date: \tab 2017-05-11\cr
+Version: \tab 3.1-0\cr
+Date: \tab 2017-07-27\cr
 License: \tab GPL (>= 2)\cr
 URL: \tab \url{https://bayespop.csss.washington.edu}\cr
 }
@@ -41,7 +41,7 @@ For MCMC diagnostics, function \link{e0.coda.list.mcmc} creates an object of typ
 
 Existing simulation results can be accessed using the \link{get.e0.mcmc} function.  An existing prediction can be accessed via \link{get.e0.prediction}.
 
-Historical data are taken from one of the packages \pkg{wpp2015} (default), \pkg{wpp2012} or \pkg{wpp2010}, depending on users settings.
+Historical data are taken from one of the packages \pkg{wpp2017} (default), \pkg{wpp2015}, \pkg{wpp2012} or \pkg{wpp2010}, depending on users settings.
 
 }
 
@@ -79,6 +79,7 @@ pred <- e0.predict(m, burnin=30, verbose=TRUE)
 summary(pred, country="Canada")
 unlink(sim.dir, recursive=TRUE)}
 }
-% exact commands to create data in ex-data directory
+%# exact commands to create data in ex-data directory
 % m <- run.e0.mcmc(sex='F', nr.chains=1, iter=60, seed=1, thin=1, verbose=TRUE, compression.type='bz', start.year=1950)
 % pred <- e0.predict(m, burnin=30, verbose=TRUE, predict.jmale=FALSE, save.as.ascii=0) 
+%# to save disk space, remove thinned_* directory and csv files from predictions dir

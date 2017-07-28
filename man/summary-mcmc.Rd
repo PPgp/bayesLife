@@ -44,7 +44,7 @@ Hana Sevcikova
 \examples{
 sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 m <- get.e0.mcmc(sim.dir)
-summary(m, country="Czech Republic", burnin=20)
+summary(m, country="Czechia", burnin=20)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
