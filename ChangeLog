@@ -1,3 +1,15 @@
+3.2-0 (10/13/2017)
+-----
+To approximate the UN settings for WPP2017, defaults changed for:
+in run.e0.mcmc:
+    sumTriangle.lim = c(30, 86)
+    Triangle.prior.up=c(100, 100, 50, 100)
+    Triangle.c.prior.up=c(100, 100, 50, 100)
+in e0.jmale.predict:
+    max.e0.eq1.pred = 86
+    
+Template file updated.
+
 3.1-0 (7/27/2017)
 -----
 Support for wpp2017 added. wpp.year=2017 is the new default in run.e0.mcmc.
