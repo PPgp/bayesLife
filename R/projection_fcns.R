@@ -480,7 +480,7 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 }
 
 e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim.eq2=c(3,9),	
-								max.e0.eq1.pred=83, my.e0.file=NULL, my.locations.file=NULL, 
+								max.e0.eq1.pred=86, my.e0.file=NULL, my.locations.file=NULL, 
 								save.as.ascii=1000, verbose=TRUE, ...) {
 	# Predicting male e0 from female predictions. estimates is the result of 
 	# the e0.jmale.estimate function. If it is NULL, the estimation is performed 
