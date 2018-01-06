@@ -1,4 +1,3 @@
-##3.0.72: deltanonART, wpp2015
 e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.iter=10) {
 	if (!is.null(mcmc$rng.state)) .Random.seed <- mcmc$rng.state
 	niter <- mcmc$iter
@@ -29,54 +28,32 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
 				
 	#get regression data
 	#################################
-	data(regdata.index.wpp2015.40.avg.2)
-	data(country.data.index.wpp2015.40.avg)
+	#data(regdata.index.wpp2015.40.avg.2)
+	#data(country.data.index.wpp2015.40.avg)
 	#data(deltaHIV.long.index)
 	#data(deltaHIV.short.index)
-	data(deltanonART.short.index.wpp2015.40.avg)
-	data(deltanonART.long.index.wpp2015.40.avg)
-	#library(mvtnorm)
-	#get.sd.beta <- function(pred){
-		#x <- regdata.index[,pred]
-		#y <- regdata.index[,'prelim.Y']
-		#sdbeta1 <- 0.5*sd(y)/sd(x)
-		#sdbeta2 <- 0.5sd(y)/sd(regdata.index[,'ART'])
-		
-		#return(c(sdbeta1,sdbeta2))
-	#}
-	
-	#sdbeta <- c((0.5*sd(regdata.index[,'prelim.Y'])/sd(regdata.index[,'HIV'])),(0.5*sd(regdata.index[,'prelim.Y'])/sd(regdata.index[,'ART'])))
-	sdbeta <- c((0.5*sd(regdata.index.wpp2015.40.avg.2[,'prelim.Y'])/sd(deltanonART.long.index.wpp2015.40.avg[,'deltanonART'])))
-	sigbetainv <- 1/sdbeta[1]^2
-	X <- deltanonART.long.index.wpp2015.40.avg[,'deltanonART']
-	
-	#le.long <- c(country.data.index[,4],country.data.index[,5],country.data.index[,6],country.data.index[,7],country.data.index[,8],country.data.index[,9],country.data.index[,10],country.data.index[,11],country.data.index[,12],country.data.index[,13],country.data.index[,14])
+	#data(deltanonARTobs2015)
+	#deltanonARTwide <- deltanonART[,-2]
+	#deltanonARTlong <- reshape(deltanonARTwide, direction="long", 
+	#                           varying=2:ncol(deltanonARTwide), 
+	#                           v.names="deltanonART", 
+	#                           times=colnames(deltanonARTwide)[-1], 
+	#                           timevar="year", idvar="country_code")
 
-##Get rid of Cambodia outliers
+	if(meta$hiv.model) {
+	    X <- as.vector(t(meta$dlt.nart))
+	    loess.vector <- as.vector(t(meta$loessSD))
+	    dct.vector <- as.vector(t(meta$d.ct))
+	    idxX <- !is.na(X)
+	    X <- X[idxX]
+	    loess.vector <- loess.vector[idxX]
+	    dct.vector <- dct.vector[idxX]
+	    sdbeta <- 0.5*sd(dct.vector)/sd(X)
+	    sigbetainv <- 1/sdbeta[1]^2
+	    newDL <- meta$d.ct
+	    newDL[] <- NA
+	}
 
-camb <- DLdata[[81]]
-gain <- camb[1,7] - camb[1,4]
-camb <- camb[,-c(6)]
-camb[1,5] <- camb[1,4] + gain/2
-camb[2,4] <- camb[4,4] <- camb[1,5]-camb[1,4]
-camb[2,5] <- camb[4,5] <- camb[1,6] - camb[1,5]
-
-DLdata[[81]] <- camb
-camb <- NULL
-
-#Get rid of Rwanda outliers
-rwanda <- DLdata[[13]]
-gain <- rwanda[1,10] - rwanda[1,7]
-rwanda <- rwanda[,-c(9)]
-rwanda[1,8] <- rwanda[1,7]+gain/2
-rwanda[2,7] <- rwanda[4,7] <- rwanda[1,8]-rwanda[1,7]
-rwanda[2,8] <- rwanda[4,8] <- rwanda[1,9] - rwanda[1,8]
-DLdata[[13]] <- rwanda
-rwanda <- gain <- NULL
-
-
-		
-					
 	for(iter in start.iter:niter) {
 	
 		if(verbose.iter > 0 && (iter %% verbose.iter == 0))
@@ -148,26 +125,28 @@ rwanda <- gain <- NULL
 		###########################################
 		grid <- seq(15,90,0.1)
 
+		if(meta$hiv.model) newDL[] <- NA
 		for(country in 1:C) {
 			Triangle.k.z.c.update(mcenv, country, DLdata=DLdata)
 			dlf[[country]] <- g.dl6(c(mcenv$Triangle.c[,country], 
 								mcenv$k.c[country], mcenv$z.c[country]), 
 								DLdata[[country]]['e0',], meta$dl.p1, meta$dl.p2)
-			if(country %in% c(6,19,20,23,28,37,38,39,40,41,45)){
-				ntries <- 1
-				while(ntries <=10){
-			test <- g.dl6(c(mcenv$Triangle.c[,country], 
-								mcenv$k.c[country], mcenv$z.c[country]), 
-								grid, meta$dl.p1, meta$dl.p2)
-			if(any(test < 0)){
-				Triangle.k.z.c.update(mcenv, country, DLdata=DLdata)
-				dlf[[country]] <- g.dl6(c(mcenv$Triangle.c[,country], 
-								mcenv$k.c[country], mcenv$z.c[country]), 
-								DLdata[[country]]['e0',], meta$dl.p1, meta$dl.p2)
-				ntries <- ntries + 1				
-		}
-		else{break}
-		}}					
+	# 		if(country %in% c(6,19,20,23,28,37,38,39,40,41,45)){
+	# 			ntries <- 1
+	# 			while(ntries <=10){
+	# 		        test <- g.dl6(c(mcenv$Triangle.c[,country], 
+	# 							mcenv$k.c[country], mcenv$z.c[country]), 
+	# 							grid, meta$dl.p1, meta$dl.p2)
+	# 		        if(any(test < 0)){
+	# 			        Triangle.k.z.c.update(mcenv, country, DLdata=DLdata)
+	# 			        dlf[[country]] <- g.dl6(c(mcenv$Triangle.c[,country], 
+	# 							mcenv$k.c[country], mcenv$z.c[country]), 
+	# 							DLdata[[country]]['e0',], meta$dl.p1, meta$dl.p2)
+	# 			        ntries <- ntries + 1				
+	#     	        } else{break}
+	#	}
+	#	}	
+			if(meta$hiv.model) newDL[colnames(DLdata[[country]])[DLdata[[country]]['post1950',]==1],country] <- dlf[[country]][DLdata[[country]]['post1950',]==1]
 			sum.term.for.omega <- sum.term.for.omega + sum(((DLdata[[country]]['dct',]-dlf[[country]])^2)/(DLdata[[country]]['loess',])^2)
 		}
 
@@ -180,105 +159,21 @@ rwanda <- gain <- NULL
 
 		# Update beta - Gibbs Sampler
 		##########################################
-		
-    #	X <- cbind(deltaHIV.long.index[,4],regdata.index[,'ART'])
-    	XX <- tcrossprod(t(X)%*%diag(1/sqrt(mcenv$omega^2*regdata.index.wpp2015.40.avg.2[,'loess.long2'])))
-    	#det <- (XX + sigbetainv)[1,1]*(XX + sigbetainv)[2,2] - (XX + sigbetainv)[1,2]^2
-    	#XXinv <- (1/det)*matrix(c((XX + sigbetainv)[2,2],-(XX + sigbetainv)[1,2],-(XX + sigbetainv)[1,2],(XX + sigbetainv)[1,1]),nrow=2,ncol=2)
-	
-	
-		#var <- (t(regdata.index[,pred])%*%diag(1/(mcenv$omega^2*regdata.index[,'loess.long']))%*%regdata.index[,pred] + 1/(sdbeta^2))
-		
-##Do this so that I can
-##use vector "newDL" in 
-##vectorized calculation on 
-##line 260 to get sxy = \sum x*y like 
-##in a typical regression
-		
-		newDL <- rep(0,(C*12 - 2))
-		for(j in 1:5){
-			for(country in 1:C){
+		if(meta$hiv.model) {
+    	    XX <- tcrossprod(t(X)%*%diag(1/sqrt(mcenv$omega^2*loess.vector)))
 
-				newDL[C*(j-1)+country] <- dlf[[country]][j]			
-		}
-		}
-		
-		for(j in 6:6){
-			for(country in 1:C){
-				if(country < 81){
-				newDL[(C)*(j-1)+country] <- dlf[[country]][j]
-				}
-				if(country > 81){
-					newDL[(C)*(j-1)+(country-1)] <- dlf[[country]][j]
-				}
+            newDL.vector <- as.vector(t(newDL))[idxX]
+		    sxy <- t(X)%*%(diag(1/(mcenv$omega^2*loess.vector))%*%(dct.vector-newDL.vector))
 
-
-			}
-		}
-		for(j in 7:8){
-			for(country in 1:C){
-				if(country==81){
-					newDL[C*(j-1)-1 + country] <- dlf[[country]][j-1]
-				}
-				else{
-					newDL[C*(j-1)-1 + country] <- dlf[[country]][j]	
-				}
-			}
-		}
-		for(j in 9:9){
-			for(country in 1:C){
-				if(country < 13){
-				newDL[C*(j-1)-1+country] <- dlf[[country]][j]
-				}
-				if(country > 13){
-					if(country==81){
-					newDL[C*(j-1)-1+(country-1)] <- dlf[[country]][j-1]	
-					}
-					newDL[C*(j-1)-1+(country-1)] <- dlf[[country]][j]
-				}
-
-			}
-		}	
-		for(j in 10:12){
-			for(country in 1:C){
-				if(country==13 | country == 81){
-					newDL[C*(j-1)-2 + country] <- dlf[[country]][j-1]
-				}
-				else{
-				newDL[C*(j-1)-2 + country] <- dlf[[country]][j]
-				}
-			}
-		}
-		
-		
-	
-		sxy <- t(X)%*%(diag(1/(mcenv$omega^2*regdata.index.wpp2015.40.avg.2[,'loess.long2']))%*%(regdata.index.wpp2015.40.avg.2[,'prelim.Y']-newDL))
-
-		mcenv$betanonART <- rnorm(1,mean=sxy/(XX+sigbetainv),sd=sqrt(1/(XX+sigbetainv)))
-
-		
-	
+		    mcenv$betanonART <- rnorm(1,mean=sxy/(XX+sigbetainv),sd=sqrt(1/(XX+sigbetainv)))
+        
 ##Update DLdata update the working 
 ##decrement incorporating the regression coefficient
 ##hence, could not use your function
 
-for(country in 1:C){
-			
-	if(country == 81){ ##For Cambodia
-				#new <- DLdata[[country]]['observed.dct',1:10]- t(matrix(c(as.numeric(deltaHIV.short.index[country,4:13]),as.numeric(country.data.index[country,c(28:37)])),nrow=10,ncol=2)%*%matrix(c(mcenv$betaHIV,mcenv$betaART),nrow=2,ncol=1))
-				new <- DLdata[[country]]['observed.dct',1:11]- mcenv$betanonART*deltanonART.short.index.wpp2015.40.avg[country,4:14]
-			DLdata[[country]]['dct',1:11] <- as.numeric(new)
-			
-				
-	}else if(country == 13){ ##For Rwanda
-	
-		   new <- DLdata[[country]]['observed.dct',1:11]- mcenv$betanonART*deltanonART.short.index.wpp2015.40.avg[country,4:14]
-			DLdata[[country]]['dct',1:11] <- as.numeric(new)		
-	}else{
-			new <- DLdata[[country]]['observed.dct',1:12]-mcenv$betanonART*deltanonART.short.index.wpp2015.40.avg[country,3:14]
-					
-			DLdata[[country]]['dct',1:12] <- as.numeric(new)
-			
+            for(country in 1:C){
+			    new <- DLdata[[country]]['observed.dct',DLdata[[country]]['post1950',]==1]-mcenv$betanonART*meta$dlt.nart[colnames(DLdata[[country]])[DLdata[[country]]['post1950',]==1],country]
+			    DLdata[[country]]['dct',DLdata[[country]]['post1950',]==1] <- as.numeric(new)
 			}	
 		}
 
@@ -406,14 +301,14 @@ get.DLdata.for.estimation <- function(meta, countries) {
     T.suppl.end <- if(!is.null(meta$suppl.data$e0.matrix)) nrow(meta$suppl.data$e0.matrix) else 0
     for(country in countries) {
     	idx <- which(!is.na(meta$d.ct[, country]))
-    	DLdata[[country]] <- matrix(NA, nrow=3, ncol=length(idx), 
-    							dimnames=list(c('e0', 'dct', 'loess'), 
-    										rownames(meta$d.ct[idx,country])))
+    	DLdata[[country]] <- matrix(NA, nrow=5, ncol=length(idx), 
+    							dimnames=list(c('e0', 'dct', 'loess', 'observed.dct', 'post1950'), 
+    										rownames(meta$d.ct[idx,])))
     	DLdata[[country]][1,] <- meta$e0.matrix[idx,country]
-    	DLdata[[country]][2,] <- meta$d.ct[idx,country]
+    	DLdata[[country]][2,] <- DLdata[[country]][4,] <- meta$d.ct[idx,country]
     	DLdata[[country]][3,] <- meta$loessSD[idx,country]
-    	DLdata[[country]] <- rbind(DLdata[[country]],DLdata[[country]][2,])
-    rownames(DLdata[[country]])[4] <- "observed.dct"
+    	DLdata[[country]][5,] <- 1
+
     }
     if(T.suppl.end > 0) {
     	for(country in 1:ncol(meta$suppl.data$e0.matrix)) {
@@ -423,14 +318,14 @@ get.DLdata.for.estimation <- function(meta, countries) {
     		if(length(idx) <= 0) next
     		start.col <- ncol(DLdata[[cidx]]) + 1
     		DLdata[[cidx]] <- cbind(DLdata[[cidx]], 
-    								matrix(NA, nrow=4, ncol=length(idx),
+    								matrix(NA, nrow=5, ncol=length(idx),
     										dimnames=list(rownames(DLdata[[cidx]]), 
-    											rownames(meta$suppl.data$d.ct[idx,country]))))
+    											rownames(meta$suppl.data$d.ct[idx,]))))
     		end.col <- ncol(DLdata[[cidx]])
     		DLdata[[cidx]][1,start.col:end.col] <- meta$suppl.data$e0.matrix[idx,country]
-       		DLdata[[cidx]][2,start.col:end.col] <- meta$suppl.data$d.ct[idx,country]
-          	DLdata[[cidx]][3,start.col:end.col] <- meta$suppl.data$loessSD[idx,country]  
-          			
+       		DLdata[[cidx]][2,start.col:end.col] <- DLdata[[cidx]][4,start.col:end.col] <- meta$suppl.data$d.ct[idx,country]
+          	DLdata[[cidx]][3,start.col:end.col] <- meta$suppl.data$loessSD[idx,country]
+          	DLdata[[cidx]][5,start.col:end.col] <- 0
   		}
     }
 

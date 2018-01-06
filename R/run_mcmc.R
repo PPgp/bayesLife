@@ -1,14 +1,12 @@
-if(getRversion() >= "2.15.1") utils::globalVariables("loess_sd")
+if(getRversion() >= "2.15.1") utils::globalVariables(c("loess_sd", "hiv_art_2015"))
 data(loess_sd, envir=environment())
-data(loess_sd_epi_avg, envir=environment())
-data(loess_sd_nonepi_avg, envir=environment())
-data(country.data.index.wpp2015.40.avg, envir=environment())
 
 run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000, 
 							output.dir=file.path(getwd(), 'bayesLife.output'), 
                          thin=10, replace.output=FALSE,
-                         start.year=1873, present.year=2015, wpp.year=2015,
-                         my.e0.file = NULL, my.locations.file = NULL, buffer.size=100, 
+                         start.year=1873, present.year=2015, wpp.year=2017,
+							hiv.model = FALSE,
+                         my.e0.file = NULL, my.locations.file = NULL, buffer.size=100,
                          a=c(13.215, 41.070, 9.235, 17.605, 2.84, 0.385),
                          #a=c(15.7669391,40.9658241,0.2107961,19.8188061,2.9306625,0.400688628),
 						 delta=c(3.844, 4.035, 11.538, 5.639, 0.901, 0.4),
@@ -16,23 +14,24 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
 						 tau=c(15.5976503,23.6500060,14.5056919,14.7185980,3.4514285,0.5667531), 
 						 Triangle.ini = list(NULL, NULL, NULL, NULL), k.ini=NULL, z.ini=NULL,
 						 lambda.ini=list(NULL, NULL, NULL, NULL), 
-						 lambda.k.ini = NULL, lambda.z.ini=NULL, omega.ini = NULL, betanonART.ini = NULL, 
+						 lambda.k.ini = NULL, lambda.z.ini=NULL, omega.ini = NULL, betanonART.ini = -0.77, #0.01
 						 Triangle.ini.low=c(10, 30, 0.1, 10), Triangle.ini.up=c(30, 50, 10, 30),
 						 k.ini.low=3, k.ini.up=5, z.ini.low=0.0001, z.ini.up=0.653,
 						 lambda.ini.low=c(0.01, 0.01, 0.01, 0.01), 
 						 lambda.ini.up=c(0.1, 0.1, 0.1, 0.1), 
 						 lambda.k.ini.low = 0.3, lambda.k.ini.up = 1, 
 						 lambda.z.ini.low=1, lambda.z.ini.up=40,
-						 omega.ini.low = 0.1, omega.ini.up=5,
-						 Triangle.prior.low=c(0, 0, -20, 0), Triangle.prior.up=c(100, 100, 100, 100),
+						 omega.ini.low = 0.1, omega.ini.up=5, 
+						 Triangle.prior.low=c(0, 0, -20, 0), Triangle.prior.up=c(100, 100, 50, 100),
 						 k.prior.low=0, k.prior.up=10, z.prior.low=0, z.prior.up=0.653,
 						 Triangle.c.ini.norm = list(round(Triangle.ini.low + (Triangle.ini.up - Triangle.ini.low)/2),c(2,2,2,2)), 
 						 k.c.ini.norm=c(round(k.ini.low + (k.ini.up - k.ini.low)/2), 2), 
 						 z.c.ini.norm=c(round(z.ini.low + (z.ini.up - z.ini.low)/2, 2), 0.2),
-						 Triangle.c.prior.low=c(0, 0, -20, 0), Triangle.c.prior.up=c(100, 100, 100, 100),
+						 Triangle.c.prior.low=c(0, 0, -20, 0), Triangle.c.prior.up=c(100, 100, 50, 100),
 						 k.c.prior.low=0, k.c.prior.up=10, z.c.prior.low=0, z.c.prior.up=0.653,
 						 country.overwrites = NULL,
-						 nu=4, dl.p1=9, dl.p2=9, sumTriangle.lim = c(30, 110), constant.variance=FALSE, outliers=c(-5,10),
+						 nu=4, dl.p1=9, dl.p2=9, sumTriangle.lim = c(30, 86), constant.variance=FALSE, 
+							outliers=c(-5,10), hiv.outliers=c(-15, 15),
                          seed = NULL, parallel=FALSE, nr.nodes=nr.chains, compression.type='None',
                          auto.conf = list(max.loops=5, iter=160000, iter.incr=20000, nr.chains=3, thin=225, burnin=10000),
 						 verbose=FALSE, verbose.iter = 100, ...) {
@@ -41,7 +40,6 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
 		ifelse(rep(nr.chains==1, nr.chains), (low+up)/2, #seq(low, to=up, length=nr.chains)
 			runif(nr.chains, low, up)
 		)
-		
 		
 	if(file.exists(output.dir)) {
 		if(length(list.files(output.dir)) > 0 & !replace.output)
@@ -85,16 +83,12 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
 		lambda.z.ini <- get.init.values.between.low.and.up(lambda.z.ini.low, lambda.z.ini.up)
 	if(is.null(omega.ini)) 
 		omega.ini <- get.init.values.between.low.and.up(omega.ini.low, omega.ini.up)
-	if(is.null(betanonART.ini))
-		betanonART.ini <- -0.77
-	#if(is.null(betaART.ini))
-	#	betaART.ini <- 0.01	
-	
+
 	sex <- substr(match.arg(sex), 1, 1)
 	bayesLife.mcmc.meta <- e0.mcmc.meta.ini(sex=sex, nr.chains=nr.chains,
                                    		start.year=start.year, present.year=present.year, 
                                         wpp.year=wpp.year, my.e0.file = my.e0.file, my.locations.file=my.locations.file,
-                                        output.dir=output.dir,
+                                        output.dir=output.dir, hiv.model=hiv.model,
                                         a=a, delta=delta, tau=tau, Triangle.ini=Triangle.ini,
                                         k.ini=k.ini, z.ini=z.ini, omega.ini=omega.ini, betanonART.ini=betanonART.ini, 
                                         lambda.ini=lambda.ini, lambda.k.ini=lambda.k.ini, lambda.z.ini=lambda.z.ini,
@@ -115,7 +109,8 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
                                         z.c.prior.low=z.c.prior.low, z.c.prior.up=z.c.prior.up,
                                         country.overwrites=country.overwrites, 
                                         nu=nu, dl.p1=dl.p1, dl.p2=dl.p2, sumTriangle.lim=sumTriangle.lim, 
-                                        constant.variance=constant.variance, outliers=outliers,
+                                        constant.variance=constant.variance, 
+                                   		outliers=outliers, hiv.outliers=hiv.outliers,
                                         buffer.size=buffer.size, compression.type=compression.type, 
                                         auto.conf=auto.conf, verbose=verbose)
     store.bayesLife.meta.object(bayesLife.mcmc.meta, output.dir)
@@ -131,20 +126,20 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
             	} else {
             		warning(var, '[[',i,']]', ' has the wrong length. Either 1 or ', nr.chains, 
                                 ' is allowed.\nValue set to ', get(var)[[i]][1], ' for all chains.')
-                    assign(paste(var,'[[',i,']]', sep=''), rep(get(var)[[i]][1], nr.chains))
+            	    assign(paste(var,'[[',i,']]', sep=''), rep(get(var)[[i]][1], nr.chains))
                }
             }
         }
         starting.values[[var]] <- get(var)
     }
-    for (var in c('k.ini', 'z.ini', 'lambda.k.ini', 'lambda.z.ini', 'omega.ini', 'betanonART.ini','iter')) {
+    for (var in c('k.ini', 'z.ini', 'lambda.k.ini', 'lambda.z.ini', 'omega.ini', 'betanonART.ini', 'iter')) {
     	if (length(get(var)) < nr.chains) {
         	if (length(get(var)) == 1) {
             	assign(var, rep(get(var), nr.chains))
             } else {
             	warning(var, ' has the wrong length. Either 1 or ', nr.chains, 
                                 ' is allowed.\nValue set to ', get(var)[1], ' for all chains.')
-                                assign(var, rep(get(var)[1], nr.chains))
+                assign(var, rep(get(var)[1], nr.chains))
             }
         }
         if (var != 'iter') starting.values[[var]] <- get(var)
@@ -201,7 +196,7 @@ mcmc.run.chain.e0 <- function(chain.id, meta, thin=1, iter=100, starting.values=
 	mcmc <- do.call('e0.mcmc.ini', c(list(chain.id, meta, iter=iter[chain.id]), this.sv))
     if (verbose) {
         cat('Starting values:\n')
-        print(unlist(mcmc[c('Triangle', 'k', 'z', 'lambda', 'lambda.k', 'lambda.z', 'omega','betanonART')]))
+        print(unlist(mcmc[c('Triangle', 'k', 'z', 'lambda', 'lambda.k', 'lambda.z', 'omega', 'betanonART')]))
         cat('Store initial values into ', mcmc$output.dir, '\n')
     }                
 	store.e0.mcmc(mcmc, append=FALSE, flush.buffer=TRUE, verbose=verbose)
@@ -348,7 +343,7 @@ init.nodes.e0 <- function() {
 	library(bayesLife)
 }
 
-.get.Tcindex <- function(e0.matrix, stop.if.less.than2=TRUE, cnames=NULL){
+.get.Tcindex <- function(e0.matrix,  stop.if.less.than2=TRUE, cnames=NULL) {
 	Tc.index <- list()
 	for (country in 1:ncol(e0.matrix)) {
 		Tc.index[[country]] <- which(!is.na(e0.matrix[,country]))
@@ -368,29 +363,51 @@ init.nodes.e0 <- function() {
 							dimnames=list(rownames(data$e0.matrix)[1:(T-1)],
 									  colnames(data$e0.matrix)))
 	loessSD[,] <- 1
+	dlt.nart <- NULL
+	if(meta$hiv.model) {
+	    data(hiv_art_2015)
+	    nonart <- HIV[,-(1:2)] * (100 - ART[,-(1:2)])/100
+	    nonart <- cbind(HIV[,1:2], nonart)
+	    # put into the same order as e0.matrix (the codes must match, i.e. no missing values)
+	    nonart <- nonart[match(data$regions$country_code, nonart$country_code),]
+	    rownames(nonart) <- nonart$country_code
+	    nonart <- t(nonart[,-c(1:2)])
+	    dlt.nart <- d.ct
+	}
 	for(i in 2:T) {
 		nisna0 <- !is.na(data$e0.matrix[i-1,])
 		nisna1 <- !is.na(data$e0.matrix[i,])
 		nisna2 <- nisna1 & nisna0
 		if (sum(nisna2) > 0) {
 			d.ct[i-1,nisna2] <- data$e0.matrix[i,nisna2] - data$e0.matrix[i-1,nisna2]
-			outliers <- nisna2 & ((d.ct[i-1,] < meta$outliers[1]) | (d.ct[i-1,] > meta$outliers[2]))
+			if(meta$hiv.model) { # different outliers for HIV and non-HIV countries
+			    dlt.nart[i-1, ] <- nonart[i, ] - nonart[i-1, ]
+			    outliers <- rep(FALSE, nr_countries)
+			    outliers[data$regions$is.hiv] <- (d.ct[i-1,data$regions$is.hiv] < meta$hiv.outliers[1]) | (d.ct[i-1,data$regions$is.hiv] > meta$hiv.outliers[2])
+			    outliers[!data$regions$is.hiv] <- (d.ct[i-1,!data$regions$is.hiv] < meta$outliers[1]) | (d.ct[i-1,!data$regions$is.hiv] > meta$outliers[2])
+			    outliers <- nisna2 & outliers
+			    dlt.nart[i-1, outliers] <- NA
+			} else 
+			    outliers <- nisna2 & ((d.ct[i-1,] < meta$outliers[1]) | (d.ct[i-1,] > meta$outliers[2]))
 			d.ct[i-1,outliers] <- NA
 		}
 		if (sum(nisna0) > 0 && !meta$constant.variance)
-			loessSD[i-1,nisna0]<- loess.lookup4.2015.avg(data$e0.matrix[i-1,nisna0],country.data.index.wpp2015.40.avg$epi.index)
-			#loessSD[i-1,nisna0]<-sapply(data$e0.matrix[i-1,nisna0],loess.lookup)
+			loessSD[i-1,nisna0] <- if(meta$hiv.model) loess.lookup.hiv.model(data$e0.matrix[i-1,nisna0], 
+			                                                                 data$regions$is.hiv[nisna0]) else
+			                                         loess.lookup(data$e0.matrix[i-1,nisna0])
 	}
 	D.supp.ct <- loessSD.suppl <- NULL
 	nr_countries.suppl <- 0
 	suppl <- data$suppl.data
 	if(!is.null(suppl$e0.matrix)) {
 		nr_countries.suppl <- ncol(suppl$e0.matrix)
-    		suppl$Tc.index <- .get.Tcindex(suppl$e0.matrix, stop.if.less.than2=FALSE)
+		suppl$Tc.index <- .get.Tcindex(suppl$e0.matrix, stop.if.less.than2=FALSE)
 		# add first time point of the observed data to get the last increment of the supplemental data
 		data.suppl <- rbind(suppl$e0.matrix, data$e0.matrix[1,suppl$index.to.all.countries])
 		T <- nrow(data.suppl)
-		d.suppl.ct <- loessSD.suppl <- matrix(NA, nrow=T-1, ncol=nr_countries.suppl)
+		d.suppl.ct <- loessSD.suppl <- matrix(NA, nrow=T-1, ncol=nr_countries.suppl,
+		                                      dimnames=list(rownames(suppl$e0.matrix)[1:(T-1)],
+		                                                    colnames(suppl$e0.matrix)))
 		for(i in 2:T) {
 			nisna0 <- !is.na(data.suppl[i-1,])
 			nisna1 <- !is.na(data.suppl[i,])
@@ -401,8 +418,11 @@ init.nodes.e0 <- function() {
 				d.suppl.ct[i-1,outliers] <- NA
 			}
 			if (sum(nisna0) > 0)
-				loessSD.suppl[i-1,nisna0]<- if(meta$constant.variance) 1 else loess.lookup4.2015.avg(data.suppl[i-1,nisna0],country.data.index.wpp2015.40.avg$epi.index)
-				#loessSD.suppl[i-1,nisna0]<- if(meta$constant.variance) 1 else sapply(data.suppl[i-1,nisna0],loess.lookup)
+				loessSD.suppl[i-1,nisna0]<- if(meta$constant.variance) 1 else {
+				    if(meta$hiv.model) loess.lookup.hiv.model(data.suppl[i-1,nisna0], 
+				                                              data$regions$is.hiv[suppl$index.to.all.countries][nisna0]) else
+				                        loess.lookup(data.suppl[i-1,nisna0])
+				}
 		}
 		suppl$nr.countries <- nr_countries.suppl
 		suppl$d.ct <- d.suppl.ct
@@ -411,6 +431,7 @@ init.nodes.e0 <- function() {
 	data$nr.countries <- nr_countries
 	data$Tc.index <- Tc.index
 	data$d.ct <- d.ct
+	data$dlt.nart <- dlt.nart
 	data$loessSD <- loessSD
 	data$suppl.data <- suppl
 	bounds <- .do.country.specific.ini(nr_countries, c(data, meta))
@@ -456,16 +477,16 @@ init.nodes.e0 <- function() {
 }
 
 e0.mcmc.meta.ini <- function(sex="F", nr.chains=1, start.year=1950, present.year=2015, 
-								wpp.year=2015, my.e0.file = NULL, my.locations.file = NULL,
+								wpp.year=2017, my.e0.file = NULL, my.locations.file = NULL,
 								output.dir=file.path(getwd(), 'bayesLife.output'),
-								..., verbose=FALSE) {
+								hiv.model=FALSE, ..., verbose=FALSE) {
 	mcmc.input <- c(list(sex=sex, nr.chains=nr.chains,
 						start.year=start.year, present.year=present.year, 
 						wpp.year=wpp.year, my.e0.file = my.e0.file,
-						output.dir=output.dir), list(...))
+						output.dir=output.dir, hiv.model=hiv.model), list(...))
 	if(present.year-3 > wpp.year) warning("present.year is much larger then wpp.year. Make sure WPP data for present.year are available.")					
     data <- get.wpp.e0.data (sex, start.year=start.year, present.year=present.year, 
-						wpp.year=wpp.year, my.e0.file = my.e0.file, 
+						wpp.year=wpp.year, my.e0.file = my.e0.file, include.hiv=hiv.model,
 						my.locations.file=my.locations.file, verbose=verbose)
 	part.ini <- .do.part.e0.mcmc.meta.ini(data, mcmc.input)
 	return(structure(c(mcmc.input, part.ini), class='bayesLife.mcmc.meta'))
@@ -475,25 +496,25 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter=100,
                      Triangle.ini = NULL, k.ini=NULL, z.ini=NULL,
 				     lambda.ini=NULL, lambda.k.ini = NULL, lambda.z.ini=NULL, omega.ini = NULL, betanonART.ini = NULL, 
 				     verbose=FALSE) {
-	Triangle.lim <- mcmc.meta$sumTriangle.lim
-	scale.Triangle <- function(Triangle) {
-		# scale Triangle.ini if needed
-		sTscale <- NULL
-		sT <- sum(Triangle)
-		if(sT > Triangle.lim[2]) sTscale <- Triangle.lim[2]
-		if(sT < Triangle.lim[1]) sTscale <- Triangle.lim[1]
-		if(!is.null(sTscale)) Triangle <- Triangle/sT * sTscale
-		return(Triangle)
-	}                                                    
+    Triangle.lim <- mcmc.meta$sumTriangle.lim
+    scale.Triangle <- function(Triangle) {
+        # scale Triangle.ini if needed
+        sTscale <- NULL
+        sT <- sum(Triangle)
+        if(sT > Triangle.lim[2]) sTscale <- Triangle.lim[2]
+        if(sT < Triangle.lim[1]) sTscale <- Triangle.lim[1]
+        if(!is.null(sTscale)) Triangle <- Triangle/sT * sTscale
+        return(Triangle)
+    }
 	nr_countries <- mcmc.meta$nr.countries
     if (!exists(".Random.seed")) runif(1)
-    Triangle.ini <- scale.Triangle(Triangle.ini)
+	Triangle.ini <- scale.Triangle(Triangle.ini)
 	mcmc <- structure(list(
 						Triangle.ini=Triangle.ini,
                         k.ini=k.ini, z.ini=z.ini, omega.ini=omega.ini, betanonART.ini=betanonART.ini, 
 						lambda.ini=lambda.ini, lambda.k.ini=lambda.k.ini, lambda.z.ini=lambda.z.ini,
 						Triangle=Triangle.ini, k=k.ini, z=z.ini, lambda=lambda.ini,
-						lambda.k=lambda.k.ini, lambda.z=lambda.z.ini, omega=omega.ini,betanonART=betanonART.ini,
+						lambda.k=lambda.k.ini, lambda.z=lambda.z.ini, omega=omega.ini, betanonART=betanonART.ini,
         				output.dir=paste('mc', chain.id, sep=''), finished.iter=1, length = 1,
         				iter=iter, id=chain.id, traces=0,
         				traces.burnin=0, rng.state = .Random.seed,
@@ -502,11 +523,11 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter=100,
     samplpars <- mcmc.meta$country.bounds
     mcmc[['Triangle.c']] <- matrix(0, ncol=nr_countries, nrow=4)
     for (i in 1:4)
-		mcmc[['Triangle.c']][i,] <- pmin(pmax(rnorm(nr_countries, mean=mcmc.meta$Triangle.c.ini.norm[[1]][i], 
+		    mcmc[['Triangle.c']][i,] <- pmin(pmax(rnorm(nr_countries, mean=mcmc.meta$Triangle.c.ini.norm[[1]][i], 
 										sd=mcmc.meta$Triangle.c.ini.norm[[2]][i]), 
 										samplpars[[paste('Triangle_', i, '.c.prior.low', sep='')]]), 
 										samplpars[[paste('Triangle_', i, '.c.prior.up', sep='')]])
-	mcmc[['Triangle.c']] <- apply(mcmc[['Triangle.c']], 2, scale.Triangle)
+    mcmc[['Triangle.c']] <- apply(mcmc[['Triangle.c']], 2, scale.Triangle)
 	mcmc[['k.c']] <- pmin(pmax(rnorm(nr_countries, mcmc.meta$k.c.ini.norm[1], 
 							sd=mcmc.meta$k.c.ini.norm[2]), samplpars$k.c.prior.low), samplpars$k.c.prior.up)
 	mcmc[['z.c']] <- pmin(pmax(rnorm(nr_countries, mcmc.meta$z.c.ini.norm[1], 
@@ -557,7 +578,7 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries=NULL, my.e0.file = NULL, 
 	meta <- mcmc.set$meta
 	#create e0 matrix only for the extra countries
 	e0.with.regions <- set.e0.wpp.extra(meta, countries=countries, 
-									  my.e0.file = my.e0.file, my.locations.file=my.locations.file,
+									  my.e0.file = my.e0.file, my.locations.file=my.locations.file, 
 									  verbose=verbose)
 	if(is.null(e0.with.regions)) return(list(meta=meta, index=c()))
 	meta$country.overwrites <- country.overwrites

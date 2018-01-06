@@ -170,7 +170,7 @@ load.e0.parameter.traces.all <- function(mcmc, par.names=e0.parameter.names(),
 
 e0.get.all.parameter.names <- function() {
     # Parameters with the number of its values
-	return(list(Triangle=4, k=1, z=1, lambda=4, lambda.k=1, lambda.z=1, omega=1)) 
+	return(list(Triangle=4, k=1, z=1, lambda=4, lambda.k=1, lambda.z=1, omega=1, betanonART=1)) 
 }				
 
 e0.get.all.parameter.names.cs <- function() {
@@ -245,6 +245,7 @@ summary.bayesLife.mcmc.set <- function(object, country=NULL, chain.id=NULL,
 							par.names.cs=par.names.cs, thin=thin, burnin=burnin, ...))
 	if (!is.null(country)) {
 		country.obj <- get.country.object(country, object$meta)
+		if(is.null(country.obj$name)) stop("Country ", country, " not found.")
 		cat('\nCountry:', country.obj$name, '\n')
 		country <- country.obj$code
 	}

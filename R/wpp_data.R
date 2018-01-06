@@ -1,5 +1,5 @@
-get.wpp.e0.data <- function(sex='M', start.year=1950, present.year=2015, wpp.year=2015, my.e0.file=NULL, 
-							my.locations.file=NULL, verbose=FALSE) {
+get.wpp.e0.data <- function(sex='M', start.year=1950, present.year=2015, wpp.year=2017, my.e0.file=NULL, 
+							include.hiv=FALSE, my.locations.file=NULL, verbose=FALSE) {
 	sex <- toupper(sex)
 	if(sex != 'M' && sex != 'F')
 		stop('Allowed values for argument "sex" are "M" and "F".')
@@ -16,17 +16,33 @@ get.wpp.e0.data <- function(sex='M', start.year=1950, present.year=2015, wpp.yea
 	include <- locations$include
 	prediction.only <- locations$prediction.only
 
+	# include HIV/AIDS countries
+	hiv.aids <- rep(FALSE, length(include))
+	if(include.hiv) {
+	    # find HIV/AIDS countries
+	    hivincl <- merge(data[,c("country_code", "include_code")], 
+	                     locations$loc_data[,c("country_code", "include_code")], 
+	                     all.x=TRUE, by="country_code", sort=FALSE)
+	    hivincl$include_code <- ifelse(hivincl$include_code.x >= 0, 
+	                                   hivincl$include_code.x, hivincl$include_code.y)
+	    hiv.aids <- hivincl$include_code == 3
+	    include[hiv.aids] <- TRUE
+	}
 	data_incl <- data[include,]
+	hiv.aids <- hiv.aids[include]
 	nr_countries_estimation <- nrow(data_incl)
 	if(any(!is.na(prediction.only))) { # move prediction countries at the end of data
 		data_prediction <- data[prediction.only,]
 		data_incl <- rbind(data_incl, data_prediction)
+		hiv.aids <- c(hiv.aids, rep(FALSE, nrow(data_prediction)))
 	}
 	
 	LEXmatrix.regions <- bayesTFR:::get.observed.time.matrix.and.regions(
 							data_incl, loc_data, 
 							start.year=start.year, 
 							present.year=present.year)
+	LEXmatrix.regions$regions$is.hiv <- hiv.aids
+	
 	if (verbose) 
 		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')
 

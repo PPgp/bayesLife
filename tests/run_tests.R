@@ -2,9 +2,8 @@ library(bayesLife)
 source('test_functions.R')
 
 cran <- TRUE
-test.get.wpp.data(2015)
-test.get.wpp.data(2010)
-test.get.wpp.data(2012)
+for(wpp.year in c(2010, 2012, 2015, 2017))
+    test.get.wpp.data(wpp.year)
 test.existing.simulation()
 test.e0trajectories()
 test.get.parameter.traces()

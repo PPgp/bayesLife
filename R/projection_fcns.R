@@ -1,8 +1,5 @@
 if(getRversion() >= "2.15.1") utils::globalVariables("loess_sd")
 data(loess_sd, envir=environment())
-data(loess_sd_epi_avg, envir=environment())
-data(loess_sd_nonepi_avg, envir=environment())
-data(country.data.index.wpp2015.40.avg)
 
 e0.proj.le.SDPropToLoess<-function(x,country,beta,l.start,kap,n.proj=11, p1=9, p2=9, const.var=FALSE){
   proj<-NULL
