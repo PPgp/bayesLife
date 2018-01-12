@@ -1,16 +1,29 @@
-if(getRversion() >= "2.15.1") utils::globalVariables("loess_sd")
+if(getRversion() >= "2.15.1") utils::globalVariables(c("loess_sd", "deltanonARTto2100.UN.EPP"))
 data(loess_sd, envir=environment())
+data(deltanonARTto2100.UN.EPP, envir=environment())
 
-e0.proj.le.SDPropToLoess<-function(x,country,beta,l.start,kap,n.proj=11, p1=9, p2=9, const.var=FALSE){
-  proj<-NULL
-  proj[1]<-l.start
-  for(a in 2:(n.proj+1)){
-  	
-  	proj[a]<-proj[a-1]+g.dl6(x,proj[a-1], p1=p1, p2=p2)+beta*deltanonARTto2100.UN.EPP[[country]][sample(1:1000,1),12+a-1] +rnorm(1,mean=0,
-  				sd=(kap*if(const.var) 1 else loess.lookup4.2015.avg(proj[a-1],country.data.index.wpp2015.40.avg$epi.index[country])))
-  				
-  }
-  return(proj[2:length(proj)])
+do.e0.proj<-function(x,l.start,kap,n.proj=11, p1=9, p2=9, const.var=FALSE){
+    proj<-NULL
+    proj[1]<-l.start
+    for(a in 2:(n.proj+1)){
+        
+        proj[a]<-proj[a-1]+g.dl6(x,proj[a-1], p1=p1, p2=p2)+rnorm(1,mean=0,
+                            sd=(kap*if(const.var) 1 else loess.lookup(proj[a-1])))
+        
+    }
+    return(proj[2:length(proj)])
+}
+
+do.e0.proj.hiv<-function(x,country,is.hiv, beta,l.start,kap,n.proj=11, p1=9, p2=9, const.var=FALSE){
+    proj<-NULL
+    proj[1]<-l.start
+    for(a in 2:(n.proj+1)){
+        
+        proj[a]<-proj[a-1]+g.dl6(x,proj[a-1], p1=p1, p2=p2)+beta*deltanonARTto2100.UN.EPP[[country]][sample(1:1000,1),12+a-1] +
+            rnorm(1,mean=0, sd=(kap*if(const.var) 1 else loess.lookup.hiv.model(proj[a-1],is.hiv)))
+        
+    }
+    return(proj[2:length(proj)])
 }
 
 e0.predict <- function(mcmc.set=NULL, end.year=2100, sim.dir=file.path(getwd(), 'bayesLife.output'),
@@ -199,21 +212,18 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
 	mean_sd <- array(NA, c(nr_countries, 2, nr_project+1))
 
 	var.par.names.cs <- c('Triangle.c', 'k.c', 'z.c')
-	
+	hiv.model <- mcmc.set$meta$hiv.model
+
 	##load beta
-	var.beta.names <- c('betanonART')
-	var.beta <- get.e0.parameter.traces(load.mcmc.set$mcmc.list, var.beta.names, burnin=0)
-	
+	data(deltanonARTto2100.UN.EPP)
+	if(hiv.model) {
+	    var.beta.names <- c('betanonART')
+	    var.beta <- get.e0.parameter.traces(load.mcmc.set$mcmc.list, var.beta.names, burnin=0)
+	}
 	country.counter <- 0
 	status.for.gui <- paste('out of', length(prediction.countries), 'countries.')
 	gui.options <- list()
-	#data(ARTto2100)
-	#data(deltaHIVto2100)
-	#data(nonARTto2100)
-	#data(deltanonARTto2100)
-	data(deltanonARTto2100.UN.EPP)
-	#data(deltanonARTto2100.all.wpp2015)
-	
+
 	#########################################
 	for (country in prediction.countries){
 	#for (country in c(23)){
@@ -272,11 +282,22 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
     			proj.idx <- 2:(this.nr_project+1)
     			last.val.idx <- this.T_end
     		}
-           trajectories[proj.idx,j]<-e0.proj.le.SDPropToLoess(cs.par.values[j,], country=country,beta=var.beta[j,], 
-           							all.e0[last.val.idx], 
-           							kap=var.par.values[j,'omega'],n.proj=length(proj.idx),
-           							p1=mcmc.set$meta$dl.p1, p2=mcmc.set$meta$dl.p2, 
-           							const.var=mcmc.set$meta$constant.variance)
+    		if(mcmc.set$meta$hiv.model) {
+                trajectories[proj.idx,j] <- do.e0.proj.hiv(cs.par.values[j,], 
+                                                           country=country, 
+                                                           is.hiv = mcmc.set$meta$regions$is.hiv[country],
+                                                           beta=var.beta[j,], 
+           							                       all.e0[last.val.idx], 
+           							                        kap=var.par.values[j,'omega'], n.proj=length(proj.idx),
+           							                        p1=mcmc.set$meta$dl.p1, p2=mcmc.set$meta$dl.p2, 
+           							                        const.var=mcmc.set$meta$constant.variance)
+    		} else { # non-HIV projections
+    		    trajectories[proj.idx,j] <- do.e0.proj(cs.par.values[j,],  
+    		                                          all.e0[last.val.idx], 
+    		                                          kap=var.par.values[j,'omega'],n.proj=length(proj.idx),
+    		                                          p1=mcmc.set$meta$dl.p1, p2=mcmc.set$meta$dl.p2, 
+    		                                          const.var=mcmc.set$meta$constant.variance)
+    		}
            							
     	}
     	if (nmissing > 0) {
@@ -495,7 +516,7 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 }
 
 e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim.eq2=c(3,9),	
-								max.e0.eq1.pred=83, my.e0.file=NULL, my.locations.file=NULL, 
+								max.e0.eq1.pred=86, my.e0.file=NULL, my.locations.file=NULL, 
 								save.as.ascii=1000, verbose=TRUE, ...) {
 	# Predicting male e0 from female predictions. estimates is the result of 
 	# the e0.jmale.estimate function. If it is NULL, the estimation is performed 

@@ -25,21 +25,6 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
 	wpar.integral.to.mC <- sapply(1:6, compute.par.integral.to.mC, mcenv=mcenv, meta=meta, 
 								lambdas.sqrt= sqrt(c(mcenv$lambda, mcenv$lambda.k, mcenv$lambda.z)), C=C)						
 								
-				
-	#get regression data
-	#################################
-	#data(regdata.index.wpp2015.40.avg.2)
-	#data(country.data.index.wpp2015.40.avg)
-	#data(deltaHIV.long.index)
-	#data(deltaHIV.short.index)
-	#data(deltanonARTobs2015)
-	#deltanonARTwide <- deltanonART[,-2]
-	#deltanonARTlong <- reshape(deltanonARTwide, direction="long", 
-	#                           varying=2:ncol(deltanonARTwide), 
-	#                           v.names="deltanonART", 
-	#                           times=colnames(deltanonARTwide)[-1], 
-	#                           timevar="year", idvar="country_code")
-
 	if(meta$hiv.model) {
 	    X <- as.vector(t(meta$dlt.nart))
 	    loess.vector <- as.vector(t(meta$loessSD))
