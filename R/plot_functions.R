@@ -654,6 +654,7 @@ e0.partraces.plot <- function(mcmc.list=NULL, sim.dir=file.path(getwd(), 'bayesL
                                 nr.points=NULL, dev.ncol=5, low.memory=TRUE, ...) {
 	if (is.null(mcmc.list))
 		mcmc.list <- get.e0.mcmc(sim.dir, low.memory=low.memory)
+	if(missing(par.names)) par.names <- e0.parameter.names(isTRUE(mcmc.list$meta$hiv.model))
 	bayesTFR:::do.plot.tfr.partraces(mcmc.list, load.e0.parameter.traces, chain.ids=chain.ids, 
         						nr.points=nr.points, par.names=par.names, dev.ncol=dev.ncol, ...)
 }
@@ -678,9 +679,10 @@ e0.pardensity.plot <- function(mcmc.list=NULL, sim.dir=file.path(getwd(), 'bayes
 									burnin=NULL, dev.ncol=5, low.memory=TRUE, ...) {
 	if (is.null(mcmc.list))
 		mcmc.list <- get.e0.mcmc(sim.dir, low.memory=low.memory)
+	if(missing(par.names)) par.names <- e0.parameter.names(isTRUE(mcmc.list$meta$hiv.model))
 	bayesTFR:::do.plot.tfr.pardensity(mcmc.list, get.e0.parameter.traces, chain.ids=chain.ids, par.names=par.names,
 			par.names.ext=bayesTFR:::get.full.par.names(par.names, 
-						e0.get.all.parameter.names.extended()),
+						e0.get.all.parameter.names.extended(is.hiv=TRUE)),
 			burnin=burnin, dev.ncol=dev.ncol, ...)
 }
 

@@ -5,7 +5,9 @@ e0.raftery.diag <- function(mcmc=NULL,
 							 par.names.cs = e0.parameter.names.cs(),
 							 country.sampling.prop=1,
 							 verbose=TRUE, ...) {
-return(bayesTFR::tfr.raftery.diag(mcmc=mcmc, sim.dir=sim.dir, burnin=burnin,
+    if(is.null(mcmc)) mcmc <- get.e0.mcmc(sim.dir)
+    if(missing(par.names)) par.names <- e0.parameter.names(isTRUE(mcmc$meta$hiv.model))
+    return(bayesTFR::tfr.raftery.diag(mcmc=mcmc, sim.dir=sim.dir, burnin=burnin,
 						country=country, par.names=par.names, par.names.cs=par.names.cs,
 						country.sampling.prop=country.sampling.prop, verbose=verbose, ...))
 }

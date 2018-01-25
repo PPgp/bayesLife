@@ -13,7 +13,7 @@ Runs (or continues running) MCMCs for simulating the life expectancy for all cou
 run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 160000, 
     output.dir = file.path(getwd(), "bayesLife.output"), 
     thin = 10, replace.output = FALSE, 
-    start.year = 1873, present.year = 2015, wpp.year = 2017, 
+    start.year = 1873, present.year = 2015, wpp.year = 2017, hiv.model = FALSE,
     my.e0.file = NULL, my.locations.file = NULL, buffer.size = 100, 
     a = c(13.215, 41.070, 9.235, 17.605, 2.84, 0.385), 
     delta = c(3.844, 4.035, 11.538, 5.639, 0.901, 0.4), 
@@ -22,6 +22,7 @@ run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 160000,
     Triangle.ini = list(NULL, NULL, NULL, NULL), k.ini = NULL, 
     z.ini = NULL, lambda.ini = list(NULL, NULL, NULL, NULL), 
     lambda.k.ini = NULL, lambda.z.ini = NULL, omega.ini = NULL, 
+    betanonART.ini = -0.77,
     Triangle.ini.low = c(10, 30, 0.1, 10), Triangle.ini.up = c(30, 50, 10, 30), 
     k.ini.low = 3, k.ini.up = 5, z.ini.low = 1e-04, z.ini.up = 0.653, 
     lambda.ini.low = c(0.01, 0.01, 0.01, 0.01), 
@@ -39,7 +40,7 @@ run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 160000,
     k.c.prior.low = 0, k.c.prior.up = 10, z.c.prior.low = 0, z.c.prior.up = 0.653,
     country.overwrites = NULL, nu = 4, dl.p1 = 9, dl.p2 = 9, 
     sumTriangle.lim = c(30, 86), constant.variance = FALSE, 
-    outliers=c(-5, 10), seed = NULL, 
+    outliers=c(-5, 10), hiv.outliers = c(-15, 15), seed = NULL, 
     parallel = FALSE, nr.nodes = nr.chains, compression.type = 'None',
     auto.conf = list(max.loops=5, iter=160000, iter.incr=20000, 
         nr.chains=3, thin=225, burnin=10000),
@@ -61,6 +62,7 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{start.year}{Start year for using historical data.}
   \item{present.year}{End year for using historical data.}
   \item{wpp.year}{Year for which WPP data is used. The functions loads a package called \pkg{wpp}\eqn{x} where \eqn{x} is the \code{wpp.year} and uses the \code{e0*} datasets.}
+  \item{hiv.model}{Logical determining if HIV/AIDS countries should be included in the estimation and treated using the Godwin & Raftery (2017) model. If \code{FALSE}, HIV/AIDS countries are not included in the estimation.}
   \item{my.e0.file}{File name containing user-specified e0 time series for one or more countries. See Details below.}
   \item{my.locations.file}{File name containing user-specified locations. See Details below.}
   \item{buffer.size}{Buffer size (in number of [thinned] iterations) for keeping data in the memory. The smaller the \code{buffer.size} the more often will the process access the hard disk and thus, the slower the run. On the other hand, the smaller the \code{buffer.size} the less data will be lost in case of failure.}
@@ -76,6 +78,7 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{lambda.ini}{List (of length four) of initial values for \eqn{\lambda_1}{lambda_1}, \dots, \eqn{\lambda_4}{lambda_4}. Each list item should be of the length \code{nr.chains}. If a list item is \code{NULL}, the initial values are equally spaced between \code{lambda.ini.low} and \code{lambda.ini.up}. By default, if there is just one chain, the value is the middle point of the interval.}
   \item{lambda.k.ini, lambda.z.ini}{An array of length \code{nr.chains} of initial values for \eqn{\lambda_k}{lambda_k} (\eqn{\lambda_z}{lambda_z}). By default, the initial values are equally spaced between \code{lambda.k.ini.low} and \code{lambda.k.ini.up} (\code{lambda.z.ini.low} and \code{lambda.z.ini.up}). If \code{nr.chains=1} and \code{lambda.k.ini} (\code{lambda.z.ini}) is \code{NULL}, the initial value is the middle point of the interval.}
   \item{omega.ini}{An array of length \code{nr.chains} of initial values for \eqn{\omega}{omega}. By default, the initial values are equally spaced between \code{omega.ini.low} and \code{omega.ini.up}. If \code{nr.chains=1} and \code{omega.ini} is \code{NULL}, the initial value is the middle point of the interval.}
+  \item{betanonART.ini}{Initital value for the regression coefficient of the HIV/AIDS model (1b). Only used if \code{hiv.model} is \code{TRUE}.}
   \item{Triangle.ini.low, Triangle.ini.up}{A vector of length four. They are the lower and upper bounds for initial values of \eqn{\Delta_1}{Triangle_1}, \dots, \eqn{\Delta_4}{Triangle_4}. An \eqn{i}-th item is only used if \code{Triangle.ini[[i]]} is \code{NULL}.}
   \item{k.ini.low, k.ini.up}{Single value giving the lower and upper bounds for initial values of \eqn{k}. It is only used if \code{k.ini} is \code{NULL}.}
   \item{z.ini.low, z.ini.up}{Single value giving the lower and upper bounds for initial values of \eqn{z}. It is only used if \code{z.ini} is   
@@ -98,6 +101,7 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{sumTriangle.lim}{Lower and upper limits for the sum of the \eqn{\Delta_i}{Triangle_i} parameters. MCMC proposals that are outside of this limit are rejected. It is applied to both, the world parameters as well as the country specific parameters.}
   \item{constant.variance}{Logical indicating if the model should be estimated using constant variance.}
   \item{outliers}{Ranges for determining outliers in the historical data. If \code{outliers=c(x, y)} then any increase in life expectancy smaller than \code{x} or larger than \code{y} is considered as an outlier and removed from the estimation.}
+  \item{hiv.outliers}{Ranges for outliers of the HIV/AIDS countries. Only used if \code{hiv.model} is \code{TRUE}.}
   \item{seed}{Seed of the random number generator. If \code{NULL} no seed is set. It can be used to generate reproducible results.}
   \item{parallel}{Logical determining if the simulation should run multiple chains in parallel. If it is \code{TRUE}, the package \pkg{\link[snowFT]{snowFT}} is required.}
   \item{nr.nodes}{Relevant only if \code{parallel} is \code{TRUE}. It gives the number of nodes for running the simulation in parallel. By default it equals to the number of chains.}
@@ -136,7 +140,9 @@ The package contains a dataset called \file{my_e0_template} (in \file{extdata} d
 	\item{mcmc.list}{A list of objects of class \code{\link{bayesLife.mcmc}}, one for each MCMC.}
 }
 \references{
-(1) J. L. Chunn, A. E. Raftery, P. Gerland (2010): Bayesian Probabilistic Projections of Life Expectancy for All Countries.  Working Paper nr. 105, Center for Statistics and the Social Sciences, University of Washington. \url{http://www.csss.washington.edu/Papers}
+(1a) Raftery, A.E., Chunn, J.L., Gerland, P., and Sevcikova, H. (2013). Bayesian probabilistic projections of life expectancy for all countries. Demography 50(3): 777–801. \url{https://dx.doi.org/10.1007/s13524-012-0193-x}
+
+(1b) J. Godwin and A. E. Raftery (2017): Bayesian projection of life expectancy accounting for the HIV/AIDS epidemic. Demographic Research 37(48):1549–1610. \url{http://www.demographic-research.org/Volumes/Vol37/48}
 
 (2a)  Oeppen J, and J.W. Vaupel (2002) Broken limits to life expectancy. Science 296:1029-1031. 
 

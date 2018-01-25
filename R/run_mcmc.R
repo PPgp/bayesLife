@@ -382,6 +382,7 @@ init.nodes.e0 <- function() {
 			d.ct[i-1,nisna2] <- data$e0.matrix[i,nisna2] - data$e0.matrix[i-1,nisna2]
 			if(meta$hiv.model) { # different outliers for HIV and non-HIV countries
 			    dlt.nart[i-1, ] <- nonart[i, ] - nonart[i-1, ]
+			    dlt.nart[i-1, !data$regions$is.hiv] <- 0
 			    outliers <- rep(FALSE, nr_countries)
 			    outliers[data$regions$is.hiv] <- (d.ct[i-1,data$regions$is.hiv] < meta$hiv.outliers[1]) | (d.ct[i-1,data$regions$is.hiv] > meta$hiv.outliers[2])
 			    outliers[!data$regions$is.hiv] <- (d.ct[i-1,!data$regions$is.hiv] < meta$outliers[1]) | (d.ct[i-1,!data$regions$is.hiv] > meta$outliers[2])

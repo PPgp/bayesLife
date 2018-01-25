@@ -17,6 +17,7 @@ do.e0.proj<-function(x,l.start,kap,n.proj=11, p1=9, p2=9, const.var=FALSE){
 do.e0.proj.hiv<-function(x,country,is.hiv, beta,l.start,kap,n.proj=11, p1=9, p2=9, const.var=FALSE){
     proj<-NULL
     proj[1]<-l.start
+    if(!is.hiv) beta <- 0
     for(a in 2:(n.proj+1)){
         
         proj[a]<-proj[a-1]+g.dl6(x,proj[a-1], p1=p1, p2=p2)+beta*deltanonARTto2100.UN.EPP[[country]][sample(1:1000,1),12+a-1] +

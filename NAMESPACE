@@ -4,6 +4,7 @@ import(
     bayesTFR, hett, coda, wpp2017
 )
 importFrom(car, dataEllipse)
+importFrom("utils", "data")
 importFrom("graphics", "abline", "grid", "legend", "lines", "plot", "points", "text")
 importFrom("grDevices", "rainbow")
 importFrom("stats", "dgamma", "dnorm", "dunif", "median", "pnorm", "quantile", "rexp", "rgamma", "rnorm", "rt", "runif", "sd")

@@ -121,6 +121,7 @@ get.e0.parameter.traces <- function(mcmc.list, par.names=e0.parameter.names(), b
 									thinning.index=NULL, thin=NULL) {
 	# get parameter traces either from disk or from memory, if they were already loaded
 	mcmc.list <- get.mcmc.list(mcmc.list)
+	if(missing(par.names)) par.names <- e0.parameter.names(isTRUE(mcmc.list[[1]]$meta$hiv.model))
 	return(bayesTFR:::do.get.tfr.parameter.traces(is.cs=FALSE, mcmc.list=mcmc.list, par.names=par.names, 
 										burnin=burnin, thinning.index=thinning.index, thin=thin))
 }
@@ -137,12 +138,13 @@ get.e0.parameter.traces.cs <- function(mcmc.list, country.obj, par.names=e0.para
 
 bdem.parameter.traces.bayesLife.mcmc <- function(mcmc, par.names, ...) {
 	# Load traces from the disk
-	all.standard.names <- c(e0.parameter.names(), e0.parameter.names.cs())
+	all.standard.names <- c(e0.parameter.names(is.hiv=TRUE), e0.parameter.names.cs())
 	return(bayesTFR:::.do.get.traces(mcmc, par.names=par.names, ..., 
 							all.standard.names=all.standard.names))
 }
 
 load.e0.parameter.traces <- function(mcmc, par.names=e0.parameter.names(), burnin=0, thinning.index=NULL) {
+    if(missing(par.names)) par.names <- e0.parameter.names(isTRUE(mcmc$meta$hiv.model))
  	return(bdem.parameter.traces(mcmc, par.names, burnin=burnin, thinning.index=thinning.index))
 }
 
@@ -156,6 +158,7 @@ load.e0.parameter.traces.cs <- function(mcmc, country, par.names=e0.parameter.na
 load.e0.parameter.traces.all <- function(mcmc, par.names=e0.parameter.names(), 
 										 par.names.cs=e0.parameter.names.cs(),
 										 burnin=0, thinning.index=NULL) {
+    if(missing(par.names)) par.names <- e0.parameter.names(isTRUE(mcmc$meta$hiv.model))
 	result <- load.e0.parameter.traces(mcmc, par.names, burnin=burnin, thinning.index=thinning.index)
 	for (country in 1:mcmc$meta$nr.countries) {
 		result <- cbind(result, 
@@ -168,9 +171,11 @@ load.e0.parameter.traces.all <- function(mcmc, par.names=e0.parameter.names(),
 	return (result)
 }
 
-e0.get.all.parameter.names <- function() {
+e0.get.all.parameter.names <- function(is.hiv=FALSE) {
     # Parameters with the number of its values
-	return(list(Triangle=4, k=1, z=1, lambda=4, lambda.k=1, lambda.z=1, omega=1, betanonART=1)) 
+	parlist <- list(Triangle=4, k=1, z=1, lambda=4, lambda.k=1, lambda.z=1, omega=1)
+	if(is.hiv) parlist$betanonART <- 1
+	return(parlist)
 }				
 
 e0.get.all.parameter.names.cs <- function() {
@@ -178,9 +183,9 @@ e0.get.all.parameter.names.cs <- function() {
 	return(list(Triangle.c=4, k.c=1, z.c=1))
 }
 
-e0.get.all.parameter.names.extended <- function(cs=FALSE) {
+e0.get.all.parameter.names.extended <- function(cs=FALSE, ...) {
 	pars <- c()
-	all.pars <- if(cs) e0.get.all.parameter.names.cs() else e0.get.all.parameter.names()
+	all.pars <- if(cs) e0.get.all.parameter.names.cs() else e0.get.all.parameter.names(...)
 	for (ipar in 1:length(all.pars)) {
 		par <- all.pars[ipar]
 		paropt <- unlist(par)
@@ -190,8 +195,8 @@ e0.get.all.parameter.names.extended <- function(cs=FALSE) {
 	return(pars)
 }
 
-e0.parameter.names.extended <- function() 
-	return(e0.get.all.parameter.names.extended())
+e0.parameter.names.extended <- function(...) 
+	return(e0.get.all.parameter.names.extended(...))
 	
 e0.parameter.names.cs.extended <- function(country.code=NULL) {
 	# return a list of cs-parameters extended by i if necessary
@@ -200,7 +205,7 @@ e0.parameter.names.cs.extended <- function(country.code=NULL) {
 	return(pars)
 }
 
-e0.parameter.names <- function() return(names(e0.get.all.parameter.names()))
+e0.parameter.names <- function(...) return(names(e0.get.all.parameter.names(...)))
 e0.parameter.names.cs <- function() return(names(e0.get.all.parameter.names.cs()))
 
 get.mcmc.list.bayesLife.mcmc.set <- function(mcmc.list, ...) return(mcmc.list$mcmc.list)
@@ -212,18 +217,20 @@ get.mcmc.meta.bayesLife.mcmc.meta <- function(meta, ...) return(meta)
 get.mcmc.meta.bayesLife.mcmc <- function(meta, ...) return(meta$meta)
 get.mcmc.meta.bayesLife.prediction <- function(meta, ...) return(meta$mcmc.set$meta)
 
-
 summary.bayesLife.mcmc <- function(object, country=NULL, 
 								par.names=e0.parameter.names(), 
-								par.names.cs=e0.parameter.names.cs(), ...)
+								par.names.cs=e0.parameter.names.cs(), ...) {
+    if(missing(par.names)) par.names <- e0.parameter.names(isTRUE(object$meta$hiv.model))
 	return (bayesTFR:::summary.bayesTFR.mcmc(object, country=country,
 				par.names=par.names, par.names.cs=par.names.cs, ...))
+}
 
 summary.bayesLife.mcmc.set <- function(object, country=NULL, chain.id=NULL, 
 								par.names=e0.parameter.names(), 
 								par.names.cs=e0.parameter.names.cs(), 
 								meta.only=FALSE, thin=1, burnin=0, ...) {
 	if(is.null(country) & missing(par.names.cs)) par.names.cs <- NULL
+	if(missing(par.names)) par.names <- e0.parameter.names(isTRUE(object$meta$hiv.model))
 	cat('\nSimulation:', get.sex.label(object$meta), 'life expectancy')
 	cat('\nWPP:', object$meta$wpp.year)
 	cat('\nInput data: e0 for period', object$meta$start.year, '-', object$meta$present.year,'\n')
@@ -314,7 +321,6 @@ create.thinned.e0.mcmc <- function(mcmc.set, thin=1, burnin=0, output.dir=NULL, 
 	# store the meta object
 	store.bayesLife.meta.object(meta, meta$output.dir)
 
-	
 	thin.index <- if(thin > mcthin) unique(round(seq(1, total.iter, by=thin/mcthin))) else 1:total.iter
 	nr.points <- length(thin.index)
 	
@@ -334,7 +340,7 @@ create.thinned.e0.mcmc <- function(mcmc.set, thin=1, burnin=0, output.dir=NULL, 
 	store.bayesLife.object(thinned.mcmc, outdir.thin.mcmc)
 	
 	if(verbose) cat('\nStoring country-independent parameters ...')
-	for (par in e0.parameter.names()) {
+	for (par in e0.parameter.names(isTRUE(meta$hiv.model))) {
 		values <- get.e0.parameter.traces(mcmc.set$mcmc.list, par, burnin,
 											thinning.index=thin.index)
 		bayesTFR:::write.values.into.file.cindep(par, values, outdir.thin.mcmc, compression.type=thinned.mcmc$compression.type)
@@ -408,10 +414,12 @@ get.nrest.countries.bayesLife.mcmc.meta <- function(meta, ...) return (meta$nr.c
 get.data.matrix.bayesLife.mcmc.meta <- function(meta, ...) return (meta$e0.matrix)
 
 coda.mcmc.bayesLife.mcmc <- function(mcmc, country=NULL, par.names=e0.parameter.names(), 
-						par.names.cs=e0.parameter.names.cs(), ...)
+						par.names.cs=e0.parameter.names.cs(), ...) {
+    if(missing(par.names)) par.names <- e0.parameter.names(isTRUE(mcmc$meta$hiv.model))
 	return(bayesTFR:::coda.mcmc.bayesTFR.mcmc(mcmc, country=country, par.names=par.names, 
 												par.names.cs=par.names.cs, ...))
-												
+}
+
 e0.coda.list.mcmc <- function(mcmc.list=NULL, country=NULL, chain.ids=NULL,
 							sim.dir=file.path(getwd(), 'bayesLife.output'), 
 							par.names=e0.parameter.names(), 
@@ -426,6 +434,7 @@ e0.coda.list.mcmc <- function(mcmc.list=NULL, country=NULL, chain.ids=NULL,
 			mcmc.list <- mcmc.list[chain.ids]
 		}
 	}
+    if(missing(par.names)) par.names <- e0.parameter.names(isTRUE(mcmc.list[[1]]$meta$hiv.model))
 	result <- list()
 	i <- 1
 	for(mcmc in mcmc.list) {

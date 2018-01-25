@@ -29,7 +29,7 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
 	    X <- as.vector(t(meta$dlt.nart))
 	    loess.vector <- as.vector(t(meta$loessSD))
 	    dct.vector <- as.vector(t(meta$d.ct))
-	    idxX <- !is.na(X)
+	    idxX <- !is.na(X) # can be NA where outliers
 	    X <- X[idxX]
 	    loess.vector <- loess.vector[idxX]
 	    dct.vector <- dct.vector[idxX]
@@ -216,7 +216,7 @@ e0.mcmc.sampling.extra <- function(mcmc, mcmc.list, countries, posterior.sample,
 	if (is.null(iter))
     	niter <- mcmc$length	
 	# get values of the hyperparameters (sample from the posterior)
-    hyperparameter.names <- e0.parameter.names()
+    hyperparameter.names <- e0.parameter.names(isTRUE(mcmc$meta$hiv.model))
     hyperparameters <- list()
     sampled.index <- sample(posterior.sample, niter, replace=TRUE)
     th.burnin <- bayesTFR:::get.thinned.burnin(mcmc, burnin)
