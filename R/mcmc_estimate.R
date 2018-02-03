@@ -27,12 +27,10 @@ e0.mcmc.sampling <- function(mcmc, thin=1, start.iter=2, verbose=FALSE, verbose.
 								
 	if(meta$hiv.model) {
 	    X <- as.vector(t(meta$dlt.nart))
-	    loess.vector <- as.vector(t(meta$loessSD))
-	    dct.vector <- as.vector(t(meta$d.ct))
 	    idxX <- !is.na(X) # can be NA where outliers
 	    X <- X[idxX]
-	    loess.vector <- loess.vector[idxX]
-	    dct.vector <- dct.vector[idxX]
+	    loess.vector <- as.vector(t(meta$loessSD))[idxX]
+	    dct.vector <- as.vector(t(meta$d.ct))[idxX]
 	    sdbeta <- 0.5*sd(dct.vector)/sd(X)
 	    sigbetainv <- 1/sdbeta[1]^2
 	    newDL <- meta$d.ct

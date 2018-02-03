@@ -1,4 +1,4 @@
-if(getRversion() >= "2.15.1") utils::globalVariables(c("loess_sd", "hiv_art_2015"))
+if(getRversion() >= "2.15.1") utils::globalVariables(c("loess_sd"))
 data(loess_sd, envir=environment())
 
 run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000, 
@@ -31,7 +31,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
 						 k.c.prior.low=0, k.c.prior.up=10, z.c.prior.low=0, z.c.prior.up=0.653,
 						 country.overwrites = NULL,
 						 nu=4, dl.p1=9, dl.p2=9, sumTriangle.lim = c(30, 86), constant.variance=FALSE, 
-							outliers=c(-5,10), hiv.outliers=c(-15, 15),
+							outliers=c(-10,10), 
                          seed = NULL, parallel=FALSE, nr.nodes=nr.chains, compression.type='None',
                          auto.conf = list(max.loops=5, iter=160000, iter.incr=20000, nr.chains=3, thin=225, burnin=10000),
 						 verbose=FALSE, verbose.iter = 100, ...) {
@@ -110,7 +110,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
                                         country.overwrites=country.overwrites, 
                                         nu=nu, dl.p1=dl.p1, dl.p2=dl.p2, sumTriangle.lim=sumTriangle.lim, 
                                         constant.variance=constant.variance, 
-                                   		outliers=outliers, hiv.outliers=hiv.outliers,
+                                   		outliers=outliers, 
                                         buffer.size=buffer.size, compression.type=compression.type, 
                                         auto.conf=auto.conf, verbose=verbose)
     store.bayesLife.meta.object(bayesLife.mcmc.meta, output.dir)
@@ -355,6 +355,11 @@ init.nodes.e0 <- function() {
 
 
 .do.part.e0.mcmc.meta.ini <- function(data, meta) {
+    read.data.file <- function(file)
+        read.delim(file = file.path(find.package("bayesLife"), 
+                        "data", file), comment.char = "#", 
+                   check.names = FALSE)
+    
 	nr_countries <- ncol(data$e0.matrix)
     #T_end_c <- rep(NA, nr_countries)
     Tc.index <- .get.Tcindex(data$e0.matrix, cnames=data$regions$country_name)
@@ -365,14 +370,44 @@ init.nodes.e0 <- function() {
 	loessSD[,] <- 1
 	dlt.nart <- NULL
 	if(meta$hiv.model) {
-	    data(hiv_art_2015)
-	    nonart <- HIV[,-(1:2)] * (100 - ART[,-(1:2)])/100
-	    nonart <- cbind(HIV[,1:2], nonart)
+	    # read HIV and ART files
+	    hiv <- read.data.file("HIVprevalence.txt")
+	    if("include_code" %in% colnames(hiv))
+	        hiv <- hiv[hiv$include_code == 1,]
+	    art <- read.data.file("ARTcoverage.txt")
+	    if("include_code" %in% colnames(art))
+	        art <- art[art$include_code == 1,]
+	    # align the two datasets
+	    epi.cntries <- intersect(hiv$country_code, art$country_code)
+	    hiv <- hiv[hiv$country_code %in% epi.cntries,]
+	    rownames(hiv) <- hiv$country_code
+	    hiv <- hiv[,-which(colnames(hiv) %in% c("country_code", "name", "country_name", "include_code"))]
+	    hiv <- hiv[as.character(epi.cntries),]
+	    art <- art[art$country_code %in% epi.cntries,]
+	    rownames(art) <- art$country_code
+	    art <- art[,-which(colnames(art) %in% c("country_code", "name", "country_name", "include_code"))]
+	    art <- art[as.character(epi.cntries),]
+	    # align columns
+	    comcols <- intersect(colnames(hiv), colnames(art))
+	    hiv <- hiv[,comcols]
+	    art <- art[,comcols]
+	    # create nonART dataset
+	    nonart <- hiv * (100 - art)/100
+	    # put middle years as colnames
+	    colnames(nonart) <- as.integer(substr(colnames(nonart), 1,4))+3
+	    data$regions$hiv.est <- data$regions$country_code %in% epi.cntries
+	    # add countries not included in nonart, i.e. all non-hiv countries
+	    missing.countries <- data$regions$country_code[!data$regions$hiv.est]
+	    nonart <- rbind(nonart, 
+	                    matrix(0, nrow=length(missing.countries), ncol=ncol(nonart),
+	                                 dimnames=list(NULL, colnames(nonart))))
 	    # put into the same order as e0.matrix (the codes must match, i.e. no missing values)
-	    nonart <- nonart[match(data$regions$country_code, nonart$country_code),]
-	    rownames(nonart) <- nonart$country_code
-	    nonart <- t(nonart[,-c(1:2)])
-	    dlt.nart <- d.ct
+	    cntries.order <- match(data$regions$country_code, c(epi.cntries, missing.countries))
+	    nonart <- nonart[cntries.order,]
+	    rownames(nonart) <- c(epi.cntries, missing.countries)[cntries.order]
+	    nonart <- t(nonart)
+	    dlt.nart <- d.ct # to have a matrix of the right shape
+	    
 	}
 	for(i in 2:T) {
 		nisna0 <- !is.na(data$e0.matrix[i-1,])
@@ -380,21 +415,16 @@ init.nodes.e0 <- function() {
 		nisna2 <- nisna1 & nisna0
 		if (sum(nisna2) > 0) {
 			d.ct[i-1,nisna2] <- data$e0.matrix[i,nisna2] - data$e0.matrix[i-1,nisna2]
-			if(meta$hiv.model) { # different outliers for HIV and non-HIV countries
-			    dlt.nart[i-1, ] <- nonart[i, ] - nonart[i-1, ]
-			    dlt.nart[i-1, !data$regions$is.hiv] <- 0
-			    outliers <- rep(FALSE, nr_countries)
-			    outliers[data$regions$is.hiv] <- (d.ct[i-1,data$regions$is.hiv] < meta$hiv.outliers[1]) | (d.ct[i-1,data$regions$is.hiv] > meta$hiv.outliers[2])
-			    outliers[!data$regions$is.hiv] <- (d.ct[i-1,!data$regions$is.hiv] < meta$outliers[1]) | (d.ct[i-1,!data$regions$is.hiv] > meta$outliers[2])
-			    outliers <- nisna2 & outliers
-			    dlt.nart[i-1, outliers] <- NA
-			} else 
-			    outliers <- nisna2 & ((d.ct[i-1,] < meta$outliers[1]) | (d.ct[i-1,] > meta$outliers[2]))
+			outliers <- nisna2 & ((d.ct[i-1,] < meta$outliers[1]) | (d.ct[i-1,] > meta$outliers[2]))
 			d.ct[i-1,outliers] <- NA
+			if(meta$hiv.model) {
+			    dlt.nart[i-1, ] <- nonart[i, ] - nonart[i-1, ]
+			    dlt.nart[i-1, outliers] <- NA
+			}
 		}
 		if (sum(nisna0) > 0 && !meta$constant.variance)
 			loessSD[i-1,nisna0] <- if(meta$hiv.model) loess.lookup.hiv.model(data$e0.matrix[i-1,nisna0], 
-			                                                                 data$regions$is.hiv[nisna0]) else
+			                                                                 data$regions$hiv.est[nisna0]) else
 			                                         loess.lookup(data$e0.matrix[i-1,nisna0])
 	}
 	D.supp.ct <- loessSD.suppl <- NULL
@@ -421,7 +451,7 @@ init.nodes.e0 <- function() {
 			if (sum(nisna0) > 0)
 				loessSD.suppl[i-1,nisna0]<- if(meta$constant.variance) 1 else {
 				    if(meta$hiv.model) loess.lookup.hiv.model(data.suppl[i-1,nisna0], 
-				                                              data$regions$is.hiv[suppl$index.to.all.countries][nisna0]) else
+				                                              data$regions$hiv.est[suppl$index.to.all.countries][nisna0]) else
 				                        loess.lookup(data.suppl[i-1,nisna0])
 				}
 		}
