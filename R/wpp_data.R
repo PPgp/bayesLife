@@ -41,7 +41,7 @@ get.wpp.e0.data <- function(sex='M', start.year=1950, present.year=2015, wpp.yea
 							data_incl, loc_data, 
 							start.year=start.year, 
 							present.year=present.year)
-	LEXmatrix.regions$regions$is.hiv.default <- hiv.aids
+	LEXmatrix.regions$regions$hiv.pred <- hiv.aids
 	
 	if (verbose) 
 		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')

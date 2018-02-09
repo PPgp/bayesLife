@@ -73,7 +73,8 @@ export(
 	e0.gap.plot,
 	e0.gap.plot.all,
 	e0.joint.plot,
-	e0.joint.plot.all
+	e0.joint.plot.all,
+	compute.loess
 )
 
 # register S3 methods

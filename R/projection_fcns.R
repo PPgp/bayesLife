@@ -286,7 +286,7 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
     		if(mcmc.set$meta$hiv.model) {
                 trajectories[proj.idx,j] <- do.e0.proj.hiv(cs.par.values[j,], 
                                                            country=country, 
-                                                           is.hiv = mcmc.set$meta$regions$is.hiv[country],
+                                                           is.hiv = mcmc.set$meta$regions$hiv.pred[country],
                                                            beta=var.beta[j,], 
            							                       all.e0[last.val.idx], 
            							                        kap=var.par.values[j,'omega'], n.proj=length(proj.idx),
