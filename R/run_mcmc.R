@@ -1,4 +1,4 @@
-if(getRversion() >= "2.15.1") utils::globalVariables(c("loess_sd"))
+if(getRversion() >= "2.15.1") utils::globalVariables("loess_sd")
 data(loess_sd, envir=environment())
 
 run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000, 

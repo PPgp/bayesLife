@@ -3,7 +3,7 @@
 import(
     bayesTFR, hett, coda, wpp2017
 )
-importFrom(car, dataEllipse)
+importFrom(car, dataEllipse, logit)
 importFrom("utils", "data")
 importFrom("graphics", "abline", "grid", "legend", "lines", "plot", "points", "text")
 importFrom("grDevices", "rainbow")
@@ -75,7 +75,10 @@ export(
 	e0.joint.plot,
 	e0.joint.plot.all,
 	compute.loess,
-	compute.residuals
+	compute.residuals,
+	scale.hiv.trajectories,
+	hiv.countries.pred,
+	hiv.countries.est
 )
 
 # register S3 methods

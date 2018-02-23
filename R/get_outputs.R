@@ -453,3 +453,13 @@ get.countries.table.bayesLife.prediction <- function(object, ...)
 
 get.observed.e0 <- function(country.index, meta, matrix.name='e0.matrix', matrix.name.suppl=matrix.name)
 	return(bayesTFR:::get.observed.tfr(country.index, meta, matrix.name=matrix.name, matrix.name.suppl=matrix.name.suppl))
+
+hiv.countries.pred <- function(meta)
+    return(data.frame(country_code=meta$regions$country_code[meta$regions$hiv.pred],
+                 country_name=meta$regions$country_name[meta$regions$hiv.pred])
+            )
+
+hiv.countries.est <- function(meta)
+    return(data.frame(country_code=meta$regions$country_code[meta$regions$hiv.est],
+                      country_name=meta$regions$country_name[meta$regions$hiv.est])
+    )

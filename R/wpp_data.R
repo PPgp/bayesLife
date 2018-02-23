@@ -145,12 +145,9 @@ scale.hiv.trajectories <- function(trajectories = NULL, scale.to = NULL,
     # The scaling is done using an adjusted logit.
     
     rep.row <- function(x,n) matrix(rep(x,each=n), nrow=n)
-    logit <- function(p, adj) { # taken from the car package
-        a <- 1 - 2 * adj
-        log((0.5 + a * (p - 0.5))/(1 - (0.5 + a * (p - 0.5))))
-    }
-    expit <- function(x, adj) { # inverse logit with adjustment
-        a <- 1 - 2 * adj
+
+    expit <- function(x, adjust) { # inverse logit with adjustment
+        a <- 1 - 2 * adjust
         (exp(x)- 1)/(2*a*(1+exp(x))) + 1/2
     }
     env <- new.env()
@@ -203,10 +200,10 @@ scale.hiv.trajectories <- function(trajectories = NULL, scale.to = NULL,
     trajs.mtx <- as.matrix(trajs.red)
     unhiv.big <- apply(unhivmtx, 2, rep.row, nr.trajs)
     
-    x <- (logit(trajs.mtx/100, adj=logit.adjust) + 
-              logit(unhiv.big/100, adj=logit.adjust) - 
-              logit(trajs.med.big/100, adj=logit.adjust))
-    scaled <- 100*expit(x, adj=logit.adjust)
+    x <- (logit(trajs.mtx/100, adjust=logit.adjust) + 
+              logit(unhiv.big/100, adjust=logit.adjust) - 
+              logit(trajs.med.big/100, adjust=logit.adjust))
+    scaled <- 100*pmax(expit(x, adjust=logit.adjust), 0)
     scaled <- cbind(data.frame(country_code = trajs$country_code,
                     Trajectory = trajs$Trajectory), 
                     scaled)

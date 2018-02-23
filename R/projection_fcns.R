@@ -1,35 +1,32 @@
-if(getRversion() >= "2.15.1") utils::globalVariables(c("loess_sd", "deltanonARTto2100.UN.EPP"))
+if(getRversion() >= "2.15.1") utils::globalVariables("loess_sd")
 data(loess_sd, envir=environment())
-data(deltanonARTto2100.UN.EPP, envir=environment())
 
-do.e0.proj<-function(x,l.start,kap,n.proj=11, p1=9, p2=9, const.var=FALSE){
-    proj<-NULL
-    proj[1]<-l.start
+do.e0.proj <- function(x, l.start, kap, n.proj=11, p1=9, p2=9, const.var=FALSE){
+    proj <- c(l.start, rep(NA, n.proj))
     for(a in 2:(n.proj+1)){
-        
-        proj[a]<-proj[a-1]+g.dl6(x,proj[a-1], p1=p1, p2=p2)+rnorm(1,mean=0,
+        proj[a] <- proj[a-1] + g.dl6(x,proj[a-1], p1=p1, p2=p2) + rnorm(1, mean=0,
                             sd=(kap*if(const.var) 1 else loess.lookup(proj[a-1])))
-        
     }
-    return(proj[2:length(proj)])
+    return(proj[-1])
 }
 
-do.e0.proj.hiv<-function(x,country,is.hiv, beta,l.start,kap,n.proj=11, p1=9, p2=9, const.var=FALSE){
-    proj<-NULL
-    proj[1]<-l.start
-    if(!is.hiv) beta <- 0
+do.e0.proj.hiv <- function(x, country.code, beta, l.start, kap, hiv.env,  
+                           traj.idx, n.proj=11, p1=9, p2=9, const.var=FALSE){
+    proj <- c(l.start, rep(NA, n.proj))
+    ccode <- as.character(country.code)
     for(a in 2:(n.proj+1)){
-        
-        proj[a]<-proj[a-1]+g.dl6(x,proj[a-1], p1=p1, p2=p2)+beta*deltanonARTto2100.UN.EPP[[country]][sample(1:1000,1),12+a-1] +
-            rnorm(1,mean=0, sd=(kap*if(const.var) 1 else loess.lookup.hiv.model(proj[a-1],is.hiv)))
-        
+        proj[a] <- (proj[a-1] + g.dl6(x,proj[a-1], p1=p1, p2=p2) + 
+                    beta*hiv.env$trajs[ccode, traj.idx, a-1] +
+                    rnorm(1, mean=0, sd=(kap*if(const.var) 1 else loess.lookup.hiv.model(proj[a-1], TRUE)))
+                    )
     }
-    return(proj[2:length(proj)])
+    return(proj[-1])
 }
 
 e0.predict <- function(mcmc.set=NULL, end.year=2100, sim.dir=file.path(getwd(), 'bayesLife.output'),
-                       replace.output=FALSE, predict.jmale = TRUE, nr.traj = NULL, thin=NULL, burnin=10000, 
-                       use.diagnostics=FALSE, save.as.ascii=1000, start.year=NULL,
+                       replace.output=FALSE, predict.jmale = TRUE, 
+                       nr.traj = NULL, thin=NULL, burnin=10000, 
+                       use.diagnostics=FALSE, hiv.countries = NULL, save.as.ascii=1000, start.year=NULL,
                        output.dir = NULL, low.memory=TRUE, seed=NULL, verbose=TRUE, ...){
 	if(!is.null(mcmc.set)) {
 		if (class(mcmc.set) != 'bayesLife.mcmc.set') {
@@ -63,10 +60,11 @@ e0.predict <- function(mcmc.set=NULL, end.year=2100, sim.dir=file.path(getwd(), 
 		if(verbose)
 			cat('\nUsing convergence settings: nr.traj=', nr.traj, ', burnin=', burnin, '\n')
 	}
-
-	pred <- make.e0.prediction(mcmc.set, end.year=end.year,  
-					replace.output=replace.output,  
-					nr.traj=nr.traj, thin=thin, burnin=burnin, save.as.ascii=save.as.ascii, start.year=start.year,
+    if(!is.null(hiv.countries)) # convert to index
+        hiv.countries <- which(mcmc.set$meta$regions$country_code %in% hiv.countries)
+	pred <- make.e0.prediction(mcmc.set, end.year=end.year, replace.output=replace.output,  
+					nr.traj=nr.traj, thin=thin, burnin=burnin, hiv.countries = hiv.countries, 
+					save.as.ascii=save.as.ascii, start.year=start.year,
 					output.dir=output.dir, verbose=verbose)
 	if(predict.jmale && mcmc.set$meta$sex == 'F')
 		pred <- e0.jmale.predict(pred, ..., save.as.ascii=save.as.ascii, verbose=verbose)
@@ -145,12 +143,13 @@ e0.predict.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 
 
 make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace.output=FALSE,
-								nr.traj = NULL, thin=NULL, burnin=0, countries = NULL,
+								nr.traj = NULL, thin=NULL, burnin=0, countries = NULL, hiv.countries = NULL,
 							    save.as.ascii=1000, output.dir = NULL, write.summary.files=TRUE, 
 							    force.creating.thinned.mcmc=FALSE,
 							    verbose=verbose){
-	# if 'countries' is given, it is an index
-	present.year <- if(is.null(start.year)) mcmc.set$meta$present.year else start.year - 5
+	# if 'countries' is given, it is an index. The same for hiv.countries.
+    meta <- mcmc.set$meta
+	present.year <- if(is.null(start.year)) meta$present.year else start.year - 5
 	nr_project <- length(seq(present.year+5, end.year, by=5))
 	cat('\nPrediction from', present.year+5, 'until', end.year, '(i.e.', nr_project, 'projections)\n\n')
 			
@@ -172,7 +171,7 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
 		stop('The number of simulations is 0. Burnin might be larger than the number of simulated values, or # trajectories is too big.')
 
 	#setup output directory
-	if (is.null(output.dir)) output.dir <- mcmc.set$meta$output.dir
+	if (is.null(output.dir)) output.dir <- meta$output.dir
 	outdir <- file.path(output.dir, 'predictions')
 
 	if(is.null(countries)) {
@@ -187,7 +186,7 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
 	
 	thinned.mcmc <- get.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin)
 	has.thinned.mcmc <- (!is.null(thinned.mcmc) && thinned.mcmc$meta$parent.iter == total.iter 
-							&& mcmc.set$meta$nr.countries == thinned.mcmc$meta$nr.countries)
+							&& meta$nr.countries == thinned.mcmc$meta$nr.countries)
 	unblock.gtk('bDem.e0pred')
 	load.mcmc.set <- if(has.thinned.mcmc && !force.creating.thinned.mcmc) thinned.mcmc
 		 			 else create.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin, 
@@ -198,28 +197,61 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
 	# load only the first par to check if everything is o.k.
 	var.par.values <- get.e0.parameter.traces(load.mcmc.set$mcmc.list, var.par.names, burnin=0)
 
-	prediction.countries <- if(is.null(countries)) 1:mcmc.set$meta$nr.countries else countries
-	nr_countries <- mcmc.set$meta$nr.countries
-	e0.matrix.reconstructed <- get.e0.reconstructed(mcmc.set$meta$e0.matrix, mcmc.set$meta)
+	prediction.countries <- if(is.null(countries)) 1:meta$nr.countries else countries
+	nr_countries <- meta$nr.countries
+	e0.matrix.reconstructed <- get.e0.reconstructed(meta$e0.matrix, meta)
 	#le0.matrix <- dim(e0.matrix.reconstructed)[1]
-	present.year.index <- bayesTFR:::get.estimation.year.index(mcmc.set$meta, present.year)
+	present.year.index <- bayesTFR:::get.estimation.year.index(meta, present.year)
 	le0.matrix <- present.year.index
 	
 	quantiles.to.keep <- c(0,0.025,0.05,0.1,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,0.95,0.975,1)
 	PIs_cqp <- array(NA, c(nr_countries, length(quantiles.to.keep), nr_project+1))
 	dimnames(PIs_cqp)[[2]] <- quantiles.to.keep
-	proj.middleyears <- bayesTFR:::get.prediction.years(mcmc.set$meta, nr_project+1, present.year.index)
+	proj.middleyears <- bayesTFR:::get.prediction.years(meta, nr_project+1, present.year.index)
 	dimnames(PIs_cqp)[[3]] <- proj.middleyears
 	mean_sd <- array(NA, c(nr_countries, 2, nr_project+1))
 
 	var.par.names.cs <- c('Triangle.c', 'k.c', 'z.c')
-	hiv.model <- mcmc.set$meta$hiv.model
-
+	hiv.model <- meta$hiv.model
+	hiv.country.codes <- c()
 	##load beta
-	data(deltanonARTto2100.UN.EPP)
 	if(hiv.model) {
 	    var.beta.names <- c('betanonART')
 	    var.beta <- get.e0.parameter.traces(load.mcmc.set$mcmc.list, var.beta.names, burnin=0)
+	    # load hiv trajectories and convert to a 3d array
+	    hiv.env <- new.env()
+	    data("HIVprevTrajectories", envir = hiv.env)
+	    trajs <- hiv.env$HIVprevTrajectories
+	    elim.cols <- which(colnames(trajs) %in% c("country_code", "Trajectory"))
+	    years <- colnames(trajs)[-elim.cols]
+	    mid.years <- substr(years, 1, 4)
+	    mid.years <- as.integer(mid.years) + 3
+	    mid.years.remove <- which(! mid.years %in% proj.middleyears[-1])
+	    if(length(mid.years.remove) > 0) {
+	        mid.years <- mid.years[-mid.years.remove]
+	        elim.cols <- c(elim.cols, which(colnames(trajs) %in% years[mid.years.remove]))
+	    }
+	    if(length(mid.years) < length(proj.middleyears[-1]))
+	        stop("HIV trajectories missing for years ", 
+	             paste(setdiff(proj.middleyears[-1], mid.years), collapse = ", "))
+	    colnames(trajs)[-elim.cols] <- mid.years
+	    mid.years.char <- as.character(sort(mid.years))
+	    hiv.country.idx <- if(is.null(hiv.countries)) which(meta$regions$hiv.pred) else hiv.countries
+	    hiv.country.codes <- meta$regions$country_code[hiv.country.idx]
+	    if(any(! hiv.country.codes %in% trajs$country_code))
+	        stop("HIV trajectories missing for countries ", 
+	             paste(setdiff(unique(trajs$country_code), hiv.country.codes), collapse = ", "))
+	    nr.hiv.traj <- length(unique(trajs$Trajectory))
+	    hiv.trajs <- array(NA, dim=c(length(hiv.country.codes), nr.hiv.traj,
+	                             length(mid.years)),
+	                       dimnames = list(hiv.country.codes, NULL, mid.years.char))
+	    for(cntry in hiv.country.codes) 
+	        hiv.trajs[as.character(cntry),, mid.years.char] <- as.matrix(trajs[trajs$country_code == cntry, mid.years.char])
+	    hiv.env$trajs <- hiv.trajs
+	    hiv.traj.idx <- sample(1:nr.hiv.traj, nr_simu, replace=TRUE)
+	} else { # no hiv model estimated
+	    if(!is.null(hiv.countries))
+	        warning("HIV model not estimated. Argument hiv.countries ignored.")
 	}
 	country.counter <- 0
 	status.for.gui <- paste('out of', length(prediction.countries), 'countries.')
@@ -239,7 +271,7 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
 			unblock.gtk('bDem.e0pred', gui.options)
 		}
 
-		country.obj <- get.country.object(country, mcmc.set$meta, index=TRUE)
+		country.obj <- get.country.object(country, meta, index=TRUE)
 		if (verbose) {			
  			cat('e0 projection for country', country, country.obj$name, 
  						'(code', country.obj$code, ')\n')
@@ -255,9 +287,9 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
 				selected.simu$index <- sample(selected.simu$index, nr_simu, replace=TRUE)
 			cs.par.values <- cs.par.values[selected.simu$index,]
 		}
-		all.e0 <- mcmc.set$meta$e0.matrix[, country]
+		all.e0 <- meta$e0.matrix[, country]
 		lall.e0 <- length(all.e0)
-		this.Tc_end <-  mcmc.set$meta$Tc.index[[country]][length(mcmc.set$meta$Tc.index[[country]])]
+		this.Tc_end <-  meta$Tc.index[[country]][length(meta$Tc.index[[country]])]
 		this.T_end <- min(this.Tc_end, le0.matrix)
 		nmissing <- le0.matrix - this.T_end
 		missing <- (this.T_end+1):le0.matrix
@@ -266,16 +298,10 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
 			cat('\t', nmissing, 'data points reconstructed.\n')
 
 		this.nr_project <- nr_project + nmissing
-		#sum.delta <- apply(cs.par.values[,1:4], 1, sum)
-		#use.traj <- which(sum.delta <= 110)
 		trajectories <- matrix(NA, this.nr_project+1, nr_simu)
-		#trajectories <- matrix(NA, this.nr_project+1, length(use.traj))
     	for(j in 1:nr_simu){
-    	#for(j in 1:length(use.traj)){
-    		#k <- use.traj[j]
     		trajectories[1,j] <- all.e0[this.T_end]
     		if(nmissing == 0 && this.Tc_end > le0.matrix) { # use observed data on projection spots
-    			#stop('')
     			trajectories[2:(lall.e0 - le0.matrix+1),j]<- all.e0[(le0.matrix+1):lall.e0]
     			proj.idx <- (lall.e0 - le0.matrix + 2):(this.nr_project+1)
     			last.val.idx <- lall.e0
@@ -283,21 +309,22 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
     			proj.idx <- 2:(this.nr_project+1)
     			last.val.idx <- this.T_end
     		}
-    		if(mcmc.set$meta$hiv.model) {
+    		if(hiv.model && country %in% hiv.country.idx) {
                 trajectories[proj.idx,j] <- do.e0.proj.hiv(cs.par.values[j,], 
-                                                           country=country, 
-                                                           is.hiv = mcmc.set$meta$regions$hiv.pred[country],
+                                                           country=country.obj$code, 
                                                            beta=var.beta[j,], 
-           							                       all.e0[last.val.idx], 
-           							                        kap=var.par.values[j,'omega'], n.proj=length(proj.idx),
-           							                        p1=mcmc.set$meta$dl.p1, p2=mcmc.set$meta$dl.p2, 
-           							                        const.var=mcmc.set$meta$constant.variance)
+           							                       l.start=all.e0[last.val.idx], 
+           							                       kap=var.par.values[j,'omega'], 
+           							                       hiv.env = hiv.env,n.proj=length(proj.idx),
+           							                       traj.idx = hiv.traj.idx[j],
+           							                       p1=meta$dl.p1, p2=meta$dl.p2, 
+           							                       const.var=meta$constant.variance)
     		} else { # non-HIV projections
     		    trajectories[proj.idx,j] <- do.e0.proj(cs.par.values[j,],  
     		                                          all.e0[last.val.idx], 
     		                                          kap=var.par.values[j,'omega'],n.proj=length(proj.idx),
-    		                                          p1=mcmc.set$meta$dl.p1, p2=mcmc.set$meta$dl.p2, 
-    		                                          const.var=mcmc.set$meta$constant.variance)
+    		                                          p1=meta$dl.p1, p2=meta$dl.p2, 
+    		                                          const.var=meta$constant.variance)
     		}
            							
     	}
@@ -319,6 +346,7 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
 				traj.mean.sd = mean_sd,
 				nr.traj=nr_simu,
 				e0.matrix.reconstructed = e0.matrix.reconstructed,
+				hiv.country.codes = hiv.country.codes,
 				output.directory=outdir,
 				mcmc.set=load.mcmc.set,
 				nr.projections=nr_project,
@@ -327,7 +355,7 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
 				start.year=start.year,
 				present.year.index=present.year.index,
 				present.year.index.all=present.year.index + (
-						if(!is.null(mcmc.set$meta$suppl.data$regions)) nrow(mcmc.set$meta$suppl.data$e0.matrix) else 0)
+						if(!is.null(meta$suppl.data$regions)) nrow(meta$suppl.data$e0.matrix) else 0)
 				),
 				class='bayesLife.prediction')
 		

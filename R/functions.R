@@ -121,6 +121,10 @@ compute.loess <- function(sim.dir=NULL, burnin = 1000, residuals=NULL,
         # add additional point at the end to be able to bin it
         lws$x <- c(lws$x, 999)
         lws$y <- c(lws$y, lws$y[length(lws$y)])
+        if(x[1] > 20) { # set the first point to 20 so that extreme cases also work
+            lws$x <- c(20, lws$x)
+            lws$y <- c(lws$y[1], lws$y)
+        }
         lws
     }
     resdf.hiv <- loess.sd.hiv <- NULL
@@ -138,7 +142,7 @@ compute.loess <- function(sim.dir=NULL, burnin = 1000, residuals=NULL,
             splhivfun <- splinefun(loess.sd.hiv$x, loess.sd.hiv$y)
             cross1 <- optimise(f=function(x) (splfun(x) - splhivfun(x))^2, c(30, 50))$minimum
             cross2 <- optimise(f=function(x) (splfun(x) - splhivfun(x))^2, c(70, 100))$minimum
-            # Replace parts of hiv curves (to the left from cross1 and and to the right
+            # Replace parts of hiv curves (to the left from cross1 and to the right
             # from cross2) with the non-hiv equivalents
             idx <- which(loess.sd.hiv$x < cross1 | loess.sd.hiv$x > cross2)
             loess.sd.hiv$x <- loess.sd.hiv$x[-idx]
