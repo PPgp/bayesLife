@@ -353,13 +353,12 @@ init.nodes.e0 <- function() {
 	return(Tc.index)
 }
 
+read.e0.data.file <- function(file)
+    read.delim(file = file.path(find.package("bayesLife"), 
+                                "data", file), comment.char = "#", 
+               check.names = FALSE)
 
 .do.part.e0.mcmc.meta.ini <- function(data, meta) {
-    read.data.file <- function(file)
-        read.delim(file = file.path(find.package("bayesLife"), 
-                        "data", file), comment.char = "#", 
-                   check.names = FALSE)
-    
 	nr_countries <- ncol(data$e0.matrix)
     #T_end_c <- rep(NA, nr_countries)
     Tc.index <- .get.Tcindex(data$e0.matrix, cnames=data$regions$country_name)
@@ -371,10 +370,10 @@ init.nodes.e0 <- function() {
 	dlt.nart <- NULL
 	if(meta$hiv.model) {
 	    # read HIV and ART files
-	    hiv <- read.data.file("HIVprevalence.txt")
+	    hiv <- read.e0.data.file("HIVprevalence.txt")
 	    if("include_code" %in% colnames(hiv))
 	        hiv <- hiv[hiv$include_code == 1,]
-	    art <- read.data.file("ARTcoverage.txt")
+	    art <- read.e0.data.file("ARTcoverage.txt")
 	    if("include_code" %in% colnames(art))
 	        art <- art[art$include_code == 1,]
 	    # align the two datasets

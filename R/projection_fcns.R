@@ -220,6 +220,12 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
 	    var.beta <- get.e0.parameter.traces(load.mcmc.set$mcmc.list, var.beta.names, burnin=0)
 	    # load hiv trajectories and convert to a 3d array
 	    hiv.env <- new.env()
+	    art <- read.e0.data.file("ARTcoverage.txt")
+	    if("include_code" %in% colnames(art))
+	        art <- art[art$include_code == 1,]
+	    rownames(art) <- art$country_code
+	    art <- art[,-which(colnames(art) %in% c("country_code", "name", "country_name", "include_code"))]
+	    colnames(art) <- as.integer(substr(colnames(art), 1,4))+3
 	    data("HIVprevTrajectories", envir = hiv.env)
 	    trajs <- hiv.env$HIVprevTrajectories
 	    elim.cols <- which(colnames(trajs) %in% c("country_code", "Trajectory"))
@@ -242,12 +248,13 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
 	        stop("HIV trajectories missing for countries ", 
 	             paste(setdiff(unique(trajs$country_code), hiv.country.codes), collapse = ", "))
 	    nr.hiv.traj <- length(unique(trajs$Trajectory))
-	    hiv.trajs <- array(NA, dim=c(length(hiv.country.codes), nr.hiv.traj,
+	    nonart.trajs <- array(NA, dim=c(length(hiv.country.codes), nr.hiv.traj,
 	                             length(mid.years)),
 	                       dimnames = list(hiv.country.codes, NULL, mid.years.char))
 	    for(cntry in hiv.country.codes) 
-	        hiv.trajs[as.character(cntry),, mid.years.char] <- as.matrix(trajs[trajs$country_code == cntry, mid.years.char])
-	    hiv.env$trajs <- hiv.trajs
+	        nonart.trajs[as.character(cntry),, mid.years.char] <- (as.matrix(trajs[trajs$country_code == cntry, mid.years.char]) * 
+	                                                                   as.matrix(100 - art[rep(as.character(cntry), nr.hiv.traj), mid.years.char])/100)
+	    hiv.env$trajs <- nonart.trajs
 	    hiv.traj.idx <- sample(1:nr.hiv.traj, nr_simu, replace=TRUE)
 	} else { # no hiv model estimated
 	    if(!is.null(hiv.countries))
