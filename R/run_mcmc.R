@@ -1,43 +1,163 @@
-if(getRversion() >= "2.15.1") utils::globalVariables("loess_sd")
-data(loess_sd, envir=environment())
+if(getRversion() >= "2.15.1") utils::globalVariables(c("loess_sd", ".e0options"))
+data(loess_sd, envir = environment())
 
-run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000, 
-							output.dir=file.path(getwd(), 'bayesLife.output'), 
-                         thin=10, replace.output=FALSE,
-                         start.year=1873, present.year=2015, wpp.year=2017,
-                         my.e0.file = NULL, my.locations.file = NULL, buffer.size=100,
-                         a=c(13.215, 41.070, 9.235, 17.605, 2.84, 0.385),
-                         #a=c(15.7669391,40.9658241,0.2107961,19.8188061,2.9306625,0.400688628),
-						 delta=c(3.844, 4.035, 11.538, 5.639, 0.901, 0.4),
-						 #delta=c(1.887, 1.982, 1.99, 1.949, 0.995, 0.4), 
-						 tau=c(15.5976503,23.6500060,14.5056919,14.7185980,3.4514285,0.5667531), 
-						 Triangle.ini = list(NULL, NULL, NULL, NULL), k.ini=NULL, z.ini=NULL,
-						 lambda.ini=list(NULL, NULL, NULL, NULL), 
-						 lambda.k.ini = NULL, lambda.z.ini=NULL, omega.ini = NULL,
-						 Triangle.ini.low=c(10, 30, 0.1, 10), Triangle.ini.up=c(30, 50, 10, 30),
-						 k.ini.low=3, k.ini.up=5, z.ini.low=0.0001, z.ini.up=0.653,
-						 lambda.ini.low=c(0.01, 0.01, 0.01, 0.01), 
-						 lambda.ini.up=c(0.1, 0.1, 0.1, 0.1), 
-						 lambda.k.ini.low = 0.3, lambda.k.ini.up = 1, 
-						 lambda.z.ini.low=1, lambda.z.ini.up=40,
-						 omega.ini.low = 0.1, omega.ini.up=5, 
-						 Triangle.prior.low=c(0, 0, -20, 0), Triangle.prior.up=c(100, 100, 50, 100),
-						 k.prior.low=0, k.prior.up=10, z.prior.low=0, z.prior.up=0.653,
-						 Triangle.c.ini.norm = list(round(Triangle.ini.low + (Triangle.ini.up - Triangle.ini.low)/2),c(2,2,2,2)), 
-						 k.c.ini.norm=c(round(k.ini.low + (k.ini.up - k.ini.low)/2), 2), 
-						 z.c.ini.norm=c(round(z.ini.low + (z.ini.up - z.ini.low)/2, 2), 0.2),
-						 Triangle.c.prior.low=c(0, 0, -20, 0), Triangle.c.prior.up=c(100, 100, 50, 100),
-						 k.c.prior.low=0, k.c.prior.up=10, z.c.prior.low=0, z.c.prior.up=0.653,
-						 country.overwrites = NULL,
-						 nu=4, dl.p1=9, dl.p2=9, sumTriangle.lim = c(30, 86), constant.variance=FALSE, outliers=c(-5,10),
-                         seed = NULL, parallel=FALSE, nr.nodes=nr.chains, compression.type='None',
-                         auto.conf = list(max.loops=5, iter=160000, iter.incr=20000, nr.chains=3, thin=225, burnin=10000),
-						 verbose=FALSE, verbose.iter = 100, ...) {
+e0mcmc.options <- function(...) {
+    e0.options("mcmc", ...)
+}
+
+e0.options <- function(what, ...) {
+    # this code was adapted from mclust.options 
+    current <- .e0options
+    if (nargs() == 1) return(current[[what]])
+    args <- list(...)
+    if (length(args) == 1 && is.null(names(args))) {
+        arg <- args[[1]]
+        switch(mode(arg), 
+                    list = args <- arg, 
+                    character = return(current[[what]][[arg]]), 
+                    stop("Invalid argument: ", dQuote(arg))
+               )
+    }
+    if (length(args) == 0) return(current[[what]])
+    if (is.null(names(args))) stop("Options must be given by name")
+    current[[what]] <- modifyList(current[[what]], args)
+    .e0options <<- current
+    invisible(current[[what]])
+}
+
+e0.options.default <- function() {
+    structure(list(
+        mcmc = e0.mcmc.options.default()
+    ))
+}
+
+e0.mcmc.options.default <- function() {
+    pars <- list(
+        a = c(13.215, 41.070, 9.235, 17.605, 2.84, 0.385),
+        #a=c(15.7669391,40.9658241,0.2107961,19.8188061,2.9306625,0.400688628),
+        delta = c(3.844, 4.035, 11.538, 5.639, 0.901, 0.4),
+        #delta=c(1.887, 1.982, 1.99, 1.949, 0.995, 0.4), 
+        tau = c(15.5976503,23.6500060,14.5056919,14.7185980,3.4514285,0.5667531),
+        Triangle = structure(
+                    list(ini = list(T1 = NULL, T2 = NULL, T3 = NULL, T4 = NULL),
+                        ini.low = c(10, 30, 0.1, 10),
+                        ini.up  = c(30, 50, 10, 30),
+                        prior.low = c(0, 0, -20, 0),
+                        prior.up  = c(100, 100, 50, 100)
+                        ), npar = 4),
+        k = structure(
+                    list(ini = NULL, ini.low = 3, ini.up = 5, 
+                         prior.low = 0, prior.up = 10),
+                    npar = 1),
+        z = structure(
+                list(ini = NULL, ini.low = 0.0001, ini.up = 0.653, 
+                     prior.low = 0, prior.up = 0.653),
+                npar = 1),
+        lambda = structure(
+                    list(ini = list(T1 = NULL, T2 = NULL, T3 = NULL, T4 = NULL),
+                         ini.low = c(0.01, 0.01, 0.01, 0.01),
+                         ini.up =  c(0.1, 0.1, 0.1, 0.1)
+                      ), npar = 4),
+        lambda.k = structure(list(ini = NULL, ini.low = 0.3, ini.up = 1), npar = 1),
+        lambda.z = structure(list(ini = NULL, ini.low = 1, ini.up = 40), npar = 1),
+        omega = structure(list(ini = NULL, ini.low = 0.1, ini.up = 5), npar = 1),
+        Triangle.c = structure(
+                        list(ini.norm = list(mean = NULL, sd = c(2, 2, 2, 2)),
+                             prior.low = c(0, 0, -20, 0), 
+                             prior.up  = c(100, 100, 50, 100)
+                        ), npar = 4),
+        k.c = structure(list(ini.norm = c(mean = NA, sd = 2), prior.low = 0, prior.up = 10), npar = 1),
+        z.c = structure(list(ini.norm = c(mean = NA, sd = 0.2), prior.low = 0, prior.up = 0.653), npar = 1),
+        world.parameters = c("Triangle", "k", "z", "lambda", "lambda.k", "lambda.z", "omega"),
+        country.overwrites = NULL,
+        nu = 4, dl.p1 = 9, dl.p2 = 9, 
+        sumTriangle.lim = c(30, 86),
+        outliers = c(-5, 10),
+        buffer.size = 100,
+        auto.conf = list(max.loops = 5, iter = 160000, iter.incr = 20000, 
+                         nr.chains = 3, thin = 225, burnin = 10000)
+    )
+    pars <- within(pars, {
+           Triangle.c$ini.norm[["mean"]] <- round(Triangle$ini.low + (Triangle$ini.up - Triangle$ini.low)/2)
+           k.c$ini.norm["mean"] <- round(k$ini.low + (k$ini.up - k$ini.low)/2)
+           z.c$ini.norm["mean"] <- round(z$ini.low + (z$ini.up - z$ini.low)/2, 2)
+           })
+    pars
+}
+
+update.ini.values <- function(nr.chains) {
+    # set starting values
+    #=====================
+    get.init.values.between.low.and.up <- function(low, up)
+        ifelse(rep(nr.chains==1, nr.chains), (low + up)/2, #seq(low, to=up, length=nr.chains)
+               runif(nr.chains, low, up)
+        )
+    current <- e0mcmc.options()
+
+    for(par in current$world.parameters) {
+        if(attr(current[[par]], "npar") == 4) {
+            for (i in 1:4) {
+                lname <- paste0("T", i)
+                if(is.null(current[[par]][["ini"]][[lname]])) 
+                    current[[par]][["ini"]][[lname]] <- get.init.values.between.low.and.up(
+                                                    current[[par]][["ini.low"]][i], 
+                                                    current[[par]][["ini.up"]][i])
+            }
+        } else {
+            if(attr(current[[par]], "npar") == 1) {
+                if(is.null(current[[par]][["ini"]]))
+                    current[[par]][["ini"]] <- get.init.values.between.low.and.up(
+                        current[[par]][["ini.low"]], current[[par]][["ini.up"]])
+            }
+        }
+    }
+    invisible(e0mcmc.options(current))
+}
+
+match.ini.to.chains <- function(nr.chains) {
+    # propagate initial values for all chains if needed
+    current <- e0mcmc.options()
+    starting.values <- list()
+    for(par in current$world.parameters) {
+        if(attr(current[[par]], "npar") == 4) {
+            val <- as.list(current[[par]][["ini"]])
+            starting.values[[par]] <- vector("list", length = 4)
+            names(starting.values[[par]]) <- paste0("T", 1:4)
+            for(i in 1:4) {
+                lname <- paste0("T", i)
+                starting.values[[par]][[lname]] <- .match.length.to.nr.chains(
+                                                val[[i]], nr.chains, paste0(par, "[[", lname, "]]"))
+            }
+        } else {
+            if(attr(current[[par]], "npar") == 1) {
+                starting.values[[par]] <- .match.length.to.nr.chains(
+                                                current[[par]][["ini"]], nr.chains, par)
+            }
+        }
+    }
+    return(starting.values)
+}
+
+.match.length.to.nr.chains <- function(val, nr.chains, var.name) {
+    if (length(val) >= nr.chains) 
+        return(val[1:nr.chains])
+    if (length(val) == 1) 
+        return(rep(val, nr.chains))
+    warning(var.name, ' has the wrong length. Either 1 or ', nr.chains, 
+                    ' is allowed.\nValue set to ', val[1], ' for all chains.')
+    return(rep(val[1], nr.chains))
+}
+
+run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000, 
+						output.dir = file.path(getwd(), 'bayesLife.output'), 
+                        thin = 10, replace.output = FALSE,
+                        start.year = 1873, present.year = 2015, wpp.year = 2017,
+                        my.e0.file = NULL, my.locations.file = NULL, 
+						constant.variance = FALSE, seed = NULL, parallel = FALSE, 
+						nr.nodes = nr.chains, compression.type = 'None',
+						verbose = FALSE, verbose.iter = 100, mcmc.options = NULL, ...) {
 						 	
-	get.init.values.between.low.and.up <- function(low, up)
-		ifelse(rep(nr.chains==1, nr.chains), (low+up)/2, #seq(low, to=up, length=nr.chains)
-			runif(nr.chains, low, up)
-		)
+
 		
 	if(file.exists(output.dir)) {
 		if(length(list.files(output.dir)) > 0 & !replace.output)
@@ -47,10 +167,11 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
 	}
     dir.create(output.dir)
     
-    default.auto.conf <- formals(run.e0.mcmc)$auto.conf
-	for (par in names(default.auto.conf))
-		if(is.null(auto.conf[[par]])) auto.conf[[par]] <- default.auto.conf[[par]]
+    if(!is.null(mcmc.options))
+        e0mcmc.options(mcmc.options)
+    mcoptions <- update.ini.values(nr.chains)
 	auto.run <- FALSE
+	auto.conf <- mcoptions$auto.conf
 	if(iter == 'auto') { # defaults for auto-run (includes convergence diagnostics)
 		iter <- auto.conf$iter
 		nr.chains <- auto.conf$nr.chains
@@ -62,116 +183,52 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
 		cat('Initialize simulation -', nr.chains, 'chain(s) in total.\n')
 	}
 	if(!is.null(seed)) set.seed(seed)
-	
-	# starting values
-	#==============================
-	for (i in 1:4) {
-		if(is.null(Triangle.ini[[i]])) 
-			Triangle.ini[[i]] <- get.init.values.between.low.and.up(Triangle.ini.low[i], Triangle.ini.up[i])
-		if(is.null(lambda.ini[[i]]))
-			lambda.ini[[i]] <- get.init.values.between.low.and.up(lambda.ini.low[i], lambda.ini.up[i])
-	}
-	if(is.null(k.ini))
-		k.ini <- get.init.values.between.low.and.up(k.ini.low, k.ini.up)
-	if(is.null(z.ini)) 
-		z.ini <- get.init.values.between.low.and.up(z.ini.low, z.ini.up)
-	if(is.null(lambda.k.ini)) 
-		lambda.k.ini <- get.init.values.between.low.and.up(lambda.k.ini.low, lambda.k.ini.up)
-	if(is.null(lambda.z.ini)) 
-		lambda.z.ini <- get.init.values.between.low.and.up(lambda.z.ini.low, lambda.z.ini.up)
-	if(is.null(omega.ini)) 
-		omega.ini <- get.init.values.between.low.and.up(omega.ini.low, omega.ini.up)
+
 	sex <- substr(match.arg(sex), 1, 1)
-	bayesLife.mcmc.meta <- e0.mcmc.meta.ini(sex=sex, nr.chains=nr.chains,
-                                   		start.year=start.year, present.year=present.year, 
-                                        wpp.year=wpp.year, my.e0.file = my.e0.file, my.locations.file=my.locations.file,
-                                        output.dir=output.dir,
-                                        a=a, delta=delta, tau=tau, Triangle.ini=Triangle.ini,
-                                        k.ini=k.ini, z.ini=z.ini, omega.ini=omega.ini, 
-                                        lambda.ini=lambda.ini, lambda.k.ini=lambda.k.ini, lambda.z.ini=lambda.z.ini,
-                                        Triangle.ini.low=Triangle.ini.low, Triangle.ini.up=Triangle.ini.up, 
-                                        k.ini.low=k.ini.low, k.ini.up=k.ini.up, 
-                                        z.ini.low=z.ini.low, z.ini.up=z.ini.up, 
-                                        Triangle.prior.low=Triangle.prior.low, Triangle.prior.up=Triangle.prior.up, 
-                                        k.prior.low=k.prior.low, k.prior.up=k.prior.up, 
-                                        z.prior.low=z.prior.low, z.prior.up=z.prior.up, 
-                                        lambda.ini.low=lambda.ini.low, lambda.ini.up=lambda.ini.up,
-                                        lambda.k.ini.low=lambda.k.ini.low, lambda.k.ini.up=lambda.k.ini.up, 
-                                        lambda.z.ini.low=lambda.z.ini.low, lambda.z.ini.up=lambda.z.ini.up, 
-                                        omega.ini.low=omega.ini.low, omega.ini.up=omega.ini.up, 
-                                        Triangle.c.ini.norm=Triangle.c.ini.norm,
-                                        k.c.ini.norm=k.c.ini.norm, z.c.ini.norm=z.c.ini.norm,
-                                        Triangle.c.prior.low=Triangle.c.prior.low, Triangle.c.prior.up=Triangle.c.prior.up, 
-                                        k.c.prior.low=k.c.prior.low, k.c.prior.up=k.c.prior.up, 
-                                        z.c.prior.low=z.c.prior.low, z.c.prior.up=z.c.prior.up,
-                                        country.overwrites=country.overwrites, 
-                                        nu=nu, dl.p1=dl.p1, dl.p2=dl.p2, sumTriangle.lim=sumTriangle.lim, 
-                                        constant.variance=constant.variance, outliers=outliers,
-                                        buffer.size=buffer.size, compression.type=compression.type, 
-                                        auto.conf=auto.conf, verbose=verbose)
+	bayesLife.mcmc.meta <- e0.mcmc.meta.ini(sex=sex, nr.chains = nr.chains,
+                                   		start.year = start.year, present.year = present.year, 
+                                        wpp.year = wpp.year, my.e0.file = my.e0.file, 
+                                   		my.locations.file = my.locations.file,
+                                        output.dir = output.dir, mcmc.options = mcoptions, 
+                                        constant.variance = constant.variance, 
+                                        compression.type = compression.type, verbose = verbose)
     store.bayesLife.meta.object(bayesLife.mcmc.meta, output.dir)
     
-    # propagate initial values for all chains if needed
-    starting.values <- list()
-    for (var in c('Triangle.ini', 'lambda.ini')) {
-    	if(!is.list(get(var))) assign(var, list(get(var)))
-    	for(i in 1:4) {
-    		if (length(get(var)[[i]]) < nr.chains) {
-        		if (length(get(var)[[i]]) == 1) {
-            		assign(paste(var,'[[',i,']]', sep=''), rep(get(var)[[i]], nr.chains))
-            	} else {
-            		warning(var, '[[',i,']]', ' has the wrong length. Either 1 or ', nr.chains, 
-                                ' is allowed.\nValue set to ', get(var)[[i]][1], ' for all chains.')
-                    assign(paste(var,'[[',i,']]', sep=''), rep(get(var)[[i]][1], nr.chains))
-               }
-            }
-        }
-        starting.values[[var]] <- get(var)
-    }
-    for (var in c('k.ini', 'z.ini', 'lambda.k.ini', 'lambda.z.ini', 'omega.ini', 'iter')) {
-    	if (length(get(var)) < nr.chains) {
-        	if (length(get(var)) == 1) {
-            	assign(var, rep(get(var), nr.chains))
-            } else {
-            	#stop('')
-            	warning(var, ' has the wrong length. Either 1 or ', nr.chains, 
-                                ' is allowed.\nValue set to ', get(var)[1], ' for all chains.')
-                assign(var, rep(get(var)[1], nr.chains))
-            }
-        }
-        if (var != 'iter') starting.values[[var]] <- get(var)
-    }
+    starting.values <- match.ini.to.chains(nr.chains)
+    iter <- .match.length.to.nr.chains(iter, nr.chains, "iter")
 
 	if (parallel) { # run chains in parallel
 		chain.set <- bayesTFR:::bDem.performParallel(nr.nodes, 1:nr.chains, mcmc.run.chain.e0, 
-                                     initfun=init.nodes.e0, meta=bayesLife.mcmc.meta, 
-                                     thin=thin, iter=iter, 
-                                     starting.values=starting.values,                                     
-                                     verbose=verbose, verbose.iter=verbose.iter, ...)
+                                     initfun = init.nodes.e0, meta = bayesLife.mcmc.meta, 
+                                     thin = thin, iter = iter, 
+                                     starting.values = starting.values,                                     
+                                     verbose = verbose, verbose.iter = verbose.iter, ...)
 	} else { # run chains sequentially
 		chain.set <- list()
 		for (chain in 1:nr.chains) {
-			chain.set[[chain]] <- mcmc.run.chain.e0(chain, bayesLife.mcmc.meta, thin=thin, 
-                                                iter=iter, starting.values=starting.values, 
-                                                verbose=verbose, verbose.iter=verbose.iter)
+			chain.set[[chain]] <- mcmc.run.chain.e0(chain, bayesLife.mcmc.meta, thin = thin, 
+                                                iter = iter, starting.values = starting.values, 
+                                                verbose = verbose, verbose.iter = verbose.iter)
 		}
 	}
 	names(chain.set) <- 1:nr.chains
-	mcmc.set <- structure(list(meta=bayesLife.mcmc.meta, mcmc.list=chain.set), class='bayesLife.mcmc.set')
+	mcmc.set <- structure(list(meta = bayesLife.mcmc.meta, mcmc.list = chain.set), 
+	                      class='bayesLife.mcmc.set')
     cat('\nResults stored in', output.dir,'\n')
     
     if(auto.run) {
-		diag <- try(e0.diagnose(sim.dir=output.dir, keep.thin.mcmc=TRUE, 
-						thin=auto.conf$thin, burnin=auto.conf$burnin,
-						verbose=verbose))
-		if(auto.conf$max.loops>1) {
+		diag <- try(e0.diagnose(sim.dir = output.dir, keep.thin.mcmc = TRUE, 
+						thin = auto.conf$thin, burnin = auto.conf$burnin,
+						verbose = verbose))
+		if(auto.conf$max.loops > 1) {
 			for(loop in 2:auto.conf$max.loops) {
 				if(!inherits(diag, "try-error") && has.mcmc.converged(diag)) break
-				mcmc.set <- continue.e0.mcmc(iter=auto.conf$iter.incr, output.dir=output.dir, nr.nodes=nr.nodes,
-										  parallel=parallel, verbose=verbose, verbose.iter=verbose.iter, ...)
-				diag <- try(e0.diagnose(sim.dir=output.dir, keep.thin.mcmc=TRUE, 
-							thin=auto.conf$thin, burnin=auto.conf$burnin,
-							verbose=verbose))
+				mcmc.set <- continue.e0.mcmc(iter = auto.conf$iter.incr, output.dir = output.dir, 
+				                             nr.nodes = nr.nodes, parallel = parallel, 
+				                             verbose = verbose, verbose.iter = verbose.iter, ...)
+				diag <- try(e0.diagnose(sim.dir = output.dir, keep.thin.mcmc = TRUE, 
+							thin = auto.conf$thin, burnin = auto.conf$burnin,
+							verbose = verbose))
 			}
 		}
 	}
@@ -181,28 +238,29 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
 }
 
 
-mcmc.run.chain.e0 <- function(chain.id, meta, thin=1, iter=100, starting.values=NULL, verbose=FALSE, verbose.iter=10) {
+mcmc.run.chain.e0 <- function(chain.id, meta, thin = 1, iter = 100, starting.values = NULL, 
+                              verbose = FALSE, verbose.iter = 10) {
 	cat('\n\nChain nr.', chain.id, '\n')
     if (verbose) 
     	cat('************\n')
 
 	this.sv <- list()
 	for(var in names(starting.values)) {
-		this.sv[[var]] <- if (var == 'Triangle.ini' || var == 'lambda.ini') sapply(starting.values[[var]], function(x) x[chain.id])
+		this.sv[[var]] <- if (is.list(starting.values[[var]])) sapply(starting.values[[var]], function(x) x[chain.id])
 							else starting.values[[var]][chain.id]
 	}
-	mcmc <- do.call('e0.mcmc.ini', c(list(chain.id, meta, iter=iter[chain.id]), this.sv))
+	mcmc <- e0.mcmc.ini(chain.id, meta, iter = iter[chain.id], ini.values = this.sv)
 
     if (verbose) {
         cat('Starting values:\n')
-        print(unlist(mcmc[c('Triangle', 'k', 'z', 'lambda', 'lambda.k', 'lambda.z', 'omega')]))
+        print(unlist(mcmc[meta$mcmc.options$world.parameters]))
         cat('Store initial values into ', mcmc$output.dir, '\n')
     }                
-	store.e0.mcmc(mcmc, append=FALSE, flush.buffer=TRUE, verbose=verbose)
+	store.e0.mcmc(mcmc, append = FALSE, flush.buffer = TRUE, verbose = verbose)
 
 	if (verbose) 
     	cat('Start sampling -', mcmc$iter, 'iterations in total.\n')
-	mcmc <- e0.mcmc.sampling(mcmc, thin=thin, verbose=verbose, verbose.iter=verbose.iter)
+	mcmc <- e0.mcmc.sampling(mcmc, thin = thin, verbose = verbose, verbose.iter = verbose.iter)
     return(mcmc)
 }
         
@@ -410,25 +468,26 @@ init.nodes.e0 <- function() {
 }
 
 .do.country.specific.ini <- function(nr_countries, meta) {
+    opts <- meta$mcmc.options
 	samplpars <- list()
     for (i in 1:4) {
-    	samplpars[[paste('Triangle_', i, '.c.prior.low', sep='')]] <- rep(meta$Triangle.c.prior.low[i], nr_countries)
-    	samplpars[[paste('Triangle_', i, '.c.prior.up', sep='')]] <- rep(meta$Triangle.c.prior.up[i], nr_countries)
+    	samplpars[[paste0('Triangle_', i, '.c.prior.low')]] <- rep(opts$Triangle.c$prior.low[i], nr_countries)
+    	samplpars[[paste0('Triangle_', i, '.c.prior.up')]] <- rep(opts$Triangle.c$prior.up[i], nr_countries)
     }
-    samplpars$k.c.prior.low <- rep(meta$k.c.prior.low, nr_countries)
-    samplpars$k.c.prior.up <- rep(meta$k.c.prior.up, nr_countries)
-    samplpars$z.c.prior.low <- rep(meta$z.c.prior.low, nr_countries)
-    samplpars$z.c.prior.up <- rep(meta$z.c.prior.up, nr_countries)
-    for(parname in c(paste('Triangle_', 1:4, '.c.prior.low', sep=''), 
-    				paste('Triangle_', 1:4, '.c.prior.up', sep=''), 'k.c.prior.low', 'k.c.prior.up', 'z.c.prior.low',
+    samplpars$k.c.prior.low <- rep(opts$k.c$prior.low, nr_countries)
+    samplpars$k.c.prior.up <- rep(opts$k.c$prior.up, nr_countries)
+    samplpars$z.c.prior.low <- rep(opts$z.c$prior.low, nr_countries)
+    samplpars$z.c.prior.up <- rep(opts$z.c$prior.up, nr_countries)
+    for(parname in c(paste0('Triangle_', 1:4, '.c.prior.low'), 
+    				paste0('Triangle_', 1:4, '.c.prior.up'), 'k.c.prior.low', 'k.c.prior.up', 'z.c.prior.low',
     						'z.c.prior.up'
     						))
     	names(samplpars[[parname]]) <- meta$regions$country_code
 
-    if(!is.null(meta$country.overwrites)) {
-    	for(row in 1:nrow(meta$country.overwrites)) {
-    		country <- meta$country.overwrites[row, 'country_code']
-    		for (col in colnames(meta$country.overwrites)) {
+    if(!is.null(opts$country.overwrites)) {
+    	for(row in 1:nrow(opts$country.overwrites)) {
+    		country <- opts$country.overwrites[row, 'country_code']
+    		for (col in colnames(opts$country.overwrites)) {
     			if(col == 'country_code') next
     			if(!is.element(col, names(samplpars))) {
     				warnings(col, ' is not a valid column name in country.overwrites. Column ignored.')
@@ -439,35 +498,60 @@ init.nodes.e0 <- function() {
     				break
     			}
  
-    			if(!is.na(meta$country.overwrites[row,col]))
-    				samplpars[[col]][as.character(country)] <- meta$country.overwrites[row,col]
+    			if(!is.na(opts$country.overwrites[row,col]))
+    				samplpars[[col]][as.character(country)] <- opts$country.overwrites[row,col]
     		}
     	}	
     }
 	return(list(country.bounds = samplpars))
 }
 
-e0.mcmc.meta.ini <- function(sex="F", nr.chains=1, start.year=1950, present.year=2015, 
-								wpp.year=2017, my.e0.file = NULL, my.locations.file = NULL,
-								output.dir=file.path(getwd(), 'bayesLife.output'),
-								..., verbose=FALSE) {
-	mcmc.input <- c(list(sex=sex, nr.chains=nr.chains,
-						start.year=start.year, present.year=present.year, 
-						wpp.year=wpp.year, my.e0.file = my.e0.file,
-						output.dir=output.dir), list(...))
-	if(present.year-3 > wpp.year) warning("present.year is much larger then wpp.year. Make sure WPP data for present.year are available.")					
-    data <- get.wpp.e0.data (sex, start.year=start.year, present.year=present.year, 
-						wpp.year=wpp.year, my.e0.file = my.e0.file, 
-						my.locations.file=my.locations.file, verbose=verbose)
-	part.ini <- .do.part.e0.mcmc.meta.ini(data, mcmc.input)
-	return(structure(c(mcmc.input, part.ini), class='bayesLife.mcmc.meta'))
+.legacy.pars <- function(mcopts) {
+    # put the new options list into the old way of storing parameters,
+    # for dependent code to work
+    opts <- list()
+    for(par in c("a", "delta", "tau", "outliers", "country.overwrites", "nu", 
+                 "dl.p1", "dl.p2", "sumTriangle.lim"))
+        opts[[par]] <- mcopts[[par]]
+    for(par in c("Triangle", "k", "z", "lambda", "lambda.k", "lambda.z", "omega")) {
+        opts[[paste0(par, ".ini")]] <- mcopts[[par]][["ini"]]
+        opts[[paste0(par, ".ini.low")]] <- mcopts[[par]][["ini.low"]]
+        opts[[paste0(par, ".ini.up")]] <- mcopts[[par]][["ini.up"]]
+    }
+    for(par in c("Triangle", "k", "z", "Triangle.c", "k.c", "z.c")) {
+        opts[[paste0(par, ".prior.low")]] <- mcopts[[par]][["prior.low"]]
+        opts[[paste0(par, ".prior.up")]] <- mcopts[[par]][["prior.up"]]
+    }
+    for(par in c("Triangle.c", "k.c", "z.c"))
+        opts[[paste0(par, ".ini.norm")]] <- mcopts[[par]][["ini.norm"]]
+
+    return(opts)
 }
 
-e0.mcmc.ini <- function(chain.id, mcmc.meta, iter=100,
-                     Triangle.ini = NULL, k.ini=NULL, z.ini=NULL,
-				     lambda.ini=NULL, lambda.k.ini = NULL, lambda.z.ini=NULL, omega.ini = NULL,
-				     verbose=FALSE) {
-    Triangle.lim <- mcmc.meta$sumTriangle.lim
+
+e0.mcmc.meta.ini <- function(sex = "F", nr.chains = 1, start.year = 1950, present.year = 2015, 
+								wpp.year = 2017, my.e0.file = NULL, my.locations.file = NULL,
+								output.dir = file.path(getwd(), 'bayesLife.output'),
+								mcmc.options = NULL, ..., verbose=FALSE) {
+	mcmc.input <- c(list(sex = sex, nr.chains = nr.chains,
+						start.year = start.year, present.year = present.year, 
+						wpp.year = wpp.year, my.e0.file = my.e0.file,
+						output.dir = output.dir, mcmc.options = mcmc.options), list(...))
+	mcmc.input <- c(mcmc.input, .legacy.pars(mcmc.options))
+	
+	if(present.year - 3 > wpp.year) 
+	    warning("present.year is much larger then wpp.year. Make sure WPP data for present.year are available.")					
+    data <- get.wpp.e0.data (sex, start.year = start.year, present.year = present.year, 
+						wpp.year = wpp.year, my.e0.file = my.e0.file, 
+						my.locations.file = my.locations.file, verbose = verbose)
+	part.ini <- .do.part.e0.mcmc.meta.ini(data, mcmc.input)
+	return(structure(c(mcmc.input, part.ini), class = 'bayesLife.mcmc.meta'))
+}
+
+e0.mcmc.ini <- function(chain.id, mcmc.meta, iter = 100, ini.values = NULL,
+                        verbose = FALSE) {
+    opts <- mcmc.meta$mcmc.options
+    Triangle.lim <- opts$sumTriangle.lim
     scale.Triangle <- function(Triangle) {
         # scale Triangle.ini if needed
         sTscale <- NULL
@@ -479,30 +563,41 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter=100,
     }                            
 	nr_countries <- mcmc.meta$nr.countries
     if (!exists(".Random.seed")) runif(1)
-	Triangle.ini <- scale.Triangle(Triangle.ini)
-	mcmc <- structure(list(
-						Triangle.ini=Triangle.ini,
-                        k.ini=k.ini, z.ini=z.ini, omega.ini=omega.ini,
-						lambda.ini=lambda.ini, lambda.k.ini=lambda.k.ini, lambda.z.ini=lambda.z.ini,
-						Triangle=Triangle.ini, k=k.ini, z=z.ini, lambda=lambda.ini,
-						lambda.k=lambda.k.ini, lambda.z=lambda.z.ini, omega=omega.ini,
-        				output.dir=paste('mc', chain.id, sep=''), finished.iter=1, length = 1,
-        				iter=iter, id=chain.id, traces=0,
-        				traces.burnin=0, rng.state = .Random.seed,
-        				compression.type=mcmc.meta$compression.type,
-        				meta = mcmc.meta), class='bayesLife.mcmc')
+	ini.values[["Triangle"]] <- scale.Triangle(ini.values[["Triangle"]])
+	mclist <- list(ini.values = ini.values)
+	for(par in c(opts$world.parameters)) {
+	    mclist[[par]] <- ini.values[[par]]
+	    # legacy
+	    mclist[[paste0(par, ".ini")]] <- ini.values[[par]]
+	}
+	mcmc <- structure(c(mclist, 
+	                    list(output.dir = paste0('mc', chain.id), finished.iter = 1, length = 1,
+        				    iter = iter, id = chain.id, traces = 0,
+        				    traces.burnin = 0, rng.state = .Random.seed,
+        				    compression.type = mcmc.meta$compression.type,
+        				    meta = mcmc.meta)), 
+        				class='bayesLife.mcmc')
+
+    # startning values for each country
     samplpars <- mcmc.meta$country.bounds
-    mcmc[['Triangle.c']] <- matrix(0, ncol=nr_countries, nrow=4)
+    mcmc[['Triangle.c']] <- matrix(0, ncol = nr_countries, nrow = 4)
     for (i in 1:4)
-		    mcmc[['Triangle.c']][i,] <- pmin(pmax(rnorm(nr_countries, mean=mcmc.meta$Triangle.c.ini.norm[[1]][i], 
-										sd=mcmc.meta$Triangle.c.ini.norm[[2]][i]), 
-										samplpars[[paste('Triangle_', i, '.c.prior.low', sep='')]]), 
-										samplpars[[paste('Triangle_', i, '.c.prior.up', sep='')]])
+		    mcmc[['Triangle.c']][i,] <- pmin(pmax(rnorm(nr_countries, 
+		                                                mean = opts$Triangle.c$ini.norm[[1]][i], 
+										                sd = opts$Triangle.c$ini.norm[[2]][i]), 
+										        samplpars[[paste0('Triangle_', i, '.c.prior.low')]]), 
+										    samplpars[[paste0('Triangle_', i, '.c.prior.up')]])
     mcmc[['Triangle.c']] <- apply(mcmc[['Triangle.c']], 2, scale.Triangle)
-	mcmc[['k.c']] <- pmin(pmax(rnorm(nr_countries, mcmc.meta$k.c.ini.norm[1], 
-							sd=mcmc.meta$k.c.ini.norm[2]), samplpars$k.c.prior.low), samplpars$k.c.prior.up)
-	mcmc[['z.c']] <- pmin(pmax(rnorm(nr_countries, mcmc.meta$z.c.ini.norm[1], 
-							sd=mcmc.meta$z.c.ini.norm[2]), samplpars$z.c.prior.low), samplpars$z.c.prior.up)
+	mcmc[['k.c']] <- pmin(pmax(rnorm(nr_countries, 
+	                                 opts$k.c$ini.norm[1], 
+							         sd = opts$k.c$ini.norm[2]), 
+							    samplpars$k.c.prior.low), 
+							samplpars$k.c.prior.up)
+	mcmc[['z.c']] <- pmin(pmax(rnorm(nr_countries, 
+	                                 opts$z.c$ini.norm[1], 
+							         sd = opts$z.c$ini.norm[2]), 
+							    samplpars$z.c.prior.low), 
+							samplpars$z.c.prior.up)
     return(mcmc) 
 }
 
@@ -651,3 +746,5 @@ e0.mcmc.ini.extra <- function(mcmc, countries, index.replace=NULL) {
 	}
 	return(mcmc)
 }
+
+.e0options <- e0.options.default()
