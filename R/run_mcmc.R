@@ -75,7 +75,8 @@ e0.mcmc.options.default <- function() {
         outliers = c(-5, 10),
         buffer.size = 100,
         auto.conf = list(max.loops = 5, iter = 160000, iter.incr = 20000, 
-                         nr.chains = 3, thin = 225, burnin = 10000)
+                         nr.chains = 3, thin = 225, burnin = 10000),
+        estimation.function = "e0.mcmc.sampling"
     )
     pars <- within(pars, {
            Triangle.c$ini.norm[["mean"]] <- round(Triangle$ini.low + (Triangle$ini.up - Triangle$ini.low)/2)
@@ -157,8 +158,6 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
 						nr.nodes = nr.chains, compression.type = 'None',
 						verbose = FALSE, verbose.iter = 100, mcmc.options = NULL, ...) {
 						 	
-
-		
 	if(file.exists(output.dir)) {
 		if(length(list.files(output.dir)) > 0 & !replace.output)
                         stop('Non-empty directory ', output.dir, 
@@ -193,7 +192,6 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
                                         constant.variance = constant.variance, 
                                         compression.type = compression.type, verbose = verbose)
     store.bayesLife.meta.object(bayesLife.mcmc.meta, output.dir)
-    
     starting.values <- match.ini.to.chains(nr.chains)
     iter <- .match.length.to.nr.chains(iter, nr.chains, "iter")
 
@@ -255,12 +253,13 @@ mcmc.run.chain.e0 <- function(chain.id, meta, thin = 1, iter = 100, starting.val
         cat('Starting values:\n')
         print(unlist(mcmc[meta$mcmc.options$world.parameters]))
         cat('Store initial values into ', mcmc$output.dir, '\n')
-    }                
+    }
 	store.e0.mcmc(mcmc, append = FALSE, flush.buffer = TRUE, verbose = verbose)
 
 	if (verbose) 
     	cat('Start sampling -', mcmc$iter, 'iterations in total.\n')
-	mcmc <- e0.mcmc.sampling(mcmc, thin = thin, verbose = verbose, verbose.iter = verbose.iter)
+	mcmc <- do.call(meta$mcmc.options$estimation.function, 
+	                list(mcmc, thin = thin, verbose = verbose, verbose.iter = verbose.iter))
     return(mcmc)
 }
         
@@ -577,8 +576,8 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter = 100, ini.values = NULL,
         				    compression.type = mcmc.meta$compression.type,
         				    meta = mcmc.meta)), 
         				class='bayesLife.mcmc')
-
-    # startning values for each country
+	
+    # starting values for each country
     samplpars <- mcmc.meta$country.bounds
     mcmc[['Triangle.c']] <- matrix(0, ncol = nr_countries, nrow = 4)
     for (i in 1:4)
