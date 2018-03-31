@@ -394,19 +394,25 @@ read.e0.data.file <- function(file)
 	    nonart <- hiv * (100 - art)/100
 	    # put middle years as colnames
 	    colnames(nonart) <- as.integer(substr(colnames(nonart), 1,4))+3
+	    # match years with e0 matrix
+	    nonart.all <- matrix(0, ncol = nrow(data$e0.matrix),
+	                         nrow = nrow(nonart), 
+	                         dimnames = list(rownames(nonart), rownames(data$e0.matrix)))
+	    nonart <- nonart[, colnames(nonart) %in% rownames(data$e0.matrix)]
+	    nonart.all[, colnames(nonart)] <- as.matrix(nonart)
 	    data$regions$hiv.est <- data$regions$country_code %in% epi.cntries
 	    # add countries not included in nonart, i.e. all non-hiv countries
 	    missing.countries <- data$regions$country_code[!data$regions$hiv.est]
-	    nonart <- rbind(nonart, 
-	                    matrix(0, nrow=length(missing.countries), ncol=ncol(nonart),
-	                                 dimnames=list(NULL, colnames(nonart))))
+	    nonart <- rbind(nonart.all, 
+	                    matrix(0, nrow=length(missing.countries), ncol=ncol(nonart.all),
+	                                 dimnames=list(NULL, colnames(nonart.all))))
 	    # put into the same order as e0.matrix (the codes must match, i.e. no missing values)
 	    cntries.order <- match(data$regions$country_code, c(epi.cntries, missing.countries))
+
 	    nonart <- nonart[cntries.order,]
 	    rownames(nonart) <- c(epi.cntries, missing.countries)[cntries.order]
 	    nonart <- t(nonart)
 	    dlt.nart <- d.ct # to have a matrix of the right shape
-	    
 	}
 	for(i in 2:T) {
 		nisna0 <- !is.na(data$e0.matrix[i-1,])
