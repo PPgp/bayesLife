@@ -14,7 +14,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains=3, iter=160000,
 						 tau=c(15.5976503,23.6500060,14.5056919,14.7185980,3.4514285,0.5667531), 
 						 Triangle.ini = list(NULL, NULL, NULL, NULL), k.ini=NULL, z.ini=NULL,
 						 lambda.ini=list(NULL, NULL, NULL, NULL), 
-						 lambda.k.ini = NULL, lambda.z.ini=NULL, omega.ini = NULL, betanonART.ini = -0.77, #0.01
+						 lambda.k.ini = NULL, lambda.z.ini=NULL, omega.ini = NULL, betanonART.ini = -0.5, # -0.77, #0.01
 						 Triangle.ini.low=c(10, 30, 0.1, 10), Triangle.ini.up=c(30, 50, 10, 30),
 						 k.ini.low=3, k.ini.up=5, z.ini.low=0.0001, z.ini.up=0.653,
 						 lambda.ini.low=c(0.01, 0.01, 0.01, 0.01), 
