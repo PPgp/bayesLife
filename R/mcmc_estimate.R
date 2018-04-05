@@ -32,7 +32,7 @@ e0.mcmc.sampling <- function(mcmc, thin = 1, start.iter = 2, verbose = FALSE, ve
 create.ctrl.env <- function(mcenv) {
     meta <- mcenv$meta
     ctrlenv <- new.env()
-    return(within(ctrlenv,
+    return(within(ctrlenv, {
                       T <- nrow(meta$e0.matrix) - 1
                       C <- meta$nr.countries
                       delta.sq <- meta$delta^2	
@@ -43,11 +43,11 @@ create.ctrl.env <- function(mcenv) {
                       recompute.par.integral <- rep(TRUE, 6)
                       wpar.integral.to.mC <- sapply(1:6, compute.par.integral.to.mC, mcenv=mcenv, meta=meta, 
                                                     lambdas.sqrt= sqrt(c(mcenv$lambda, mcenv$lambda.k, mcenv$lambda.z)), C=C)
-            ))
+            }))
 }
 
 update.mcmc.parameters <- function(mcenv, ctrlenv) {
-    ctrlenv <- within(ctrlenv, 
+    ctrlenv <- within(ctrlenv, {
     # Update Triangle, k, z using Metropolis-Hastings sampler
     ###########################################
     sum.Trkz.c <- rowSums(mcenv$Triangle.c)
@@ -120,8 +120,8 @@ update.mcmc.parameters <- function(mcenv, ctrlenv) {
     }
     laccepted <- lambdas.update(mcenv, wpar.integral.to.mC, C)
     recompute.par.integral <- recompute.par.integral | laccepted
-    )
-    return(list(mc=mcenv, ctrl=ctrlenv)
+    })
+    return(list(mc=mcenv, ctrl=ctrlenv))
 }
 
 store.sample.to.disk <- function(iter, niter, mcenv) { 

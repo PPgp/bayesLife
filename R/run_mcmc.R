@@ -544,6 +544,8 @@ e0.mcmc.meta.ini <- function(sex = "F", nr.chains = 1, start.year = 1950, presen
 						wpp.year = wpp.year, my.e0.file = my.e0.file, 
 						my.locations.file = my.locations.file, verbose = verbose)
 	part.ini <- .do.part.e0.mcmc.meta.ini(data, mcmc.input)
+	if(!is.null(mcmc.options$meta.ini.fun))
+	    part.ini <- c(part.ini, do.call(mcmc.options$meta.ini.fun, c(mcmc.input, part.ini)))
 	return(structure(c(mcmc.input, part.ini), class = 'bayesLife.mcmc.meta'))
 }
 
