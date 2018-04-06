@@ -232,12 +232,12 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
 	    years <- colnames(trajs)[-elim.cols]
 	    mid.years <- substr(years, 1, 4)
 	    mid.years <- as.integer(mid.years) + 3
-	    mid.years.remove <- which(! mid.years %in% proj.middleyears[-1])
+	    mid.years.remove <- which(! mid.years %in% proj.middleyears)
 	    if(length(mid.years.remove) > 0) {
 	        mid.years <- mid.years[-mid.years.remove]
 	        elim.cols <- c(elim.cols, which(colnames(trajs) %in% years[mid.years.remove]))
 	    }
-	    if(length(mid.years) < length(proj.middleyears[-1]))
+	    if(length(mid.years) < length(proj.middleyears))
 	        stop("HIV trajectories missing for years ", 
 	             paste(setdiff(proj.middleyears[-1], mid.years), collapse = ", "))
 	    colnames(trajs)[-elim.cols] <- mid.years
@@ -248,13 +248,17 @@ make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace
 	        stop("HIV trajectories missing for countries ", 
 	             paste(setdiff(unique(trajs$country_code), hiv.country.codes), collapse = ", "))
 	    nr.hiv.traj <- length(unique(trajs$Trajectory))
-	    nonart.trajs <- array(NA, dim=c(length(hiv.country.codes), nr.hiv.traj,
-	                             length(mid.years)),
-	                       dimnames = list(hiv.country.codes, NULL, mid.years.char))
-	    for(cntry in hiv.country.codes) 
-	        nonart.trajs[as.character(cntry),, mid.years.char] <- (as.matrix(trajs[trajs$country_code == cntry, mid.years.char]) * 
-	                                                                   as.matrix(100 - art[rep(as.character(cntry), nr.hiv.traj), mid.years.char])/100)
-	    hiv.env$trajs <- nonart.trajs
+	    mid.years.minus1 <-  mid.years.char[-length(mid.years.char)]
+	    nondart.trajs <- array(NA, dim=c(length(hiv.country.codes), nr.hiv.traj,
+	                             length(mid.years.minus1)),
+	                       dimnames = list(hiv.country.codes, NULL, mid.years.minus1))
+	    for(cntry in hiv.country.codes) {
+	        tr <- (as.matrix(trajs[trajs$country_code == cntry, mid.years.char]) * 
+	                   as.matrix(100 - art[rep(as.character(cntry), nr.hiv.traj), 
+	                                       mid.years.char])/100)
+	        nondart.trajs[as.character(cntry),, mid.years.minus1] <- tr[, 2:ncol(tr)] - tr[, 1:(ncol(tr)-1)]
+	    }
+	    hiv.env$trajs <- nondart.trajs
 	    hiv.traj.idx <- sample(1:nr.hiv.traj, nr_simu, replace=TRUE)
 	} else { # no hiv model estimated
 	    if(!is.null(hiv.countries))
