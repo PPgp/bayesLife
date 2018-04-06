@@ -76,7 +76,8 @@ e0.mcmc.options.default <- function() {
         buffer.size = 100,
         auto.conf = list(max.loops = 5, iter = 160000, iter.incr = 20000, 
                          nr.chains = 3, thin = 225, burnin = 10000),
-        estimation.function = "e0.mcmc.sampling"
+        estimation.function = "e0.mcmc.sampling",
+        include.hiv.countries = FALSE
     )
     pars <- within(pars, {
            Triangle.c$ini.norm[["mean"]] <- round(Triangle$ini.low + (Triangle$ini.up - Triangle$ini.low)/2)
@@ -542,10 +543,12 @@ e0.mcmc.meta.ini <- function(sex = "F", nr.chains = 1, start.year = 1950, presen
 	    warning("present.year is much larger then wpp.year. Make sure WPP data for present.year are available.")					
     data <- get.wpp.e0.data (sex, start.year = start.year, present.year = present.year, 
 						wpp.year = wpp.year, my.e0.file = my.e0.file, 
+						include.hiv = mcmc.options$include.hiv.countries,
 						my.locations.file = my.locations.file, verbose = verbose)
 	part.ini <- .do.part.e0.mcmc.meta.ini(data, mcmc.input)
 	if(!is.null(mcmc.options$meta.ini.fun))
-	    part.ini <- c(part.ini, do.call(mcmc.options$meta.ini.fun, c(mcmc.input, part.ini)))
+	    part.ini <- c(part.ini, do.call(mcmc.options$meta.ini.fun, 
+	                                    list(c(mcmc.input, part.ini))))
 	return(structure(c(mcmc.input, part.ini), class = 'bayesLife.mcmc.meta'))
 }
 

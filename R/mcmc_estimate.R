@@ -8,30 +8,29 @@ e0.mcmc.sampling <- function(mcmc, thin = 1, start.iter = 2, verbose = FALSE, ve
 	# copying of the whole mcmc list
 	mcenv <- as.environment(mcmc)
 	set.slice.sampling.width(mcenv)
-	meta <- mcenv$meta
+	meta <- as.environment(mcenv$meta)
 	
-	ctrlenv <- create.ctrl.env(mcenv)
+	ctrlenv <- create.ctrl.env(mcenv, meta)
          
 	for(iter in start.iter:niter) {
 		if(verbose.iter > 0 && (iter %% verbose.iter == 0))
 			cat('\nIteration:', iter, '--', date())
 		unblock.gtk('bDem.e0mcmc')
 
-		update <- update.mcmc.parameters(mcenv, ctrlenv)
+		update <- update.mcmc.parameters(mcenv, ctrlenv, meta)
 		mcenv <- update$mc
 		ctrlenv <- update$ctrl
 		
         # write samples simu/thin to disk
-		mcenv <- store.sample.to.disk(iter, niter, mcenv)
+		mcenv <- store.sample.to.disk(iter, niter, mcenv, verbose = verbose)
 	}
 	resmc <- as.list(mcenv)
 	class(resmc) <- class(mcmc)
 	return(resmc)
 }
 
-create.ctrl.env <- function(mcenv) {
-    meta <- mcenv$meta
-    ctrlenv <- new.env()
+create.ctrl.env <- function(mcenv, meta) {
+    ctrlenv <- list()
     return(within(ctrlenv, {
                       T <- nrow(meta$e0.matrix) - 1
                       C <- meta$nr.countries
@@ -46,7 +45,7 @@ create.ctrl.env <- function(mcenv) {
             }))
 }
 
-update.mcmc.parameters <- function(mcenv, ctrlenv) {
+update.mcmc.parameters <- function(mcenv, ctrlenv, meta) {
     ctrlenv <- within(ctrlenv, {
     # Update Triangle, k, z using Metropolis-Hastings sampler
     ###########################################
@@ -124,7 +123,7 @@ update.mcmc.parameters <- function(mcenv, ctrlenv) {
     return(list(mc=mcenv, ctrl=ctrlenv))
 }
 
-store.sample.to.disk <- function(iter, niter, mcenv) { 
+store.sample.to.disk <- function(iter, niter, mcenv, verbose = FALSE) { 
     # write samples simu/thin to disk
     mcenv$finished.iter <- mcenv$finished.iter + 1
     mcenv$rng.state <- .Random.seed         
