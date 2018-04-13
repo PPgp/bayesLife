@@ -11,10 +11,38 @@ e0.proj.le.SDPropToLoess<-function(x,l.start,kap,n.proj=11, p1=9, p2=9, const.va
   return(proj[2:length(proj)])
 }
 
-e0.predict <- function(mcmc.set=NULL, end.year=2100, sim.dir=file.path(getwd(), 'bayesLife.output'),
-                       replace.output=FALSE, predict.jmale = TRUE, nr.traj = NULL, thin=NULL, burnin=10000, 
-                       use.diagnostics=FALSE, save.as.ascii=1000, start.year=NULL,
-                       output.dir = NULL, low.memory=TRUE, seed=NULL, verbose=TRUE, ...){
+get.nr.traj.burnin.from.diagnostics <- function(sim.dir, verbose = FALSE) {
+    diag.list <- get.e0.convergence.all(sim.dir)
+    ldiag <- length(diag.list)
+    if (ldiag == 0) stop('There is no diagnostics available. Use manual settings of "nr.traj" or "thin".')
+    use.nr.traj <- use.burnin <- rep(NA, ldiag)
+    for(idiag in 1:ldiag) {
+        if (bayesTFR::has.mcmc.converged(diag.list[[idiag]])) {
+            use.nr.traj[idiag] <- diag.list[[idiag]]$use.nr.traj
+            use.burnin[idiag] <- diag.list[[idiag]]$burnin
+        }
+    }
+    if(all(is.na(use.nr.traj)))
+        stop('There is no diagnostics indicating convergence of the MCMCs. Use manual settings of "nr.traj" or "thin".')
+    # Try to select those that suggest nr.traj >= 2000 (take the minimum of those)
+    traj.is.notna <- !is.na(use.nr.traj)
+    larger2T <- traj.is.notna & use.nr.traj >= 2000
+    nr.traj.idx <- if(sum(larger2T) > 0) 
+                        (1:ldiag)[larger2T][which.min(use.nr.traj[larger2T])] 
+                    else (1:ldiag)[traj.is.notna][which.max(use.nr.traj[traj.is.notna])]
+    nr.traj <- use.nr.traj[nr.traj.idx]
+    burnin <- use.burnin[nr.traj.idx]
+    if(verbose)
+        cat('\nUsing convergence settings: nr.traj=', nr.traj, ', burnin=', burnin, '\n')
+    return(c(nr.traj = nr.traj, burnin = burnin))
+}
+
+e0.predict <- function(mcmc.set = NULL, end.year = 2100, 
+                       sim.dir = file.path(getwd(), 'bayesLife.output'),
+                       replace.output = FALSE, predict.jmale = TRUE, 
+                       nr.traj = NULL, thin = NULL, burnin = 10000, 
+                       use.diagnostics = FALSE, save.as.ascii = 1000, start.year = NULL,
+                       output.dir = NULL, low.memory = TRUE, seed = NULL, verbose = TRUE, ...){
 	if(!is.null(mcmc.set)) {
 		if (class(mcmc.set) != 'bayesLife.mcmc.set') {
 			stop('Wrong type of mcmc.set. Must be of type bayesLife.mcmc.set.')
@@ -25,35 +53,17 @@ e0.predict <- function(mcmc.set=NULL, end.year=2100, sim.dir=file.path(getwd(), 
 	if(!is.null(seed)) set.seed(seed)
 		# Get argument settings from existing convergence diagnostics
 	if(use.diagnostics) {
-		diag.list <- get.e0.convergence.all(mcmc.set$meta$output.dir)
-		ldiag <- length(diag.list)
-		if (ldiag == 0) stop('There is no diagnostics available. Use manual settings of "nr.traj" or "thin".')
-		use.nr.traj <- use.burnin <- rep(NA, ldiag)
-		for(idiag in 1:ldiag) {
-			if (bayesTFR::has.mcmc.converged(diag.list[[idiag]])) {
-				use.nr.traj[idiag] <- diag.list[[idiag]]$use.nr.traj
-				use.burnin[idiag] <- diag.list[[idiag]]$burnin
-			}
-		}
-		if(all(is.na(use.nr.traj)))
-			stop('There is no diagnostics indicating convergence of the MCMCs. Use manual settings of "nr.traj" or "thin".')
-		# Try to select those that suggest nr.traj >= 2000 (take the minimum of those)
-		traj.is.notna <- !is.na(use.nr.traj)
-		larger2T <- traj.is.notna & use.nr.traj>=2000
-		nr.traj.idx <- if(sum(larger2T)>0) (1:ldiag)[larger2T][which.min(use.nr.traj[larger2T])] 
-						else (1:ldiag)[traj.is.notna][which.max(use.nr.traj[traj.is.notna])]
-		nr.traj <- use.nr.traj[nr.traj.idx]
-		burnin <- use.burnin[nr.traj.idx]
-		if(verbose)
-			cat('\nUsing convergence settings: nr.traj=', nr.traj, ', burnin=', burnin, '\n')
+	    diagpars <- get.nr.traj.burnin.from.diagnostics(mcmc.set$meta$output.dir, verbose = verbose)
+		nr.traj <- diagpars$nr.traj
+		burnin <- diagpars$burnin
 	}
-
-	pred <- make.e0.prediction(mcmc.set, end.year=end.year,  
-					replace.output=replace.output,  
-					nr.traj=nr.traj, thin=thin, burnin=burnin, save.as.ascii=save.as.ascii, start.year=start.year,
-					output.dir=output.dir, verbose=verbose)
+	pred <- make.e0.prediction(mcmc.set, end.year = end.year,  
+					replace.output = replace.output,  
+					nr.traj = nr.traj, thin = thin, burnin = burnin, 
+					save.as.ascii = save.as.ascii, start.year = start.year,
+					output.dir = output.dir, verbose = verbose)
 	if(predict.jmale && mcmc.set$meta$sex == 'F')
-		pred <- e0.jmale.predict(pred, ..., save.as.ascii=save.as.ascii, verbose=verbose)
+		pred <- e0.jmale.predict(pred, ..., save.as.ascii = save.as.ascii, verbose = verbose)
 	invisible(pred)
 }
 
@@ -128,12 +138,13 @@ e0.predict.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 }
 
 
-make.e0.prediction <- function(mcmc.set, start.year=NULL, end.year=2100, replace.output=FALSE,
-								nr.traj = NULL, thin=NULL, burnin=0, countries = NULL,
-							    save.as.ascii=1000, output.dir = NULL, write.summary.files=TRUE, 
-							    force.creating.thinned.mcmc=FALSE,
-							    verbose=verbose){
+make.e0.prediction <- function(mcmc.set, start.year = NULL, end.year = 2100, 
+                               replace.output = FALSE, nr.traj = NULL, thin = NULL, 
+                               burnin = 0, countries = NULL, save.as.ascii = 1000, 
+                               output.dir = NULL, write.summary.files = TRUE, 
+							   force.creating.thinned.mcmc = FALSE, verbose = verbose){
 	# if 'countries' is given, it is an index
+    # use match.call to collect the args
 	present.year <- if(is.null(start.year)) mcmc.set$meta$present.year else start.year - 5
 	nr_project <- length(seq(present.year+5, end.year, by=5))
 	cat('\nPrediction from', present.year+5, 'until', end.year, '(i.e.', nr_project, 'projections)\n\n')

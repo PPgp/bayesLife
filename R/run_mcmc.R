@@ -68,7 +68,9 @@ e0.mcmc.options.default <- function() {
                         ), npar = 4),
         k.c = structure(list(ini.norm = c(mean = NA, sd = 2), prior.low = 0, prior.up = 10), npar = 1),
         z.c = structure(list(ini.norm = c(mean = NA, sd = 0.2), prior.low = 0, prior.up = 0.653), npar = 1),
-        world.parameters = c("Triangle", "k", "z", "lambda", "lambda.k", "lambda.z", "omega"),
+        world.parameters = c(Triangle = 4, k = 1, z = 1, lambda = 4, 
+                             lambda.k = 1, lambda.z = 1, omega = 1),
+        country.parameters = c(Triangle.c = 4, k.c = 1, z.c = 1),
         country.overwrites = NULL,
         nu = 4, dl.p1 = 9, dl.p2 = 9, 
         sumTriangle.lim = c(30, 86),
@@ -96,8 +98,9 @@ update.ini.values <- function(nr.chains) {
         )
     current <- e0mcmc.options()
 
-    for(par in current$world.parameters) {
-        if(attr(current[[par]], "npar") == 4) {
+    wp <- current$world.parameters
+    for(par in names(wp)) {
+        if(wp[[par]] == 4) {
             for (i in 1:4) {
                 lname <- paste0("T", i)
                 if(is.null(current[[par]][["ini"]][[lname]])) 
@@ -106,7 +109,7 @@ update.ini.values <- function(nr.chains) {
                                                     current[[par]][["ini.up"]][i])
             }
         } else {
-            if(attr(current[[par]], "npar") == 1) {
+            if(wp[[par]] == 1) {
                 if(is.null(current[[par]][["ini"]]))
                     current[[par]][["ini"]] <- get.init.values.between.low.and.up(
                         current[[par]][["ini.low"]], current[[par]][["ini.up"]])
@@ -120,8 +123,9 @@ match.ini.to.chains <- function(nr.chains) {
     # propagate initial values for all chains if needed
     current <- e0mcmc.options()
     starting.values <- list()
-    for(par in current$world.parameters) {
-        if(attr(current[[par]], "npar") == 4) {
+    wp <- current$world.parameters
+    for(par in names(wp)) {
+        if(wp[[par]] == 4) {
             val <- as.list(current[[par]][["ini"]])
             starting.values[[par]] <- vector("list", length = 4)
             names(starting.values[[par]]) <- paste0("T", 1:4)
@@ -131,7 +135,7 @@ match.ini.to.chains <- function(nr.chains) {
                                                 val[[i]], nr.chains, paste0(par, "[[", lname, "]]"))
             }
         } else {
-            if(attr(current[[par]], "npar") == 1) {
+            if(wp[[par]] == 1) {
                 starting.values[[par]] <- .match.length.to.nr.chains(
                                                 current[[par]][["ini"]], nr.chains, par)
             }
@@ -252,7 +256,7 @@ mcmc.run.chain.e0 <- function(chain.id, meta, thin = 1, iter = 100, starting.val
 
     if (verbose) {
         cat('Starting values:\n')
-        print(unlist(mcmc[meta$mcmc.options$world.parameters]))
+        print(unlist(mcmc[names(meta$mcmc.options$world.parameters)]))
         cat('Store initial values into ', mcmc$output.dir, '\n')
     }
 	store.e0.mcmc(mcmc, append = FALSE, flush.buffer = TRUE, verbose = verbose)
@@ -569,7 +573,7 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter = 100, ini.values = NULL,
     if (!exists(".Random.seed")) runif(1)
 	ini.values[["Triangle"]] <- scale.Triangle(ini.values[["Triangle"]])
 	mclist <- list(ini.values = ini.values)
-	for(par in c(opts$world.parameters)) {
+	for(par in names(opts$world.parameters)) {
 	    mclist[[par]] <- ini.values[[par]]
 	    # legacy
 	    mclist[[paste0(par, ".ini")]] <- ini.values[[par]]

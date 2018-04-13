@@ -170,12 +170,12 @@ load.e0.parameter.traces.all <- function(mcmc, par.names=e0.parameter.names(),
 
 e0.get.all.parameter.names <- function() {
     # Parameters with the number of its values
-	return(list(Triangle=4, k=1, z=1, lambda=4, lambda.k=1, lambda.z=1, omega=1)) 
+	return(bayesLife:::e0mcmc.options("world.parameters")) 
 }				
 
 e0.get.all.parameter.names.cs <- function() {
     # Country-specific parameters with the number of its values
-	return(list(Triangle.c=4, k.c=1, z.c=1))
+	return(e0mcmc.options("country.parameters"))
 }
 
 e0.get.all.parameter.names.extended <- function(cs=FALSE) {

@@ -3,9 +3,7 @@ if(getRversion() >= "2.15.1") utils::globalVariables("counter")
 store.e0.mcmc <- local({
 	# Writes parameter values into ascii files - one file per parameter and country (if country-specific)
     ##########################
-    par.names <- e0.parameter.names()
-    par.cs.names <- e0.parameter.names.cs()
-        
+
     default.buffer.size <- 10
     buffer <- buffer.cs <- NULL
                 
@@ -24,6 +22,8 @@ store.e0.mcmc <- local({
                 
 	buffers.ini <- function(mcmc, size, countries=NULL) {
 		buffer <<- list()
+		par.names <<- e0.parameter.names()
+		par.cs.names <<- e0.parameter.names.cs()
 		if (is.null(countries)) {
         	for (par in par.names) buffer[[par]] <<- matrix(NA, ncol=length(mcmc[[par]]), nrow=size)
 			country.index <- 1: mcmc$meta$nr.countries
