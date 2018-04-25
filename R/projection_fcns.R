@@ -1,12 +1,12 @@
 if(getRversion() >= "2.15.1") utils::globalVariables("loess_sd")
 data(loess_sd, envir=environment())
 
-e0.proj.le.SDPropToLoess<-function(x,l.start,kap,n.proj=11, p1=9, p2=9, const.var=FALSE){
-  proj<-NULL
-  proj[1]<-l.start
-  for(a in 2:(n.proj+1)){
-  	proj[a]<-proj[a-1]+g.dl6(x,proj[a-1], p1=p1, p2=p2)+rnorm(1,mean=0,
-  				sd=(kap*if(const.var) 1 else loess.lookup(proj[a-1])))
+generate.e0.trajectory <- function(x, l.start, kap, n.proj = 11, p1 = 9, p2 = 9, const.var = FALSE, ...){
+  proj <- NULL
+  proj[1] <- l.start
+  for(a in 2:(n.proj+1)) {
+  	proj[a] <- proj[a-1] + g.dl6(x, proj[a-1], p1 = p1, p2 = p2) + 
+  	            rnorm(1, mean = 0, sd = (kap*if(const.var) 1 else loess.lookup(proj[a-1])))
   }
   return(proj[2:length(proj)])
 }
@@ -137,186 +137,199 @@ e0.predict.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 	invisible(bayesLife.prediction)
 }
 
+e0.prediction.setup <- function(...) {
+    setup <- list(...)
+    setup <- within(setup, {
+        meta <- mcmc.set$meta
+        present.year <- if(is.null(start.year)) meta$present.year else start.year - 5
+        nr_project <- length(seq(present.year+5, end.year, by=5))
+        cat('\nPrediction from', present.year+5, 'until', end.year, '(i.e.', nr_project, 'projections)\n\n')
+    
+        total.iter <- get.total.iterations(mcmc.set$mcmc.list, burnin)
+        stored.iter <- get.stored.mcmc.length(mcmc.set$mcmc.list, burnin)
+        mcthin <- max(sapply(mcmc.set$mcmc.list, function(x) x$thin))
+        if(!is.null(nr.traj) && !is.null(thin)) {
+            warning('Both nr.traj and thin are given. Argument thin will be ignored.')
+            thin <- NULL
+        }
+        if(is.null(nr.traj)) nr.traj <- min(stored.iter, 2000)
+        else {
+            if (nr.traj > stored.iter) 
+                warning('nr.traj is larger than the available MCMC sample. Only ', stored.iter, ' trajectories will be generated.')
+            nr.traj <- min(nr.traj, stored.iter)	
+        }
+        if(is.null(thin)) thin <- floor(stored.iter/nr.traj * mcthin)
+        if(stored.iter <= 0 || thin == 0)
+            stop('The number of simulations is 0. Burnin might be larger than the number of simulated values, or # trajectories is too big.')
+    
+        #setup output directory
+        if (is.null(output.dir)) output.dir <- meta$output.dir
+        outdir <- file.path(output.dir, 'predictions')
+    
+        if(is.null(get0("countries"))) {
+            if(!replace.output && has.e0.prediction(sim.dir = output.dir))
+                stop('Prediction in ', outdir,
+                    ' already exists.\nSet replace.output=TRUE if you want to overwrite existing projections.')
+            unlink(outdir, recursive=TRUE)
+            write.to.disk <- TRUE
+            if(!file.exists(outdir)) 
+                dir.create(outdir, recursive=TRUE)
+        } else write.to.disk <- FALSE
+    
+        thinned.mcmc <- get.thinned.e0.mcmc(mcmc.set, thin = thin, burnin = burnin)
+        has.thinned.mcmc <- (!is.null(thinned.mcmc) && thinned.mcmc$meta$parent.iter == total.iter 
+                         && meta$nr.countries == thinned.mcmc$meta$nr.countries)
 
-make.e0.prediction <- function(mcmc.set, start.year = NULL, end.year = 2100, 
-                               replace.output = FALSE, nr.traj = NULL, thin = NULL, 
-                               burnin = 0, countries = NULL, save.as.ascii = 1000, 
-                               output.dir = NULL, write.summary.files = TRUE, 
-							   force.creating.thinned.mcmc = FALSE, verbose = verbose){
+        load.mcmc.set <- if(has.thinned.mcmc && 
+                            !get0("force.creating.thinned.mcmc", ifnotfound = FALSE)) thinned.mcmc
+                        else create.thinned.e0.mcmc(mcmc.set, thin = thin, burnin = burnin, 
+                                output.dir = output.dir, verbose = verbose)
+        nr_simu <- load.mcmc.set$mcmc.list[[1]]$finished.iter
+        
+        if (verbose) cat('Load world-level parameters.\n')
+        var.par.names <- c('omega')
+        # load only the first par to check if everything is o.k.
+        var.par.values <- get.e0.parameter.traces(load.mcmc.set$mcmc.list, var.par.names, burnin=0)
+    
+        prediction.countries <- if(is.null(get0("countries"))) 1:meta$nr.countries else countries
+        nr_countries <- meta$nr.countries
+        e0.matrix.reconstructed <- get.e0.reconstructed(meta$e0.matrix, meta)
+        present.year.index <- bayesTFR:::get.estimation.year.index(meta, present.year)
+        le0.matrix <- present.year.index
+    
+        quantiles.to.keep <- e0pred.options("quantiles")
+        PIs_cqp <- array(NA, c(nr_countries, length(quantiles.to.keep), nr_project+1))
+        dimnames(PIs_cqp)[[2]] <- quantiles.to.keep
+        proj.middleyears <- bayesTFR:::get.prediction.years(meta, nr_project+1, present.year.index)
+        dimnames(PIs_cqp)[[3]] <- proj.middleyears
+        mean_sd <- array(NA, c(nr_countries, 2, nr_project+1))
+    
+        var.par.names.cs <- e0.parameter.names.cs()
+        pred.env <- new.env() # for passing to trajectory function
+    })
+    return(setup)
+}
+
+
+run.e0.projection.for.all.countries <- function(setup, traj.fun = "generate.e0.trajectory") {
+    with(setup, {
+        country.counter <- 0
+        status.for.gui <- paste('out of', length(prediction.countries), 'countries.')
+        gui.options <- list()
+        #########################################
+        for (country in prediction.countries){
+        #for (country in c(23)){
+        #########################################
+            if(getOption('bDem.e0pred', default=FALSE)) {
+                # This is to unblock the GUI, if the run is invoked from bayesDem
+                # and pass info about its status
+                # In such a case the gtk libraries are already loaded
+                country.counter <- country.counter + 1
+                gui.options$bDem.e0pred.status <- paste('finished', country.counter, status.for.gui)
+                unblock.gtk('bDem.e0pred', gui.options)
+            }
+            country.obj <- get.country.object(country, meta, index=TRUE)
+            if (verbose) {			
+                cat('e0 projection for country', country, country.obj$name, 
+                    '(code', country.obj$code, ')\n')
+            }
+            if (is.element(country.obj$code, load.mcmc.set$meta$regions$country_code)) {
+                cs.par.values <- get.e0.parameter.traces.cs(load.mcmc.set$mcmc.list, country.obj, 
+                                                            var.par.names.cs, burnin=0)
+            } 
+            else { # there are no thinned traces for this country, use the full traces
+                cs.par.values <- get.e0.parameter.traces.cs(mcmc.set$mcmc.list, country.obj, 
+                                                        var.par.names.cs, burnin=burnin)
+                selected.simu <- bayesTFR:::get.thinning.index(nr_simu, dim(cs.par.values)[1])
+                if (length(selected.simu$index) < nr_simu)
+                    selected.simu$index <- sample(selected.simu$index, nr_simu, replace=TRUE)
+                cs.par.values <- cs.par.values[selected.simu$index,]
+            }
+            all.e0 <- meta$e0.matrix[, country]
+            lall.e0 <- length(all.e0)
+            this.Tc_end <-  meta$Tc.index[[country]][length(meta$Tc.index[[country]])]
+            this.T_end <- min(this.Tc_end, le0.matrix)
+            nmissing <- le0.matrix - this.T_end
+            missing <- (this.T_end+1):le0.matrix
+        
+            if (verbose && nmissing > 0) 
+                cat('\t', nmissing, 'data points reconstructed.\n')
+        
+            this.nr_project <- nr_project + nmissing
+            trajectories <- matrix(NA, this.nr_project+1, nr_simu)
+            pred.env$country.obj <- country.obj
+            
+            for(j in 1:nr_simu) {
+                trajectories[1,j] <- all.e0[this.T_end]
+                if(nmissing == 0 && this.Tc_end > le0.matrix) { # use observed data on projection spots
+                    trajectories[2:(lall.e0 - le0.matrix+1),j]<- all.e0[(le0.matrix+1):lall.e0]
+                    proj.idx <- (lall.e0 - le0.matrix + 2):(this.nr_project+1)
+                    last.val.idx <- lall.e0
+                } else {
+                    proj.idx <- 2:(this.nr_project+1)
+                    last.val.idx <- this.T_end
+                }
+                trajectories[proj.idx, j] <- do.call(traj.fun, list(x = cs.par.values[j,], 
+                                                                   l.start = all.e0[last.val.idx], 
+                                                                    kap = var.par.values[j,'omega'],
+                                                                   n.proj = length(proj.idx),
+                                                                    p1 = meta$dl.p1, p2 = meta$dl.p2, 
+                                                                    const.var = meta$constant.variance,
+                                                                   traj = j, pred.env = pred.env))
+            }
+            if (nmissing > 0) {
+                e0.matrix.reconstructed[(this.T_end+1):le0.matrix,country] <- apply(matrix(trajectories[2:(nmissing+1),],
+                                                                                       nrow=nmissing), 1, quantile, 0.5, na.rm = TRUE)
+                trajectories <- trajectories[(nmissing+1):nrow(trajectories),]
+                trajectories[1,] <- quantile(trajectories[1,], 0.5, na.rm = TRUE)
+            }
+            save(trajectories, file = file.path(outdir, paste('traj_country', country.obj$code, '.rda', sep='')))
+            PIs_cqp[country,,] = apply(trajectories, 1, quantile, quantiles.to.keep, na.rm = TRUE)
+            mean_sd[country,1,] <- apply(trajectories, 1, mean, na.rm = TRUE)
+            mean_sd[country,2,] = apply(trajectories, 1, sd, na.rm = TRUE)
+        }
+        mcmc.set <- remove.e0.traces(mcmc.set)
+        bayesLife.prediction <- structure(list(
+            quantiles = PIs_cqp,
+            traj.mean.sd = mean_sd,
+            nr.traj = nr_simu,
+            e0.matrix.reconstructed = e0.matrix.reconstructed,
+            output.directory = outdir,
+            mcmc.set = load.mcmc.set,
+            nr.projections = nr_project,
+            burnin = burnin,
+            end.year = end.year,
+            start.year = get0("start.year"),
+            present.year.index = present.year.index,
+            present.year.index.all = present.year.index + (
+                if(!is.null(meta$suppl.data$regions)) nrow(meta$suppl.data$e0.matrix) else 0)
+            ), class='bayesLife.prediction')
+        
+        if(write.to.disk) {		
+            prediction.file <- file.path(outdir, 'prediction.rda')
+            save(bayesLife.prediction, file=prediction.file)
+            
+            bayesTFR:::do.convert.trajectories(pred = bayesLife.prediction, n = save.as.ascii, 
+                                               output.dir = outdir, verbose = verbose)
+            if(get0("write.summary.files", ifnotfound = TRUE))
+                do.write.e0.projection.summary(bayesLife.prediction, output.dir = outdir)
+            
+            cat('\nPrediction stored into', outdir, '\n')
+        }
+        bayesLife.prediction
+    })
+}
+
+make.e0.prediction <- function(mcmc.set, pred.options = NULL, ...) {
 	# if 'countries' is given, it is an index
     # use match.call to collect the args
-	present.year <- if(is.null(start.year)) mcmc.set$meta$present.year else start.year - 5
-	nr_project <- length(seq(present.year+5, end.year, by=5))
-	cat('\nPrediction from', present.year+5, 'until', end.year, '(i.e.', nr_project, 'projections)\n\n')
-			
-	total.iter <- get.total.iterations(mcmc.set$mcmc.list, burnin)
-	stored.iter <- get.stored.mcmc.length(mcmc.set$mcmc.list, burnin)
-	mcthin <- max(sapply(mcmc.set$mcmc.list, function(x) x$thin))
-	if(!is.null(nr.traj) && !is.null(thin)) {
-		warning('Both nr.traj and thin are given. Argument thin will be ignored.')
-		thin <- NULL
-	}
-	if(is.null(nr.traj)) nr.traj <- min(stored.iter, 2000)
-	else {
-		if (nr.traj > stored.iter) 
-			warning('nr.traj is larger than the available MCMC sample. Only ', stored.iter, ' trajectories will be generated.')
-		nr.traj <- min(nr.traj, stored.iter)	
-	}
-	if(is.null(thin)) thin <- floor(stored.iter/nr.traj * mcthin)
-	if(stored.iter <= 0 || thin == 0)
-		stop('The number of simulations is 0. Burnin might be larger than the number of simulated values, or # trajectories is too big.')
-
-	#setup output directory
-	if (is.null(output.dir)) output.dir <- mcmc.set$meta$output.dir
-	outdir <- file.path(output.dir, 'predictions')
-
-	if(is.null(countries)) {
-		if(!replace.output && has.e0.prediction(sim.dir=output.dir))
-			stop('Prediction in ', outdir,
-				' already exists.\nSet replace.output=TRUE if you want to overwrite existing projections.')
-		unlink(outdir, recursive=TRUE)
-		write.to.disk <- TRUE
-		if(!file.exists(outdir)) 
-			dir.create(outdir, recursive=TRUE)
-	} else write.to.disk <- FALSE
-	
-	thinned.mcmc <- get.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin)
-	has.thinned.mcmc <- (!is.null(thinned.mcmc) && thinned.mcmc$meta$parent.iter == total.iter 
-							&& mcmc.set$meta$nr.countries == thinned.mcmc$meta$nr.countries)
-	unblock.gtk('bDem.e0pred')
-	load.mcmc.set <- if(has.thinned.mcmc && !force.creating.thinned.mcmc) thinned.mcmc
-		 			 else create.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin, 
-					 					output.dir=output.dir, verbose=verbose)
-	nr_simu <- load.mcmc.set$mcmc.list[[1]]$finished.iter	
-	if (verbose) cat('Load world-level parameters.\n')
-	var.par.names <- c('omega')
-	# load only the first par to check if everything is o.k.
-	var.par.values <- get.e0.parameter.traces(load.mcmc.set$mcmc.list, var.par.names, burnin=0)
-
-	prediction.countries <- if(is.null(countries)) 1:mcmc.set$meta$nr.countries else countries
-	nr_countries <- mcmc.set$meta$nr.countries
-	e0.matrix.reconstructed <- get.e0.reconstructed(mcmc.set$meta$e0.matrix, mcmc.set$meta)
-	#le0.matrix <- dim(e0.matrix.reconstructed)[1]
-	present.year.index <- bayesTFR:::get.estimation.year.index(mcmc.set$meta, present.year)
-	le0.matrix <- present.year.index
-	
-	quantiles.to.keep <- c(0,0.025,0.05,0.1,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,0.95,0.975,1)
-	PIs_cqp <- array(NA, c(nr_countries, length(quantiles.to.keep), nr_project+1))
-	dimnames(PIs_cqp)[[2]] <- quantiles.to.keep
-	proj.middleyears <- bayesTFR:::get.prediction.years(mcmc.set$meta, nr_project+1, present.year.index)
-	dimnames(PIs_cqp)[[3]] <- proj.middleyears
-	mean_sd <- array(NA, c(nr_countries, 2, nr_project+1))
-
-	var.par.names.cs <- c('Triangle.c', 'k.c', 'z.c')
-	
-	country.counter <- 0
-	status.for.gui <- paste('out of', length(prediction.countries), 'countries.')
-	gui.options <- list()
-	#########################################
-	for (country in prediction.countries){
-	#for (country in c(23)){
-	#########################################
-		if(getOption('bDem.e0pred', default=FALSE)) {
-			# This is to unblock the GUI, if the run is invoked from bayesDem
-			# and pass info about its status
-			# In such a case the gtk libraries are already loaded
-			country.counter <- country.counter + 1
-			gui.options$bDem.e0pred.status <- paste('finished', country.counter, status.for.gui)
-			unblock.gtk('bDem.e0pred', gui.options)
-		}
-
-		country.obj <- get.country.object(country, mcmc.set$meta, index=TRUE)
-		if (verbose) {			
- 			cat('e0 projection for country', country, country.obj$name, 
- 						'(code', country.obj$code, ')\n')
- 		}
- 		if (is.element(country.obj$code, load.mcmc.set$meta$regions$country_code)) {
-			cs.par.values <- get.e0.parameter.traces.cs(load.mcmc.set$mcmc.list, country.obj, 
-								var.par.names.cs, burnin=0)
-		} else { # there are no thinned traces for this country, use the full traces
-			cs.par.values <- get.e0.parameter.traces.cs(mcmc.set$mcmc.list, country.obj, 
-								var.par.names.cs, burnin=burnin)
-			selected.simu <- bayesTFR:::get.thinning.index(nr_simu, dim(cs.par.values)[1])
-			if (length(selected.simu$index) < nr_simu)
-				selected.simu$index <- sample(selected.simu$index, nr_simu, replace=TRUE)
-			cs.par.values <- cs.par.values[selected.simu$index,]
-		}
-		all.e0 <- mcmc.set$meta$e0.matrix[, country]
-		lall.e0 <- length(all.e0)
-		this.Tc_end <-  mcmc.set$meta$Tc.index[[country]][length(mcmc.set$meta$Tc.index[[country]])]
-		this.T_end <- min(this.Tc_end, le0.matrix)
-		nmissing <- le0.matrix - this.T_end
-		missing <- (this.T_end+1):le0.matrix
-
-		if (verbose && nmissing > 0) 
-			cat('\t', nmissing, 'data points reconstructed.\n')
-
-		this.nr_project <- nr_project + nmissing
-		#sum.delta <- apply(cs.par.values[,1:4], 1, sum)
-		#use.traj <- which(sum.delta <= 110)
-		trajectories <- matrix(NA, this.nr_project+1, nr_simu)
-		#trajectories <- matrix(NA, this.nr_project+1, length(use.traj))
-    	for(j in 1:nr_simu){
-    	#for(j in 1:length(use.traj)){
-    		#k <- use.traj[j]
-    		trajectories[1,j] <- all.e0[this.T_end]
-    		if(nmissing == 0 && this.Tc_end > le0.matrix) { # use observed data on projection spots
-    			#stop('')
-    			trajectories[2:(lall.e0 - le0.matrix+1),j]<- all.e0[(le0.matrix+1):lall.e0]
-    			proj.idx <- (lall.e0 - le0.matrix + 2):(this.nr_project+1)
-    			last.val.idx <- lall.e0
-    		} else {
-    			proj.idx <- 2:(this.nr_project+1)
-    			last.val.idx <- this.T_end
-    		}
-           trajectories[proj.idx,j]<-e0.proj.le.SDPropToLoess(cs.par.values[j,], 
-           							all.e0[last.val.idx], 
-           							kap=var.par.values[j,'omega'],n.proj=length(proj.idx),
-           							p1=mcmc.set$meta$dl.p1, p2=mcmc.set$meta$dl.p2, 
-           							const.var=mcmc.set$meta$constant.variance)
-    	}
-    	if (nmissing > 0) {
-    		e0.matrix.reconstructed[(this.T_end+1):le0.matrix,country] <- apply(matrix(trajectories[2:(nmissing+1),],
-    											 nrow=nmissing), 1, quantile, 0.5, na.rm = TRUE)
-    		trajectories <- trajectories[(nmissing+1):nrow(trajectories),]
-    		trajectories[1,] <- quantile(trajectories[1,], 0.5, na.rm = TRUE)
-    	}
-    	#stop('')
-		save(trajectories, file = file.path(outdir, paste('traj_country', country.obj$code, '.rda', sep='')))
- 		PIs_cqp[country,,] = apply(trajectories, 1, quantile, quantiles.to.keep, na.rm = TRUE)
- 		mean_sd[country,1,] <- apply(trajectories, 1, mean, na.rm = TRUE)
- 		mean_sd[country,2,] = apply(trajectories, 1, sd, na.rm = TRUE)
-	}
-	mcmc.set <- remove.e0.traces(mcmc.set)
-	bayesLife.prediction <- structure(list(
-				quantiles = PIs_cqp,
-				traj.mean.sd = mean_sd,
-				nr.traj=nr_simu,
-				e0.matrix.reconstructed = e0.matrix.reconstructed,
-				output.directory=outdir,
-				mcmc.set=load.mcmc.set,
-				nr.projections=nr_project,
-				burnin=burnin,
-				end.year=end.year,
-				start.year=start.year,
-				present.year.index=present.year.index,
-				present.year.index.all=present.year.index + (
-						if(!is.null(mcmc.set$meta$suppl.data$regions)) nrow(mcmc.set$meta$suppl.data$e0.matrix) else 0)
-				),
-				class='bayesLife.prediction')
-		
-	if(write.to.disk) {		
-		prediction.file <- file.path(outdir, 'prediction.rda')
-		save(bayesLife.prediction, file=prediction.file)
-	
-		bayesTFR:::do.convert.trajectories(pred=bayesLife.prediction, n=save.as.ascii, output.dir=outdir, 
-										verbose=verbose)
-		if(write.summary.files)
-			do.write.e0.projection.summary(bayesLife.prediction, output.dir=outdir)
-	
-		cat('\nPrediction stored into', outdir, '\n')
-	}
-	invisible(bayesLife.prediction)
+    if(!is.null(pred.options))
+        e0pred.options(pred.options)
+    
+    unblock.gtk('bDem.e0pred')
+    setup <- e0.prediction.setup(mcmc.set = mcmc.set, ...)
+    
+    invisible(run.e0.projection.for.all.countries(setup))
 }
 
 remove.e0.traces <- function(mcmc.set) {

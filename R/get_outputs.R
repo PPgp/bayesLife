@@ -117,19 +117,24 @@ get.e0.convergence <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 	return(bayesLife.convergence)
 }
 
-get.e0.parameter.traces <- function(mcmc.list, par.names=e0.parameter.names(), burnin=0,
-									thinning.index=NULL, thin=NULL) {
+get.e0.parameter.traces <- function(mcmc.list, par.names = NULL, burnin = 0,
+									thinning.index = NULL, thin = NULL) {
 	# get parameter traces either from disk or from memory, if they were already loaded
 	mcmc.list <- get.mcmc.list(mcmc.list)
-	return(bayesTFR:::do.get.tfr.parameter.traces(is.cs=FALSE, mcmc.list=mcmc.list, par.names=par.names, 
-										burnin=burnin, thinning.index=thinning.index, thin=thin))
+	if(missing(par.names)) par.names <- e0.parameter.names(get.mcmc.meta(mcmc.list)$mcmc.options)
+	
+	return(bayesTFR:::do.get.tfr.parameter.traces(is.cs = FALSE, mcmc.list = mcmc.list, 
+	                                              par.names = par.names, burnin = burnin, 
+	                                              thinning.index = thinning.index, thin = thin))
 }
 
-get.e0.parameter.traces.cs <- function(mcmc.list, country.obj, par.names=e0.parameter.names.cs(), 
-									   burnin=0, thinning.index=NULL, thin=NULL) {
+get.e0.parameter.traces.cs <- function(mcmc.list, country.obj, par.names = NULL, 
+									   burnin = 0, thinning.index = NULL, thin = NULL) {
 	# country.obj is result of get.country.object()
 	# get traces for country-specific parameters either from disk or from memory, if they were already loaded
 	mcmc.list <- get.mcmc.list(mcmc.list)
+	if(missing(par.names)) par.names <- e0.parameter.names.cs(get.mcmc.meta(mcmc.list)$mcmc.options)
+	
 	return(bayesTFR:::do.get.tfr.parameter.traces(is.cs=TRUE, mcmc.list=mcmc.list, par.names=par.names,
 										 country.obj=country.obj,
 										burnin=burnin, thinning.index=thinning.index, thin=thin))
@@ -137,50 +142,61 @@ get.e0.parameter.traces.cs <- function(mcmc.list, country.obj, par.names=e0.para
 
 bdem.parameter.traces.bayesLife.mcmc <- function(mcmc, par.names, ...) {
 	# Load traces from the disk
-	all.standard.names <- c(e0.parameter.names(), e0.parameter.names.cs())
-	return(bayesTFR:::.do.get.traces(mcmc, par.names=par.names, ..., 
-							all.standard.names=all.standard.names))
+	all.standard.names <- c(e0.parameter.names(get.mcmc.meta(mcmc)$mcmc.options), 
+	                        e0.parameter.names.cs(get.mcmc.meta(mcmc)$mcmc.options))
+	return(bayesTFR:::.do.get.traces(mcmc, par.names = par.names, ..., 
+							all.standard.names = all.standard.names))
 }
 
-load.e0.parameter.traces <- function(mcmc, par.names=e0.parameter.names(), burnin=0, thinning.index=NULL) {
+load.e0.parameter.traces <- function(mcmc, par.names = NULL, 
+                                     burnin = 0, thinning.index = NULL) {
+    if(missing(par.names)) par.names <- e0.parameter.names(get.mcmc.meta(mcmc)$mcmc.options)
  	return(bdem.parameter.traces(mcmc, par.names, burnin=burnin, thinning.index=thinning.index))
 }
 
-load.e0.parameter.traces.cs <- function(mcmc, country, par.names=e0.parameter.names.cs(), burnin=0, 
-										thinning.index=NULL) {
+load.e0.parameter.traces.cs <- function(mcmc, country, par.names = NULL, burnin = 0, 
+										thinning.index = NULL) {
+    if(missing(par.names)) par.names <- e0.parameter.names.cs(get.mcmc.meta(mcmc)$mcmc.options)
  	return(bdem.parameter.traces(mcmc, par.names, paste('_country', country, sep=''),
-						par.names.postfix=paste('_c', country, sep=''), burnin=burnin, 
-						thinning.index=thinning.index))
+						par.names.postfix = paste('_c', country, sep=''), burnin = burnin, 
+						thinning.index = thinning.index))
 }
 
-load.e0.parameter.traces.all <- function(mcmc, par.names=e0.parameter.names(), 
-										 par.names.cs=e0.parameter.names.cs(),
-										 burnin=0, thinning.index=NULL) {
-	result <- load.e0.parameter.traces(mcmc, par.names, burnin=burnin, thinning.index=thinning.index)
+load.e0.parameter.traces.all <- function(mcmc, par.names = NULL, 
+										 par.names.cs = NULL,
+										 burnin = 0, thinning.index = NULL) {
+    if(missing(par.names)) par.names <- e0.parameter.names(get.mcmc.meta(mcmc)$mcmc.options)
+	result <- load.e0.parameter.traces(mcmc, par.names, burnin = burnin, 
+	                                   thinning.index = thinning.index)
+	if(missing(par.names.cs)) par.names.cs <- e0.parameter.names.cs(get.mcmc.meta(mcmc)$mcmc.options)
 	for (country in 1:mcmc$meta$nr.countries) {
 		result <- cbind(result, 
 						load.e0.parameter.traces.cs(mcmc, 
 												    get.country.object(country, 
-												         mcmc$meta, index=TRUE)$code, 
-												    par.names.cs, burnin=burnin,
-												    thinning.index=thinning.index))
+												         mcmc$meta, index = TRUE)$code, 
+												    par.names.cs, burnin = burnin,
+												    thinning.index = thinning.index))
 	}
 	return (result)
 }
 
-e0.get.all.parameter.names <- function() {
+e0.get.all.parameter.names <- function(opts = NULL) {
     # Parameters with the number of its values
-	return(bayesLife:::e0mcmc.options("world.parameters")) 
+    if(is.null(opts)) 
+        return(e0mcmc.options("world.parameters"))
+    return(opts$world.parameters)
 }				
 
-e0.get.all.parameter.names.cs <- function() {
+e0.get.all.parameter.names.cs <- function(opts = NULL) {
     # Country-specific parameters with the number of its values
-	return(e0mcmc.options("country.parameters"))
+    if(is.null(opts)) 
+        return(e0mcmc.options("country.parameters"))
+	return(opts$country.parameters)
 }
 
-e0.get.all.parameter.names.extended <- function(cs=FALSE) {
+e0.get.all.parameter.names.extended <- function(cs=FALSE, ...) {
 	pars <- c()
-	all.pars <- if(cs) e0.get.all.parameter.names.cs() else e0.get.all.parameter.names()
+	all.pars <- if(cs) e0.get.all.parameter.names.cs(...) else e0.get.all.parameter.names(...)
 	for (ipar in 1:length(all.pars)) {
 		par <- all.pars[ipar]
 		paropt <- unlist(par)
@@ -190,18 +206,18 @@ e0.get.all.parameter.names.extended <- function(cs=FALSE) {
 	return(pars)
 }
 
-e0.parameter.names.extended <- function() 
-	return(e0.get.all.parameter.names.extended())
+e0.parameter.names.extended <- function(...) 
+	return(e0.get.all.parameter.names.extended(...))
 	
-e0.parameter.names.cs.extended <- function(country.code=NULL) {
+e0.parameter.names.cs.extended <- function(country.code = NULL, ...) {
 	# return a list of cs-parameters extended by i if necessary
-	pars <- e0.get.all.parameter.names.extended(cs=TRUE)
+	pars <- e0.get.all.parameter.names.extended(cs = TRUE, ...)
 	if(!is.null(country.code)) pars <- paste(pars, '_c', country.code, sep='')
 	return(pars)
 }
 
-e0.parameter.names <- function() return(names(e0.get.all.parameter.names()))
-e0.parameter.names.cs <- function() return(names(e0.get.all.parameter.names.cs()))
+e0.parameter.names <- function(...) return(names(e0.get.all.parameter.names(...)))
+e0.parameter.names.cs <- function(...) return(names(e0.get.all.parameter.names.cs(...)))
 
 get.mcmc.list.bayesLife.mcmc.set <- function(mcmc.list, ...) return(mcmc.list$mcmc.list)
 get.mcmc.list.bayesLife.mcmc <- function(mcmc.list, ...) return(list(mcmc.list))
@@ -210,20 +226,25 @@ get.mcmc.list.bayesLife.prediction <- function(mcmc.list, ...) return(mcmc.list$
 get.mcmc.meta.bayesLife.mcmc.set <- function(meta, ...) return(meta$meta)
 get.mcmc.meta.bayesLife.mcmc.meta <- function(meta, ...) return(meta)
 get.mcmc.meta.bayesLife.mcmc <- function(meta, ...) return(meta$meta)
+get.mcmc.meta.list <- function(meta, ...) return(meta[[1]]$meta)
 get.mcmc.meta.bayesLife.prediction <- function(meta, ...) return(meta$mcmc.set$meta)
 
 
-summary.bayesLife.mcmc <- function(object, country=NULL, 
-								par.names=e0.parameter.names(), 
-								par.names.cs=e0.parameter.names.cs(), ...)
-	return (bayesTFR:::summary.bayesTFR.mcmc(object, country=country,
-				par.names=par.names, par.names.cs=par.names.cs, ...))
+summary.bayesLife.mcmc <- function(object, country = NULL, 
+								par.names = NULL, par.names.cs = NULL, ...) {
+    if(missing(par.names)) par.names <- e0.parameter.names(get.mcmc.meta(object)$mcmc.options)
+    if(missing(par.names.cs)) par.names.cs <- e0.parameter.names.cs(get.mcmc.meta(object)$mcmc.options)
+	return (bayesTFR:::summary.bayesTFR.mcmc(object, country = country,
+				par.names = par.names, par.names.cs = par.names.cs, ...))
+}
 
 summary.bayesLife.mcmc.set <- function(object, country=NULL, chain.id=NULL, 
-								par.names=e0.parameter.names(), 
-								par.names.cs=e0.parameter.names.cs(), 
+								par.names = NULL, 
+								par.names.cs = NULL, 
 								meta.only=FALSE, thin=1, burnin=0, ...) {
-	if(is.null(country) & missing(par.names.cs)) par.names.cs <- NULL
+    if(missing(par.names)) par.names <- e0.parameter.names(get.mcmc.meta(object)$mcmc.options)
+    if(missing(par.names.cs) && !is.null(country)) par.names.cs <- e0.parameter.names.cs(get.mcmc.meta(object)$mcmc.options)
+
 	cat('\nSimulation:', get.sex.label(object$meta), 'life expectancy')
 	cat('\nWPP:', object$meta$wpp.year)
 	cat('\nInput data: e0 for period', object$meta$start.year, '-', object$meta$present.year,'\n')
@@ -241,21 +262,24 @@ summary.bayesLife.mcmc.set <- function(object, country=NULL, chain.id=NULL,
 		return(res)
 	} 
 	if (!is.null(chain.id))
-		return(summary(object$mcmc.list[[chain.id]], country=country, par.names=par.names,
-							par.names.cs=par.names.cs, thin=thin, burnin=burnin, ...))
+		return(summary(object$mcmc.list[[chain.id]], country = country, 
+		               par.names = par.names, par.names.cs = par.names.cs, 
+		               thin = thin, burnin = burnin, ...))
 	if (!is.null(country)) {
 		country.obj <- get.country.object(country, object$meta)
 		if(is.null(country.obj$name)) stop("Country ", country, " not found.")
 		cat('\nCountry:', country.obj$name, '\n')
 		country <- country.obj$code
 	}
-	summary(coda.list.mcmc(object, country=country, par.names=par.names,
-							par.names.cs=par.names.cs, thin=thin, burnin=burnin), ...)
+	summary(coda.list.mcmc(object, country = country, par.names = par.names,
+							par.names.cs = par.names.cs, thin = thin, 
+							burnin = burnin), ...)
 }
 
-print.summary.bayesLife.mcmc.set.meta <- function(x, ...) return(bayesTFR:::print.summary.bayesTFR.mcmc.set.meta(x, ...))
+print.summary.bayesLife.mcmc.set.meta <- function(x, ...) 
+    return(bayesTFR:::print.summary.bayesTFR.mcmc.set.meta(x, ...))
 
-summary.bayesLife.prediction <- function(object, country=NULL, compact=TRUE, ...) {
+summary.bayesLife.prediction <- function(object, country = NULL, compact = TRUE, ...) {
 	res <- bayesTFR:::get.prediction.summary.data(object, 
 				unchanged.pars=c('burnin', 'nr.traj'), 
 				country=country, compact=compact)
@@ -334,22 +358,26 @@ create.thinned.e0.mcmc <- function(mcmc.set, thin=1, burnin=0, output.dir=NULL, 
 	store.bayesLife.object(thinned.mcmc, outdir.thin.mcmc)
 	
 	if(verbose) cat('\nStoring country-independent parameters ...')
-	for (par in e0.parameter.names()) {
+	for (par in e0.parameter.names(meta$mcmc.options)) {
 		values <- get.e0.parameter.traces(mcmc.set$mcmc.list, par, burnin,
-											thinning.index=thin.index)
-		bayesTFR:::write.values.into.file.cindep(par, values, outdir.thin.mcmc, compression.type=thinned.mcmc$compression.type)
+											thinning.index = thin.index)
+		bayesTFR:::write.values.into.file.cindep(par, values, outdir.thin.mcmc, 
+		                                         compression.type = thinned.mcmc$compression.type)
 	}
 	if(verbose) cat('done.')
-	.store.country.specific.traces(mcmc.set, 1:mcmc.set$meta$nr.countries, burnin, thin.index, outdir=outdir.thin.mcmc, verbose=verbose)
+	.store.country.specific.traces(mcmc.set, 1:mcmc.set$meta$nr.countries, burnin, 
+	                               thin.index, outdir = outdir.thin.mcmc, verbose = verbose)
 
 	#if (mcmc.set$meta$nr_countries > mcmc.set$meta$nr_countries_estimation) {
 	#	.update.thinned.extras(mcmc.set, (mcmc.set$meta$nr_countries_estimation+1):mcmc.set$meta$nr_countries,
 	#							burnin=burnin, nr.points=nr.points, dir=outdir.thin.mcmc, verbose=verbose)
 	#}
-	invisible(structure(list(meta=meta, mcmc.list=list(thinned.mcmc)), class='bayesLife.mcmc.set'))
+	invisible(structure(list(meta = meta, mcmc.list = list(thinned.mcmc)), 
+	                    class = 'bayesLife.mcmc.set'))
 }
 
-create.thinned.e0.mcmc.extra <- function(mcmc.set, thinned.mcmc.set, countries, thin=1, burnin=0, verbose=TRUE) {
+create.thinned.e0.mcmc.extra <- function(mcmc.set, thinned.mcmc.set, countries, 
+                                         thin = 1, burnin = 0, verbose = TRUE) {
 	# if 'countries' is given, it is an index.
 	mcthin <- max(sapply(mcmc.set$mcmc.list, function(x) x$thin))
 	thin <- max(c(thin, mcthin))
@@ -359,14 +387,15 @@ create.thinned.e0.mcmc.extra <- function(mcmc.set, thinned.mcmc.set, countries, 
 	.store.country.specific.traces(mcmc.set, countries, burnin, thin.index, outdir=outdir.thin.mcmc, verbose=verbose)
 	invisible(get.thinned.e0.mcmc(mcmc.set, thin=thin, burnin=burnin))
 }
-.store.country.specific.traces <- function(mcmc.set, countries, burnin, thin.index, outdir, verbose=FALSE) {
+.store.country.specific.traces <- function(mcmc.set, countries, burnin, thin.index, 
+                                           outdir, verbose = FALSE) {
 	if(verbose) cat('\nStoring country-specific parameters ...')
-	par.names.cs <- e0.parameter.names.cs()
+	par.names.cs <- e0.parameter.names.cs(mcmc.set$meta$mcmc.options)
 	for (country in countries){
 		country.obj <- get.country.object(country, mcmc.set$meta, index=TRUE)
 		for (par in par.names.cs) {
 			values <- get.e0.parameter.traces.cs(mcmc.set$mcmc.list, country.obj, par, 
-											burnin=burnin, thinning.index=thin.index)
+											burnin = burnin, thinning.index = thin.index)
 			bayesTFR:::write.values.into.file.cdep(par, values, outdir, country.code=country.obj$code,
 						compression.type=mcmc.set$meta$compression.type)
 		}
@@ -407,16 +436,17 @@ get.nrest.countries.bayesLife.mcmc.meta <- function(meta, ...) return (meta$nr.c
 
 get.data.matrix.bayesLife.mcmc.meta <- function(meta, ...) return (meta$e0.matrix)
 
-coda.mcmc.bayesLife.mcmc <- function(mcmc, country=NULL, par.names=e0.parameter.names(), 
-						par.names.cs=e0.parameter.names.cs(), ...)
-	return(bayesTFR:::coda.mcmc.bayesTFR.mcmc(mcmc, country=country, par.names=par.names, 
-												par.names.cs=par.names.cs, ...))
-												
-e0.coda.list.mcmc <- function(mcmc.list=NULL, country=NULL, chain.ids=NULL,
-							sim.dir=file.path(getwd(), 'bayesLife.output'), 
-							par.names=e0.parameter.names(), 
-							par.names.cs=e0.parameter.names.cs(), 
-							low.memory=FALSE, ...) {
+coda.mcmc.bayesLife.mcmc <- function(mcmc, country = NULL, 
+                                     par.names = NULL, par.names.cs = NULL, ...) {
+    if(missing(par.names)) par.names <- e0.parameter.names(get.mcmc.meta(mcmc)$mcmc.options)
+    if(missing(par.names.cs)) par.names.cs <- e0.parameter.names.cs(get.mcmc.meta(mcmc)$mcmc.options)
+	return(bayesTFR:::coda.mcmc.bayesTFR.mcmc(mcmc, country = country, par.names = par.names, 
+												par.names.cs = par.names.cs, ...))
+}												
+e0.coda.list.mcmc <- function(mcmc.list = NULL, country = NULL, chain.ids = NULL,
+							sim.dir = file.path(getwd(), 'bayesLife.output'), 
+							par.names = NULL, par.names.cs = NULL, 
+							low.memory = FALSE, ...) {
 	# return a list of mcmc objects that can be analyzed using the coda package
 	if (is.null(mcmc.list)) {
 		mcmc.list <- get.e0.mcmc(sim.dir, chain.ids=chain.ids, low.memory=low.memory)$mcmc.list
@@ -426,10 +456,13 @@ e0.coda.list.mcmc <- function(mcmc.list=NULL, country=NULL, chain.ids=NULL,
 			mcmc.list <- mcmc.list[chain.ids]
 		}
 	}
+    if(missing(par.names)) par.names <- e0.parameter.names(get.mcmc.meta(mcmc.list)$mcmc.options)
+    if(missing(par.names.cs)) par.names.cs <- e0.parameter.names.cs(get.mcmc.meta(mcmc.list)$mcmc.options)
 	result <- list()
 	i <- 1
 	for(mcmc in mcmc.list) {
-		result[[i]] <- coda.mcmc(mcmc, country=country, par.names=par.names, par.names.cs=par.names.cs, ...)
+		result[[i]] <- coda.mcmc(mcmc, country = country, par.names = par.names, 
+		                         par.names.cs = par.names.cs, ...)
 		i <- i+1
 	}
 	return(mcmc.list(result))

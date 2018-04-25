@@ -5,6 +5,10 @@ e0mcmc.options <- function(...) {
     e0.options("mcmc", ...)
 }
 
+e0pred.options <- function(...) {
+    e0.options("pred", ...)
+}
+
 e0.options <- function(what, ...) {
     # this code was adapted from mclust.options 
     current <- .e0options
@@ -27,7 +31,8 @@ e0.options <- function(what, ...) {
 
 e0.options.default <- function() {
     structure(list(
-        mcmc = e0.mcmc.options.default()
+        mcmc = e0.mcmc.options.default(),
+        pred = e0.pred.options.default()
     ))
 }
 
@@ -86,6 +91,14 @@ e0.mcmc.options.default <- function() {
            k.c$ini.norm["mean"] <- round(k$ini.low + (k$ini.up - k$ini.low)/2)
            z.c$ini.norm["mean"] <- round(z$ini.low + (z$ini.up - z$ini.low)/2, 2)
            })
+    pars
+}
+
+e0.pred.options.default <- function() {
+    pars <- list(
+        quantiles = c(0, 0.025, 0.05, 0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 
+                       0.6, 0.7, 0.75, 0.8, 0.9, 0.95, 0.975, 1)
+    )
     pars
 }
 
@@ -170,7 +183,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
         unlink(output.dir, recursive=TRUE)
 	}
     dir.create(output.dir)
-    
+    old.opts <- e0mcmc.options()
     if(!is.null(mcmc.options))
         e0mcmc.options(mcmc.options)
     mcoptions <- update.ini.values(nr.chains)
@@ -234,7 +247,8 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
 							verbose = verbose))
 			}
 		}
-	}
+    }
+    e0mcmc.options(old.opts)
     if (verbose) 
 		cat('\nSimulation successfully finished!!!\n')
     invisible(mcmc.set)

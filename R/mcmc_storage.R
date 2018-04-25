@@ -22,8 +22,8 @@ store.e0.mcmc <- local({
                 
 	buffers.ini <- function(mcmc, size, countries=NULL) {
 		buffer <<- list()
-		par.names <<- e0.parameter.names()
-		par.cs.names <<- e0.parameter.names.cs()
+		par.names <<- e0.parameter.names(mcmc$meta$mcmc.options)
+		par.cs.names <<- e0.parameter.names.cs(mcmc$meta$mcmc.options)
 		if (is.null(countries)) {
         	for (par in par.names) buffer[[par]] <<- matrix(NA, ncol=length(mcmc[[par]]), nrow=size)
 			country.index <- 1: mcmc$meta$nr.countries
