@@ -478,7 +478,8 @@ e0.world.dlcurves <- function(x, mcmc.list, burnin=NULL, ...) {
 	}
 	if(is.null(burnin)) burnin <- 0
     mcmc.list <- get.mcmc.list(mcmc.list)
-	return(e0.get.dlcurves(x, mcmc.list, country.code=NULL,  burnin=burnin, ...))
+	return(do.call(get.from.options("dlcurves.function", mcmc.list[[1]]$meta$mcmc.options, "e0.get.dlcurves"), 
+	               list(x, mcmc.list, country.code = NULL,  burnin = burnin, ...)))
 }
 
 e0.country.dlcurves <- function(x, mcmc.list, country, burnin=NULL, ...) {
@@ -494,10 +495,12 @@ e0.country.dlcurves <- function(x, mcmc.list, country, burnin=NULL, ...) {
     country.obj <- get.country.object(country, mcmc.list[[1]]$meta)
     if(is.null(country.obj$code))
 	    stop("Country ", country, " not found.")
-    return(e0.get.dlcurves(x, mcmc.list, country.code=country.obj$code,  burnin=burnin, ...))
+    return(do.call(get.from.options("dlcurves.function", mcmc.list[[1]]$meta$mcmc.options, "e0.get.dlcurves"), 
+        list(x, mcmc.list, country.code = country.obj$code,  burnin = burnin, ...)))
 }
 
-e0.get.dlcurves <- function(x, mcmc.list, country.code, burnin, nr.curves=2000, predictive.distr=FALSE) {
+e0.get.dlcurves <- function(x, mcmc.list, country.code, burnin, 
+                            nr.curves = 2000, predictive.distr = FALSE) {
 	dlc <- c()
     nr.curves.from.mc <- if (!is.null(nr.curves)) ceiling(max(nr.curves, 2000)/length(mcmc.list))
     						else NULL
@@ -512,10 +515,13 @@ e0.get.dlcurves <- function(x, mcmc.list, country.code, burnin, nr.curves=2000, 
 	} else {
 		dl.par.names <- c('Triangle_1', 'Triangle_2', 'Triangle_3', 'Triangle_4', 'k', 'z')
 	}
+    meta <- mcmc.list[[1]]$meta
+    opts <- meta$mcmc.options
 	if(predictive.distr) {
-		loessSD <- loess.lookup(x)
-		if(!is.null(mcmc.list[[1]]$meta$constant.variance) && mcmc.list[[1]]$meta$constant.variance)
-			loessSD[] <- 1
+	    if(isTRUE(meta$constant.variance))
+	        loessSD <- rep(1, length(x))
+	    else
+		    loessSD <- loess.lookup(x)
 	}
     for (mcmc in mcmc.list) {
     	th.burnin <- bayesTFR:::get.thinned.burnin(mcmc,burnin)
@@ -528,14 +534,14 @@ e0.get.dlcurves <- function(x, mcmc.list, country.code, burnin, nr.curves=2000, 
 		else traces <- load.e0.parameter.traces(mcmc, burnin=th.burnin, 
 								thinning.index=thincurves.mc$index)				
 		dl.pars <- traces[,dl.par.names, drop=FALSE]
-		omegas <- load.e0.parameter.traces(mcmc, par.names='omega', burnin=th.burnin, 
-								thinning.index=thincurves.mc$index)
-		dl <- t(apply(dl.pars, 1, g.dl6, l=x, p1 = mcmc$meta$dl.p1, p2 = mcmc$meta$dl.p2))
+		dl <- t(apply(dl.pars, 1, g.dl6, l = x, p1 = opts$dl.p1, p2 = opts$dl.p2))
 		if(predictive.distr) {
-			errors <- matrix(NA, nrow=dim(dl)[1], ncol=dim(dl)[2])
+		    omegas <- load.e0.parameter.traces(mcmc, par.names = 'omega', burnin = th.burnin, 
+		                                       thinning.index = thincurves.mc$index)
+			errors <- matrix(NA, nrow = dim(dl)[1], ncol = dim(dl)[2])
 			n <- ncol(errors)
 			for(i in 1:nrow(errors))
-				errors[i,] <- rnorm(n, mean=0, sd=omegas[i]*loessSD)
+				errors[i,] <- rnorm(n, mean = 0, sd = omegas[i]*loessSD)
         	dlc <- rbind(dlc, dl+errors)
         } else dlc <- rbind(dlc, dl)
     }
@@ -571,8 +577,9 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
     }
     if (is.null(e0.lim)) e0.lim <- c(min(40, obs.data), max(90, obs.data))
     x <- seq(e0.lim[1], e0.lim[2], length=1000)
-    dlc <- e0.get.dlcurves(x, mcmc.list, country$code,  burnin, nr.curves, 
-    						predictive.distr=predictive.distr)
+    dlc <- do.call(get.from.options("dlcurves.function", meta$mcmc.options, "e0.get.dlcurves"), 
+                   list(x, mcmc.list, country$code,  burnin, nr.curves, 
+    						predictive.distr = predictive.distr))
     thincurves <- bayesTFR:::get.thinning.index(nr.curves, dim(dlc)[1])
     ltype <- "l"
     if (thincurves$nr.points == 0) {

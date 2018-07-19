@@ -67,9 +67,9 @@ e0.predict <- function(mcmc.set = NULL, end.year = 2100,
 	invisible(pred)
 }
 
-e0.predict.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'), 
-					prediction.dir=sim.dir, 
-					countries = NULL, save.as.ascii=1000, verbose=TRUE, ...) {
+e0.predict.extra <- function(sim.dir = file.path(getwd(), 'bayesLife.output'), 
+					prediction.dir = sim.dir, 
+					countries = NULL, save.as.ascii = 1000, verbose = TRUE, ...) {
 	# Run prediction for given countries/regions (as codes). If they are not given it will be set to countries 
 	# for which there are MCMC results but no prediction.
 	# It is to be used after running run.e0.mcmc.extra
@@ -270,12 +270,13 @@ run.e0.projection.for.all.countries <- function(setup, traj.fun = "generate.e0.t
                     last.val.idx <- this.T_end
                 }
                 trajectories[proj.idx, j] <- do.call(traj.fun, list(x = cs.par.values[j,], 
-                                                                   l.start = all.e0[last.val.idx], 
+                                                                    l.start = all.e0[last.val.idx], 
                                                                     kap = var.par.values[j,'omega'],
-                                                                   n.proj = length(proj.idx),
-                                                                    p1 = meta$dl.p1, p2 = meta$dl.p2, 
+                                                                    n.proj = length(proj.idx),
+                                                                    p1 = meta$mcmc.options$dl.p1, 
+                                                                    p2 = meta$mcmc.options$dl.p2, 
                                                                     const.var = meta$constant.variance,
-                                                                   traj = j, pred.env = pred.env))
+                                                                    traj = j, pred.env = pred.env))
             }
             if (nmissing > 0) {
                 e0.matrix.reconstructed[(this.T_end+1):le0.matrix,country] <- apply(matrix(trajectories[2:(nmissing+1),],
@@ -304,10 +305,15 @@ run.e0.projection.for.all.countries <- function(setup, traj.fun = "generate.e0.t
             present.year.index.all = present.year.index + (
                 if(!is.null(meta$suppl.data$regions)) nrow(meta$suppl.data$e0.matrix) else 0)
             ), class='bayesLife.prediction')
-        
+        bayesLife.prediction
+    })
+}
+
+write.to.disk.prediction <- function(bayesLife.prediction, setup) {
+    with(setup, {
         if(write.to.disk) {		
             prediction.file <- file.path(outdir, 'prediction.rda')
-            save(bayesLife.prediction, file=prediction.file)
+            save(bayesLife.prediction, file = prediction.file)
             
             bayesTFR:::do.convert.trajectories(pred = bayesLife.prediction, n = save.as.ascii, 
                                                output.dir = outdir, verbose = verbose)
@@ -316,7 +322,6 @@ run.e0.projection.for.all.countries <- function(setup, traj.fun = "generate.e0.t
             
             cat('\nPrediction stored into', outdir, '\n')
         }
-        bayesLife.prediction
     })
 }
 
@@ -329,7 +334,9 @@ make.e0.prediction <- function(mcmc.set, pred.options = NULL, ...) {
     unblock.gtk('bDem.e0pred')
     setup <- e0.prediction.setup(mcmc.set = mcmc.set, ...)
     
-    invisible(run.e0.projection.for.all.countries(setup))
+    pred <- run.e0.projection.for.all.countries(setup)
+    write.to.disk.prediction(pred, setup)
+    invisible(pred)
 }
 
 remove.e0.traces <- function(mcmc.set) {

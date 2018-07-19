@@ -1,5 +1,6 @@
-get.e0.mcmc <- function(sim.dir=file.path(getwd(), 'bayesLife.output'), chain.ids=NULL, 
-						low.memory=TRUE, burnin=0, verbose=FALSE) {
+get.e0.mcmc <- function(sim.dir = file.path(getwd(), 'bayesLife.output'), 
+                        chain.ids = NULL, low.memory = TRUE, burnin = 0, 
+                        verbose = FALSE) {
 	############
 	# Returns an object of class bayesLife.mcmc.set
 	############
@@ -8,13 +9,16 @@ get.e0.mcmc <- function(sim.dir=file.path(getwd(), 'bayesLife.output'), chain.id
 		warning('File ', mcmc.file.path, ' does not exist.')
 		return(NULL)
 	}
-	load(file=mcmc.file.path)
+	load(file = mcmc.file.path)
 	bayesLife.mcmc.meta$output.dir <- normalizePath(sim.dir)
+	if(is.null(bayesLife.mcmc.meta$mcmc.options)) {
+	    bayesLife.mcmc.meta <- .convert.meta.from.legacy.form(bayesLife.mcmc.meta)
+	}
 	if (is.null(chain.ids)) {
 		mc.dirs.short <- list.files(sim.dir, pattern='^mc[0-9]+', full.names=FALSE)
 		chain.ids <- as.integer(substring(mc.dirs.short, 3))
 	} else {
-		mc.dirs.short <- paste('mc', chain.ids, sep='')
+		mc.dirs.short <- paste0('mc', chain.ids)
 	}
 	ord.idx <- order(chain.ids)
 	mc.dirs.short <- mc.dirs.short[ord.idx]
@@ -43,6 +47,39 @@ get.e0.mcmc <- function(sim.dir=file.path(getwd(), 'bayesLife.output'), chain.id
 	names(mcmc.chains) <- chain.ids
 	return(structure(list(meta=bayesLife.mcmc.meta, 
                           mcmc.list=mcmc.chains), class='bayesLife.mcmc.set'))
+}
+
+.convert.meta.from.legacy.form <- function(meta) {
+    # Put meta created with older version of bayesLife into the new format.
+    # It means creating mcmc.options and removing relevant info from meta
+    opts <- e0mcmc.options()
+    for(par in c("a", "delta", "tau", "outliers", "country.overwrites", "nu", 
+                 "dl.p1", "dl.p2", "sumTriangle.lim")) {
+        opts[[par]] <- meta[[par]]
+        meta[[par]] <- NULL
+    }
+    for(par in c("Triangle", "k", "z", "lambda", "lambda.k", "lambda.z", "omega")) {
+        for(w in c("ini", "ini.low", "ini.up")) {
+            old.name <- paste0(par, ".", w)
+            opts[[par]][[w]] <- meta[[old.name]]
+            meta[[old.name]] <- NULL
+        }
+    }
+    for(par in c("Triangle", "k", "z", "Triangle.c", "k.c", "z.c")) {
+        for(w in c("prior.low", "prior.up")) {
+            old.name <- paste0(par, ".", w)
+            opts[[par]][[w]] <- meta[[old.name]]
+            meta[[old.name]] <- NULL
+        }
+    }
+    for(par in c("Triangle.c", "k.c", "z.c")) {
+        w <- "ini.norm"
+        old.name <- paste0(par, ".", w)
+        opts[[par]][[w]] <- meta[[old.name]]
+        meta[[old.name]] <- NULL
+    }
+    meta$mcmc.options <- opts
+    return(meta)
 }
 
 has.e0.mcmc <- function(sim.dir) {

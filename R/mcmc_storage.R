@@ -73,7 +73,7 @@ store.e0.mcmc <- local({
 	store <- function(mcmc, append=FALSE, flush.buffer=FALSE, countries=NULL, verbose=FALSE) {
 		# If countries is not NULL, only country-specific parameters 
 		# for those countries (given as index) are stored
-		buffer.size <- mcmc$meta$buffer.size
+		buffer.size <- mcmc$meta$mcmc.options$buffer.size
 		if (is.null(buffer.size)) buffer.size <- default.buffer.size
 		if (is.null(buffer)) buffers.ini(mcmc, buffer.size, countries=countries)
 		buffers.insert(mcmc, countries=countries)
