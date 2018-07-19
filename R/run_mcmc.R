@@ -335,6 +335,7 @@ init.nodes.e0 <- function() {
 }
 
 .do.part.e0.mcmc.meta.ini <- function(data, meta) {
+    opts <- meta$mcmc.options
 	nr_countries <- ncol(data$e0.matrix)
     #T_end_c <- rep(NA, nr_countries)
     Tc.index <- .get.Tcindex(data$e0.matrix, cnames=data$regions$country_name)
@@ -349,7 +350,7 @@ init.nodes.e0 <- function() {
 		nisna2 <- nisna1 & nisna0
 		if (sum(nisna2) > 0) {
 			d.ct[i-1,nisna2] <- data$e0.matrix[i,nisna2] - data$e0.matrix[i-1,nisna2]
-			outliers <- nisna2 & ((d.ct[i-1,] < meta$outliers[1]) | (d.ct[i-1,] > meta$outliers[2]))
+			outliers <- nisna2 & ((d.ct[i-1,] < opts$outliers[1]) | (d.ct[i-1,] > opts$outliers[2]))
 			d.ct[i-1,outliers] <- NA
 		}
 		if (sum(nisna0) > 0 && !meta$constant.variance)
@@ -372,7 +373,7 @@ init.nodes.e0 <- function() {
 			nisna2 <- nisna1 & nisna0
 			if (sum(nisna2) > 0) {
 				d.suppl.ct[i-1,nisna2] <- data.suppl[i,nisna2] - data.suppl[i-1,nisna2]
-				outliers <- nisna2 & ((d.suppl.ct[i-1,] < meta$outliers[1]) | (d.suppl.ct[i-1,] > meta$outliers[2]))
+				outliers <- nisna2 & ((d.suppl.ct[i-1,] < opts$outliers[1]) | (d.suppl.ct[i-1,] > opts$outliers[2]))
 				d.suppl.ct[i-1,outliers] <- NA
 			}
 			if (sum(nisna0) > 0)

@@ -87,8 +87,8 @@ do.compute.loess <- function(df) {
     # add additional point at the end to be able to bin it
     lws$x <- c(lws$x, 999)
     lws$y <- c(lws$y, lws$y[length(lws$y)])
-    if(x[1] > 20) { # set the first point to 20 so that extreme cases also work
-        lws$x <- c(20, lws$x)
+    if(x[1] > 15) { # set the first point to 15 so that extreme cases also work (Cambodia has 18.12)
+        lws$x <- c(15, lws$x)
         lws$y <- c(lws$y[1], lws$y)
     }
     lws
