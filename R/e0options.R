@@ -123,4 +123,8 @@ get.from.options <- function(name, opts, default = NULL) {
     return(value)
 }
 
+using.bayesLife <- function() {
+    .e0options <<- e0.options.default()
+}
+
 .e0options <- e0.options.default()

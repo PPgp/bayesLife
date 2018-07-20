@@ -75,8 +75,10 @@ export(
 	e0.joint.plot,
 	e0.joint.plot.all,
 	e0mcmc.options,
+	e0pred.options,
 	compute.loess,
-	compute.residuals
+	compute.residuals,
+	using.bayesLife
 )
 
 # register S3 methods
