@@ -580,6 +580,7 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL
 	#}
 	new.meta[['Tc.index']] <- update.Tc.index(meta$Tc.index, Emeta$Tc.index, id.replace, is.old)
 	new.meta[['regions']] <- update.regions(meta$regions, Emeta$regions, id.replace, is.new, is.old)
+	new.meta[['regionsDT']] <- create.regionsDT(new.meta[['regions']])
 	if(is.null(meta$country.bounds)) { # simulation was created with previous versions of bayesLife
 		meta$country.bounds <- .do.country.specific.ini(meta$nr.countries, meta)$country.bounds
 	}
@@ -602,6 +603,7 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL
 											suppl.id.replace, suppl.is.old.tmp)
 		new.meta$suppl.data$regions <- update.regions(meta$suppl.data$regions, Emeta$suppl.data$regions, 
 												suppl.id.replace, suppl.new, suppl.old)
+		new.meta$suppl.data$regionsDT <- create.regionsDT(new.meta$suppl.data$regions)
 		n.new <- ncol(new.meta$suppl.data$e0.matrix) - ncol(meta$suppl.data$e0.matrix)
 		new.meta$suppl.data$index.from.all.countries <- meta$suppl.data$index.from.all.countries
 		new.meta$suppl.data$index.to.all.countries <- meta$suppl.data$index.to.all.countries

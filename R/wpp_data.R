@@ -54,15 +54,28 @@ get.wpp.e0.data <- function(sex = 'M', start.year = 1950, present.year = 2015,
 									start.year, present.year)
 	if(!is.null(un.object$suppl.data.object) && verbose) 
 		cat('Dimension of the supplemental e0 matrix:', dim(LEXmatrixsuppl.regions$obs_matrix), '\n')
-									
-	return(list(e0.matrix=LEXmatrix.regions$obs_matrix, 
-				e0.matrix.all=LEXmatrix.regions$obs_matrix_all, 
-				regions=LEXmatrix.regions$regions, 
-				nr.countries.estimation=nr_countries_estimation,
-				suppl.data=bayesTFR:::.get.suppl.data.list(LEXmatrixsuppl.regions, matrix.name='e0.matrix')
+	suppl.data <- bayesTFR:::.get.suppl.data.list(LEXmatrixsuppl.regions, matrix.name='e0.matrix')
+	suppl.data$regionsDT <- create.regionsDT(suppl.data$regions)
+	return(list(e0.matrix = LEXmatrix.regions$obs_matrix, 
+				e0.matrix.all = LEXmatrix.regions$obs_matrix_all, 
+				regions = LEXmatrix.regions$regions, 
+				regionsDT = create.regionsDT(LEXmatrix.regions$regions),
+				nr.countries.estimation = nr_countries_estimation,
+				suppl.data = suppl.data
 				))
 }
 
+create.regionsDT <- function(reglist) {
+    # convert regions from list to data.table
+    if(is.null(reglist)) return(NULL)
+    dt <- as.data.table(reglist)
+    # convert factors to character
+    fcols <- colnames(dt)[sapply(dt,class) == "factor"]
+    if(length(fcols) > 0)
+        dt[,(fcols):= lapply(.SD, as.character), .SDcols = fcols]
+    return(dt)
+}
+    
 read.UNe0 <- function(sex, wpp.year, my.e0.file=NULL, ...) {
 	un.dataset <- paste('e0', sex, sep='')
 	un.suppl.dataset <- paste('e0', sex, '_supplemental', sep='')
