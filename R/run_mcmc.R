@@ -96,6 +96,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
 	if (verbose) {
 		cat('\nStarting Bayesian Hierarchical Model for Life Expectancy.\n')
 		cat('=========================================================\n')
+		cat('Using configuration for ', e0.options("use"))
 		cat('Initialize simulation -', nr.chains, 'chain(s) in total.\n')
 	}
 	if(!is.null(seed)) set.seed(seed)
@@ -267,7 +268,9 @@ run.e0.mcmc.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 	}
 	chain.ids <- names(mcmc.set$mcmc.list)
 	mcthin <- 1
-	if(verbose) cat('\n')
+	if(verbose) {
+	    cat('\nMCMC for extra countries, using settings for ', e0.options("use"), "\n\n")
+	}
 	for (chain in chain.ids) { # update meta in each chain
 		if(verbose) cat('Updating meta in chain', chain, '\n')
 		mcmc.set$mcmc.list[[chain]]$meta <- meta
