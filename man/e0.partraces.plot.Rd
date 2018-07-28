@@ -11,12 +11,12 @@ Functions for plotting the MCMC parameter traces.
 \usage{
 e0.partraces.plot(mcmc.list = NULL, 
     sim.dir = file.path(getwd(), "bayesLife.output"), 
-    chain.ids = NULL, par.names = e0.parameter.names(), 
+    chain.ids = NULL, par.names = NULL, 
     nr.points = NULL, dev.ncol = 5, low.memory = TRUE, \dots)
     
 e0.partraces.cs.plot(country, mcmc.list = NULL, 
     sim.dir = file.path(getwd(), "bayesLife.output"), 
-    chain.ids = NULL, par.names = e0.parameter.names.cs(), 
+    chain.ids = NULL, par.names = NULL, 
     nr.points = NULL, dev.ncol = 3, low.memory = TRUE, \dots)
 }
 \arguments{
@@ -42,11 +42,9 @@ Hana Sevcikova
 \code{\link{e0.coda.list.mcmc}} and \code{\link{get.e0.parameter.traces}} for retrieving the raw values of traces.
 }
 \examples{
-\dontrun{
 sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
-e0.partraces.plot(sim.dir=sim.dir)
-e0.partraces.cs.plot(country="Ireland", sim.dir=sim.dir)
-}
+e0.partraces.plot(sim.dir = sim.dir)
+e0.partraces.cs.plot(country = "Ireland", sim.dir = sim.dir)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

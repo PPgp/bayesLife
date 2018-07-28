@@ -231,7 +231,7 @@ e0.get.all.parameter.names.cs <- function(opts = NULL) {
 	return(opts$country.parameters)
 }
 
-e0.get.all.parameter.names.extended <- function(cs=FALSE, ...) {
+e0.get.all.parameter.names.extended <- function(cs = FALSE, ...) {
 	pars <- c()
 	all.pars <- if(cs) e0.get.all.parameter.names.cs(...) else e0.get.all.parameter.names(...)
 	for (ipar in 1:length(all.pars)) {

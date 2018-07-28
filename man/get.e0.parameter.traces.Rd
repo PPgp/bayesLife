@@ -9,12 +9,12 @@ Accessing MCMC Parameter Traces
 Functions for accessing traces of the MCMC parameters, either country-independent or country-specific.
 }
 \usage{
-get.e0.parameter.traces(mcmc.list, par.names = e0.parameter.names(), 
+get.e0.parameter.traces(mcmc.list, par.names = NULL, 
     burnin = 0, thinning.index = NULL, thin = NULL)
     
 get.e0.parameter.traces.cs(mcmc.list, country.obj, 
-    par.names = e0.parameter.names.cs(), 
-    burnin = 0, thinning.index = NULL, thin = NULL)
+    par.names = NULL, burnin = 0, thinning.index = NULL, 
+    thin = NULL)
 }
 \arguments{
   \item{mcmc.list}{List of \code{\link{bayesLife.mcmc}} objects.}
@@ -40,17 +40,16 @@ Hana Sevcikova
 }
 
 \examples{
-\dontrun{
 sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 m <- get.e0.mcmc(sim.dir)
-e0.values <- get.e0.parameter.traces(m$mcmc.list, burnin=10, par.names="z")
-hist(e0.values, main=colnames(e0.values))
+e0.values <- get.e0.parameter.traces(m$mcmc.list, burnin = 10, par.names = "z")
+hist(e0.values, main = colnames(e0.values))
 
 e0.values.cs <- get.e0.parameter.traces.cs(m$mcmc.list, 
-                    get.country.object("Canada", meta=m$meta),
-                    burnin=10, par.names="z.c")
-hist(e0.values.cs, main=colnames(e0.values.cs))}
-}
+                    get.country.object("Canada", meta = m$meta),
+                    burnin = 10, par.names = "z.c")
+hist(e0.values.cs, main = colnames(e0.values.cs))}
+
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{ manip }

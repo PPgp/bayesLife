@@ -11,13 +11,14 @@ Accessing Parameter Names
 Functions for accessing names of the MCMC parameters, either country-independent or country-specific.
 }
 \usage{
-e0.parameter.names()
-e0.parameter.names.cs()
-e0.parameter.names.extended()
-e0.parameter.names.cs.extended(country.code = NULL)
+e0.parameter.names(...)
+e0.parameter.names.cs(...)
+e0.parameter.names.extended(...)
+e0.parameter.names.cs.extended(country.code = NULL, ...)
 }
 \arguments{
 \item{country.code}{Country code. If it is given, the country-specific parameter names contain the suffix \sQuote{_c\eqn{x}} where \eqn{x} is the \code{country.code}.}
+\item{...}{List of options containing elements \code{world.parameters} and \code{country.parameters}. If not given, they are obtained from the global environment, using \code{\link{e0mcmc.options}}.}
 }
 
 \value{

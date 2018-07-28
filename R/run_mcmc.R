@@ -247,9 +247,9 @@ continue.e0.chain <- function(chain.id, mcmc.list, iter, verbose=FALSE, verbose.
 
 run.e0.mcmc.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'), 
 								countries = NULL, my.e0.file = NULL, iter = NULL,
-								thin=1, burnin=2000, parallel=FALSE, nr.nodes=NULL, 
-								my.locations.file = NULL, verbose=FALSE, verbose.iter=100, 
-								country.overwrites = NULL, ...) {
+								thin = 1, burnin = 2000, parallel = FALSE, nr.nodes = NULL, 
+								my.locations.file = NULL, mcmc.options = NULL, 
+								verbose = FALSE, verbose.iter = 100, ...) {
 									
     old.opts <- e0mcmc.options()
     mcmc.set <- get.e0.mcmc(sim.dir)
@@ -259,7 +259,6 @@ run.e0.mcmc.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 	                                my.e0.file = my.e0.file, 
 							        my.locations.file = my.locations.file, 
 							        burnin = burnin, 
-							        country.overwrites = country.overwrites, 
 							        verbose = verbose)
 	meta <- Eini$meta
 	if(length(Eini$index) <= 0) {
@@ -512,8 +511,7 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter = 100, ini.values = NULL,
 }
 
 e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL, 
-                                   my.locations.file = NULL, burnin = 200, 
-                                   country.overwrites = NULL, verbose = FALSE) {
+                                   my.locations.file = NULL, burnin = 200, verbose = FALSE) {
 	update.regions <- function(reg, ereg, id.replace, is.new, is.old) {
 		nreg <- list()
 		for (name in c('code', 'area_code', 'country_code')) {
@@ -558,7 +556,6 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL
 									  my.e0.file = my.e0.file, my.locations.file = my.locations.file, 
 									  verbose = verbose)
 	if(is.null(e0.with.regions)) return(list(meta = meta, index = c()))
-	meta$mcmc.options$country.overwrites <- country.overwrites
 	part.ini <- .do.part.e0.mcmc.meta.ini(e0.with.regions, meta)
 	Emeta <- part.ini
 						 		

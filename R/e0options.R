@@ -1,6 +1,9 @@
 if(getRversion() >= "2.15.1") utils::globalVariables(c("loess_sd", ".e0options"))
 data(loess_sd, envir = environment())
 
+e0options <- function()
+    .e0options
+
 e0mcmc.options <- function(...) {
     e0.options("mcmc", ...)
 }
@@ -24,10 +27,15 @@ e0.options <- function(what, ...) {
         )
     }
     if (length(args) == 0) return(current[[what]])
-    if (is.null(names(args))) stop("Options must be given by name")
-    current[[what]] <- modifyList(current[[what]], args)
+    if (is.null(names(args))) {
+        if(mode(args) == "character")
+            return(current[[what]][args])
+        stop("Options must be given by name")
+    }
+    old.opts <- current[[what]]
+    current[[what]] <- modifyList(old.opts, args)
     .e0options <<- current
-    invisible(current[[what]])
+    invisible(old.opts)
 }
 
 e0.options.default <- function() {

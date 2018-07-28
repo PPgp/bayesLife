@@ -6,7 +6,8 @@ import(
 importFrom(car, dataEllipse)
 importFrom("graphics", "abline", "grid", "legend", "lines", "plot", "points", "text")
 importFrom("grDevices", "rainbow")
-importFrom("stats", "dgamma", "dnorm", "dunif", "median", "pnorm", "quantile", "rexp", "rgamma", "rnorm", "rt", "runif", "sd")
+importFrom("stats", "dgamma", "dnorm", "dunif", "median", "pnorm", "quantile", "rexp", "rgamma", 
+           "rnorm", "rt", "runif", "sd", "C", "approxfun", "lowess", "na.omit")
 importFrom("utils", "modifyList")
            
 #exportPattern("^[[:alpha:]]+")
@@ -74,6 +75,7 @@ export(
 	e0.gap.plot.all,
 	e0.joint.plot,
 	e0.joint.plot.all,
+	e0options,
 	e0mcmc.options,
 	e0pred.options,
 	compute.loess,
