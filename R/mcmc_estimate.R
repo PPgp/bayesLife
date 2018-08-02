@@ -48,6 +48,7 @@ create.ctrl.env <- function(mcenv, meta) {
 }
 
 update.mcmc.parameters <- function(mcenv, ctrlenv, opts) {
+    delta.sq <- DLdata <- psi.shape <- NULL # to avoid R check note "no visible binding ..."
     ctrlenv <- within(ctrlenv, {
     # Update Triangle, k, z using Metropolis-Hastings sampler
     ###########################################

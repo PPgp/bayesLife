@@ -28,8 +28,8 @@ e0.options <- function(what, ...) {
     }
     if (length(args) == 0) return(current[[what]])
     if (is.null(names(args))) {
-        if(mode(args) == "character")
-            return(current[[what]][args])
+        if(is.list(args) && mode(unlist(args)) == "character") # retrieving multiple options
+            return(current[[what]][unlist(args)])
         stop("Options must be given by name")
     }
     old.opts <- current[[what]]
@@ -108,6 +108,7 @@ e0.mcmc.options.default <- function() {
         dlcurves.function = "e0.get.dlcurves",
         include.hiv.countries = FALSE
     )
+    Triangle <- k <- z <- NULL # to avoid R check note "no visible binding ..."
     pars <- within(pars, {
         Triangle.c$ini.norm[["mean"]] <- round(Triangle$ini.low + (Triangle$ini.up - Triangle$ini.low)/2)
         k.c$ini.norm["mean"] <- round(k$ini.low + (k$ini.up - k$ini.low)/2)

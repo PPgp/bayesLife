@@ -187,13 +187,15 @@ continue.e0.mcmc <- function(iter, chain.ids = NULL,
                              parallel = FALSE, nr.nodes = NULL, auto.conf = NULL, 
                              verbose = FALSE, verbose.iter=10, ...) {
         mcmc.set <- get.e0.mcmc(output.dir)
-
+        opts <- mcmc.set$meta$mcmc.options
         auto.run <- FALSE
-        if(iter == 'auto') { # defaults for auto-run (includes convergence diagnostics)
-			default.auto.conf <- mcmc.set$meta$mcmc.options$auto.conf
-			if(is.null(auto.conf)) auto.conf <- list()
-			for (par in names(default.auto.conf))
-				if(is.null(auto.conf[[par]])) auto.conf[[par]] <- default.auto.conf[[par]]
+        if(iter == 'auto') { 
+            # defaults for auto-run (includes convergence diagnostics)
+            default.auto.conf <- opts$auto.conf
+            if(is.null(auto.conf)) auto.conf <- list()
+            # merge with new auto-conf
+            for (par in names(default.auto.conf))
+                if(is.null(auto.conf[[par]])) auto.conf[[par]] <- default.auto.conf[[par]]
 			iter <- auto.conf$iter.incr
 			auto.run <- TRUE
 			fiter <- sapply(mcmc.set$mcmc.list, function(x) x$finished.iter)
@@ -229,7 +231,7 @@ continue.e0.mcmc <- function(iter, chain.ids = NULL,
 											thin=auto.conf$thin, burnin=auto.conf$burnin, verbose=verbose))
 				}
 			}
-		}
+        }
         invisible(mcmc.set)
 }
 
@@ -248,17 +250,14 @@ continue.e0.chain <- function(chain.id, mcmc.list, iter, verbose=FALSE, verbose.
 run.e0.mcmc.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'), 
 								countries = NULL, my.e0.file = NULL, iter = NULL,
 								thin = 1, burnin = 2000, parallel = FALSE, nr.nodes = NULL, 
-								my.locations.file = NULL, mcmc.options = NULL, 
+								my.locations.file = NULL, country.overwrites = NULL, 
 								verbose = FALSE, verbose.iter = 100, ...) {
 									
-    old.opts <- e0mcmc.options()
     mcmc.set <- get.e0.mcmc(sim.dir)
-	e0mcmc.options(mcmc.set$meta$mcmc.options)
-	
 	Eini <- e0.mcmc.meta.ini.extra(mcmc.set, countries = countries, 
 	                                my.e0.file = my.e0.file, 
 							        my.locations.file = my.locations.file, 
-							        burnin = burnin, 
+							        burnin = burnin, country.overwrites = country.overwrites,
 							        verbose = verbose)
 	meta <- Eini$meta
 	if(length(Eini$index) <= 0) {
@@ -511,7 +510,8 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter = 100, ini.values = NULL,
 }
 
 e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL, 
-                                   my.locations.file = NULL, burnin = 200, verbose = FALSE) {
+                                   my.locations.file = NULL, burnin = 200, 
+                                   country.overwrites = NULL, verbose = FALSE) {
 	update.regions <- function(reg, ereg, id.replace, is.new, is.old) {
 		nreg <- list()
 		for (name in c('code', 'area_code', 'country_code')) {
@@ -556,6 +556,16 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL
 									  my.e0.file = my.e0.file, my.locations.file = my.locations.file, 
 									  verbose = verbose)
 	if(is.null(e0.with.regions)) return(list(meta = meta, index = c()))
+	# join old and new country.overwrites option; remove possible duplicates
+	if(!is.null(country.overwrites)) { 
+	    existing <- meta$mcmc.options$country.overwrites
+	    if(!is.null(existing)) {
+	        iexisting <- which(existing$country_code %in% country.overwrites$country_code)
+	        if(length(iexisting) > 0)
+	            existing <- existing[-iexisting,]
+	    }
+	    meta$mcmc.options$country.overwrites <- rbind(existing, country.overwrites)
+	}
 	part.ini <- .do.part.e0.mcmc.meta.ini(e0.with.regions, meta)
 	Emeta <- part.ini
 						 		

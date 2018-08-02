@@ -12,21 +12,19 @@ Summary of an object \code{\link{bayesLife.mcmc.set}} or \code{\link{bayesLife.m
 }
 \usage{
 \method{summary}{bayesLife.mcmc.set}(object, country = NULL, chain.id = NULL, 
-    par.names = e0.parameter.names(), 
-    par.names.cs = e0.parameter.names.cs(), 
+    par.names = NULL, par.names.cs = NULL, 
     meta.only = FALSE, thin = 1, burnin = 0, \dots)
 	
 \method{summary}{bayesLife.mcmc}(object, country = NULL,
-    par.names = e0.parameter.names(), 
-    par.names.cs = e0.parameter.names.cs(), \dots)
+    par.names = NULL, par.names.cs = NULL, \dots)
 }
 
 \arguments{
   \item{object}{Object of class \code{\link{bayesLife.mcmc.set}} or \code{\link{bayesLife.mcmc}}.}
   \item{country}{Country name or code if a country-specific summary is desired.}
   \item{chain.id}{Identifiers of MCMC chains. By default, all chains are considered.}
-  \item{par.names}{Country independent parameters to be included in the summary.}
-  \item{par.names.cs}{Country-specific parameters to be included in the summary.}
+  \item{par.names}{Country independent parameters to be included in the summary. Run \code{\link{e0.parameter.names}()} for defaults.}
+  \item{par.names.cs}{Country-specific parameters to be included in the summary. Run \code{\link{e0.parameter.names.cs}()} for defaults.}
   \item{meta.only}{Logical. If it is \code{TRUE}, only meta information of the simulation is included.}
   \item{thin}{Thinning interval. Only used if larger than the \code{thin} argument used in \code{\link{run.e0.mcmc}}.}
   \item{burnin}{Number of iterations to be discarded from the beginning of each chain before computing the summary.}

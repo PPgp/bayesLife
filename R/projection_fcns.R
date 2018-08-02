@@ -139,6 +139,7 @@ e0.predict.extra <- function(sim.dir = file.path(getwd(), 'bayesLife.output'),
 
 e0.prediction.setup <- function(...) {
     setup <- list(...)
+    mcmc.set <- start.year <- end.year <- burnin <- replace.output <- verbose <- countries <- NULL # to avoid R check note "no visible binding ..."
     setup <- within(setup, {
         meta <- mcmc.set$meta
         present.year <- if(is.null(start.year)) meta$present.year else start.year - 5

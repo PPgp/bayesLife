@@ -336,7 +336,8 @@ test.run.mcmc.simulation.auto <- function(compression='None') {
 
 	test.name <- 'continuing auto MCMC'
 	start.test(test.name)
-	m <- continue.e0.mcmc(iter='auto', output.dir=sim.dir, auto.conf=list(max.loops=2))
+	m <- continue.e0.mcmc(iter='auto', output.dir=sim.dir, 
+	                      mcmc.options = list(auto.conf=list(max.loops=2)))
 	stopifnot(get.total.iterations(m$mcmc.list, 0) == 60)
 	test.ok(test.name)
 
@@ -379,7 +380,7 @@ test.estimate.mcmc.with.overwrites <- function() {
 							k.c.prior.up = c(3, 8),
 							k.c.prior.low = c(2, NA))
 	m <- run.e0.mcmc.extra(sim.dir = sim.dir, countries = c(800, 900), burnin = 0, 
-	                       country.overwrites = overwrites)
+	                       mcmc.options = list(country.overwrites = overwrites))
 	Ug <- get.country.object('Uganda', m$meta)
 	Wrld <- get.country.object(900, m$meta)
 	stopifnot((m$meta$country.bounds$k.c.prior.up[Ug$index] == 3) && (m$meta$country.bounds$k.c.prior.up[iSene$index] == 7) && 
@@ -405,7 +406,9 @@ test.run.mcmc.simulation.auto.parallel <- function() {
 
 	test.name <- 'continuing auto MCMC in parallel'
 	start.test(test.name)
-	m <- continue.e0.mcmc(iter='auto', output.dir=sim.dir, auto.conf=list(max.loops=2), parallel=TRUE, cltype='SOCK')
+	m <- continue.e0.mcmc(iter='auto', output.dir=sim.dir, 
+	                      mcmc.options = list(auto.conf=list(max.loops=2)), 
+	                      parallel=TRUE, cltype='SOCK')
 	stopifnot(get.total.iterations(m$mcmc.list, 0) == 60)
 	test.ok(test.name)
 	unlink(sim.dir, recursive=TRUE)

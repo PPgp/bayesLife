@@ -20,7 +20,7 @@ run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 160000,
     
 continue.e0.mcmc(iter, chain.ids = NULL, 
     output.dir = file.path(getwd(), "bayesLife.output"), 
-    parallel = FALSE, nr.nodes = NULL, auto.conf = NULL, 
+    parallel = FALSE, nr.nodes = NULL, mcmc.options = NULL, 
     verbose = FALSE, verbose.iter = 10, \dots)
 }
 
@@ -50,7 +50,7 @@ continue.e0.mcmc(iter, chain.ids = NULL,
 \details{
 	The function \code{run.e0.mcmc} creates an object of class \code{\link{bayesLife.mcmc.meta}} and stores it in \code{output.dir}.  It launches \code{nr.chains} MCMCs, either sequentially or in parallel.  Parameter traces of each chain are stored as (possibly compressed) ASCII files in a subdirectory of \code{output.dir}, called \code{mc}\emph{x} where \emph{x} is the identifier of that chain.  There is one file per parameter, named after the parameter with the suffix \dQuote{.txt}, possibly followed by a compression suffix if \code{compression.type} is given.  Country-specific parameters have the suffix \code{_country}\emph{c} where \emph{c} is the country code.  In addition to the trace files, each \code{mc}\emph{x} directory contains the object \code{\link{bayesLife.mcmc}} in binary format.  All chain-specific files  are written into disk after the first, last and each \code{buffer.size}-th (thinned) iteration.
 	
-Using the function \code{continue.e0.mcmc} one can continue simulating an existing MCMCs by \code{iter} iterations for either all or selected chains.
+Using the function \code{continue.e0.mcmc} one can continue simulating an existing MCMCs by \code{iter} iterations for either all or selected chains. The global options used for generating the existing MCMCs will be used. If there is a need to overwrite the \code{auto.conf} option, it should be done as part of the \code{mcmc.options} argument.
 
 The function loads observed data (further denoted as WPP dataset), depending on the specified sex,  from the \code{\link[wpp2017]{e0F}} (\code{\link[wpp2017]{e0M}}) and \code{\link[wpp2017]{e0F_supplemental}} (\code{\link[wpp2017]{e0M_supplemental}}) datasets in a \pkg{wpp}\eqn{x} package where \eqn{x} is the \code{wpp.year}. It is then merged with the  \code{\link{include}} dataset that corresponds to the same \code{wpp.year}. The argument \code{my.e0.file} can be used to overwrite those default data. Such a file can include a subset of countries contained in the WPP dataset, as well as a set of new countries. In the former case,
   	the function replaces the corresponding country data from the WPP dataset with values in this file. Only columns are replaced that match column names of the WPP dataset, and in addition, columns \sQuote{last.observed} and \sQuote{include_code} are used, if present. Countries are merged with WPP using the column \sQuote{country_code}. In addition, in order the countries to be included in the simulation, in both cases (whether they are included in the WPP dataset or not), they must be contained in the table of locations (\code{\link[wpp2017]{UNlocations}}). In addition, their corresponding \sQuote{include_code} must be set to 2. If the column \sQuote{include_code} is present in \code{my.e0.file}, its value overwrites the default include code, unless is -1.
