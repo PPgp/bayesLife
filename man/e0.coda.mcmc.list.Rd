@@ -13,8 +13,7 @@ e0.coda.list.mcmc(mcmc.list = NULL, country = NULL, chain.ids = NULL,
     sim.dir = file.path(getwd(), "bayesLife.output"), 
     par.names = NULL, par.names.cs = NULL, low.memory = FALSE, \dots)
     
-\method{coda.mcmc}{bayesLife.mcmc}(mcmc, country = NULL, par.names = NULL, 
-    par.names.cs = NULL, \dots)
+\method{coda.mcmc}{bayesLife.mcmc}(mcmc, country = NULL, par.names = NULL, par.names.cs = NULL, \dots)
 }
 
 \arguments{

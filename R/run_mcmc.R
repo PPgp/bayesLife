@@ -300,7 +300,6 @@ run.e0.mcmc.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 	store.bayesLife.meta.object(meta, meta$output.dir)
 	mcmc.set$meta <- meta
 	cat('\n')
-	e0mcmc.options(old.opts)
 	invisible(mcmc.set)
 }
 	
@@ -564,7 +563,8 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL
 	        if(length(iexisting) > 0)
 	            existing <- existing[-iexisting,]
 	    }
-	    meta$mcmc.options$country.overwrites <- rbind(existing, country.overwrites)
+	    # rbind where there can be different columns in each dataset
+	    meta$mcmc.options$country.overwrites <- as.data.frame(rbindlist(list(existing, country.overwrites), fill=TRUE, use.names = TRUE))
 	}
 	part.ini <- .do.part.e0.mcmc.meta.ini(e0.with.regions, meta)
 	Emeta <- part.ini
@@ -578,7 +578,7 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL
 		codes.replace <- e0.with.regions$regions$country_code[is.old]
 		id.replace <- unlist(sapply(codes.replace, get.country.object, meta=meta)['index',])
 	} else {id.replace <- c()}
-	new.meta <- list(nr.countries=nr_countries.all)
+	new.meta <- list(nr.countries=nr_countries.all, mcmc.options = meta$mcmc.options)
 					
 	for (name in c('e0.matrix', 'e0.matrix.all', 'e0.matrix.observed', 'd.ct', 'loessSD')) {
 		meta[[name]][,id.replace] <- Emeta[[name]][,is.old]

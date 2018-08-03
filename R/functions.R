@@ -64,7 +64,7 @@ compute.residuals <- function(sim.dir, burnin = 1000) {
     dlfunc <- function(t) {
             mean(apply(cs.pars, 1, 
                        function(pars) g.dl6(pars[1:6], l = e0.obs[t], 
-                                            p1 = meta$p1, p2 = meta$p2)))
+                                            p1 = meta$mcmc.options$dl.p1, p2 = meta$mcmc.options$dl.p2)))
     }
     # Compute residuals
     for(cntry in 1:nC) {

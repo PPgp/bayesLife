@@ -49,7 +49,7 @@ Here, \eqn{t} is the time and \eqn{c} is the country index. \eqn{G_{c,t}}{G_(c,t
 
 Using the \code{\link[hett]{tlm}} function of the \pkg{hett} package, the function  estimates the coefficients \eqn{\beta_i}{beta_i} (\eqn{i=1,\dots,4}) and \eqn{\gamma_1}{gamma_1}, as well as paramteres \eqn{\sigma_j}{sigma_j} (\eqn{j=1,2}) and optionally the degrees of freedom \eqn{\nu_j}{nu_j} (\eqn{j=1,2}). If \code{constant.gap.eq2} is \code{TRUE}, \eqn{\gamma_1}{gamma_1} is set to 1 and \eqn{\epsilon_{c,t}}{epsilon_(c,t)} is iid \eqn{N(\mu=0, \sigma_2^2)}{N(mu=0, sigma_2^2)}.
 
-The \code{mcmc.set} object should be a \code{\link{bayesLife.mcmc.set}} object obtained from a simulation of a female life expectancy. Note that since only the observed data and no MCMC results are used in this estimation, the \code{mcmc.set} object can be obtained from a toy simulation such as in the example below. The function extracts observed data from this object and treats them as \eqn{l_{c,t}}. For the male historical time series, the function takes the male WPP dataset  from the same \pkg{wpp} package as the female data (\code{\link[wpp2017]{e0M}}) and possibly partly replaces it by any user-specified data given in \code{my.e0.file}. 
+The \code{mcmc.set} object should be a \code{\link{bayesLife.mcmc.set}} object obtained from a simulation of a female life expectancy. Note that since only the observed data and no MCMC results are used in this estimation, the \code{mcmc.set} object can be obtained from a toy simulation such as in the example below. The function extracts observed data from this object and treats them as \eqn{l_{c,t}}. For the male historical time series, the function takes the male WPP dataset (\code{\link[wpp2017]{e0M}}) from the same \pkg{wpp} package as the female data, and possibly partly replaces the male dataset by any user-specified data given in \code{my.e0.file}. 
 }
 \value{
 List with the components, \code{eq1} and \code{eq2}, each containing estimation results from the first and second equation, respectively. These are:
@@ -78,7 +78,7 @@ Hana Sevcikova
 \dontrun{
 sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 m <- get.e0.mcmc(sim.dir)
-fit <- e0.jmale.estimate(m, verbose=TRUE)
+fit <- e0.jmale.estimate(m, verbose = TRUE)
 }}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

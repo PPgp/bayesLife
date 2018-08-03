@@ -205,8 +205,10 @@ test.DLcurve <- function() {
 	# world distribution
 	dlw <- e0.world.dlcurves(e0, m, burnin=10)
 	stopifnot(all(dim(dlw)==c(50,100)))
-	# median of the world DL in the e0 range of 60-70 is larger than the country-specific median in that range
-	stopifnot(all(apply(dlw[, e0 > 60 & e0 < 70], 2, median) > apply(dl[, e0 > 60 & e0 < 70], 2, median)))
+	# median of the world DL in the e0 range of 50-60 is larger than the country-specific median in that range
+	# check visually with:
+	# e0.DLcurve.plot(m, 'Slovenia'); lines(e0, apply(dlw, 2, median), col="blue")
+	stopifnot(all(apply(dlw[, e0 > 50 & e0 < 60], 2, median) > apply(dl[, e0 > 50 & e0 < 60], 2, median)))
 	test.ok(test.name)
 }
 
@@ -337,7 +339,7 @@ test.run.mcmc.simulation.auto <- function(compression='None') {
 	test.name <- 'continuing auto MCMC'
 	start.test(test.name)
 	m <- continue.e0.mcmc(iter='auto', output.dir=sim.dir, 
-	                      mcmc.options = list(auto.conf=list(max.loops=2)))
+	                      auto.conf=list(max.loops=2))
 	stopifnot(get.total.iterations(m$mcmc.list, 0) == 60)
 	test.ok(test.name)
 
@@ -380,7 +382,7 @@ test.estimate.mcmc.with.overwrites <- function() {
 							k.c.prior.up = c(3, 8),
 							k.c.prior.low = c(2, NA))
 	m <- run.e0.mcmc.extra(sim.dir = sim.dir, countries = c(800, 900), burnin = 0, 
-	                       mcmc.options = list(country.overwrites = overwrites))
+	                       country.overwrites = overwrites)
 	Ug <- get.country.object('Uganda', m$meta)
 	Wrld <- get.country.object(900, m$meta)
 	stopifnot((m$meta$country.bounds$k.c.prior.up[Ug$index] == 3) && (m$meta$country.bounds$k.c.prior.up[iSene$index] == 7) && 
@@ -407,7 +409,7 @@ test.run.mcmc.simulation.auto.parallel <- function() {
 	test.name <- 'continuing auto MCMC in parallel'
 	start.test(test.name)
 	m <- continue.e0.mcmc(iter='auto', output.dir=sim.dir, 
-	                      mcmc.options = list(auto.conf=list(max.loops=2)), 
+	                      auto.conf=list(max.loops=2), 
 	                      parallel=TRUE, cltype='SOCK')
 	stopifnot(get.total.iterations(m$mcmc.list, 0) == 60)
 	test.ok(test.name)

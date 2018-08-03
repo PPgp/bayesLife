@@ -12,7 +12,7 @@ run.e0.mcmc.extra(sim.dir = file.path(getwd(), "bayesLife.output"),
     countries = NULL, my.e0.file = NULL, 
     iter = NULL, thin = 1, burnin = 2000, 
     parallel = FALSE, nr.nodes = NULL,  my.locations.file = NULL,
-    mcmc.options = NULL, verbose = FALSE, verbose.iter = 100, ...)
+    country.overwrites = NULL, verbose = FALSE, verbose.iter = 100, ...)
 }
 \arguments{
   \item{sim.dir}{
@@ -39,7 +39,7 @@ Logical determining if the simulation should run multiple chains in parallel.
 Relevant only if \code{parallel} is \code{TRUE}. It gives the number of nodes for running the simulation in parallel. By default it equals to the number of chains contained in the existing simulation.
 }
 \item{my.locations.file}{File name containing user-specified locations. See Details below.}
-\item{mcmc.options}{By default the simulation is run under the same global options as the existing simulation. This argument allows to overwrite those options, and it has the same structure as in \code{\link{run.e0.mcmc}} (see also \code{\link{e0mcmc.options}}). Note that options set directly in the global environment will not affect this simulation - it has to be passed via this argument. The most useful option in this context is \code{country.overwrites}. It allows to overwrite some of the prior parameters for specific countries. It should be a data frame with an obligatory column \sQuote{country_code}. Each row then corresponds to one country. Other columns can be \sQuote{k.c.prior.low}, \sQuote{k.c.prior.up}, \sQuote{z.c.prior.low}, \sQuote{z.c.prior.up}, \sQuote{Triangle_\eqn{x}.c.prior.low} and \sQuote{Triangle_\eqn{x}.c.prior.up} where \eqn{x} can be an integer from 1 to 4. Rows corresponding to countries that are not processed in this function are ignored.}
+\item{country.overwrites}{This argument allows to overwrite some of the prior parameters for specific countries, stored in the global option of the same name, see \code{\link{e0mcmc.options}}. It is a data frame where ach row corresponds to one country. Rows corresponding to countries that are not processed in this function are ignored.}
   \item{verbose}{
 Logical switching log messages on and off.
 }

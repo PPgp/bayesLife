@@ -9,8 +9,8 @@ Convergence Diagnostics for Markov Chain Monte Carlo of Life Expectancy
 Function \code{e0.diagnose} runs convergence diagnostics of existing MCMCs, using the \code{raftery.diag} function from the \pkg{coda} package. 
 }
 \usage{
-e0.diagnose(sim.dir, thin=225, burnin = 10000, express = FALSE, 
-    country.sampling.prop = NULL, keep.thin.mcmc=FALSE, verbose = TRUE)
+e0.diagnose(sim.dir, thin = 225, burnin = 10000, express = FALSE, 
+    country.sampling.prop = NULL, keep.thin.mcmc = FALSE, verbose = TRUE)
 }
 \arguments{
   \item{sim.dir}{Directory with the MCMC simulation results.}

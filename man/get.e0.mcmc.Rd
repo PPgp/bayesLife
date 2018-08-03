@@ -18,7 +18,7 @@ has.e0.mcmc(sim.dir)
 
 e0.mcmc(mcmc.set, chain.id = 1)
 
-e0.mcmc.list(mcmc.set, chain.ids=NULL)
+e0.mcmc.list(mcmc.set, chain.ids = NULL)
 }
 \arguments{
   \item{sim.dir}{Directory where the simulation results are stored.}

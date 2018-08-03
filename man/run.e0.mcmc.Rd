@@ -20,7 +20,7 @@ run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 160000,
     
 continue.e0.mcmc(iter, chain.ids = NULL, 
     output.dir = file.path(getwd(), "bayesLife.output"), 
-    parallel = FALSE, nr.nodes = NULL, mcmc.options = NULL, 
+    parallel = FALSE, nr.nodes = NULL, auto.conf = NULL, 
     verbose = FALSE, verbose.iter = 10, \dots)
 }
 
@@ -36,14 +36,15 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{wpp.year}{Year for which WPP data is used. The functions loads a package called \pkg{wpp}\eqn{x} where \eqn{x} is the \code{wpp.year} and uses the \code{e0*} datasets.}
   \item{my.e0.file}{File name containing user-specified e0 time series for one or more countries. See Details below.}
   \item{my.locations.file}{File name containing user-specified locations. See Details below.}
-  \item{constant.variance}{Logical indicating if the model should be estimated using constant variance.}
+  \item{constant.variance}{Logical indicating if the model should be estimated using constant variance. It should only be used if the standard deviation lowess is to be analysed, see \code{\link{compute.loess}}.}
   \item{seed}{Seed of the random number generator. If \code{NULL} no seed is set. It can be used to generate reproducible results.}
   \item{parallel}{Logical determining if the simulation should run multiple chains in parallel. If it is \code{TRUE}, the package \pkg{\link[snowFT]{snowFT}} is required.}
   \item{nr.nodes}{Relevant only if \code{parallel} is \code{TRUE}. It gives the number of nodes for running the simulation in parallel. By default it equals to the number of chains.}
   \item{compression.type}{One of \sQuote{None}, \sQuote{gz}, \sQuote{xz}, \sQuote{bz}, determining type of a compression of the MCMC files.}
   \item{verbose}{Logical switching log messages on and off.}
   \item{verbose.iter}{Integer determining how often (in number of iterations) log messages are outputted during the estimation.}
-  \item{mcmc.options}{List of options to overwrite global MCMC options as defined in \code{\link{e0mcmc.options}}. }
+  \item{mcmc.options}{List of options that overwrites global MCMC options as defined in \code{\link{e0mcmc.options}}. }
+  \item{auto.conf}{In \code{continue.e0.mcmc} one can overwrite the global \code{auto.conf} option, see \code{\link{e0mcmc.options}} for its definition. This argument is only used if the function argument \code{iter} is set to \sQuote{auto}.}
   \item{\dots}{Additional parameters to be passed to the function \code{\link[snowFT]{performParallel}}, if \code{parallel} is \code{TRUE}.}
   \item{chain.ids}{Array of chain identifiers that should be resumed. If it is \code{NULL}, all existing chains in \code{output.dir} are resumed.}
 }
@@ -71,7 +72,9 @@ The package contains a dataset called \file{my_e0_template} (in \file{extdata} d
 	\item{mcmc.list}{A list of objects of class \code{\link{bayesLife.mcmc}}, one for each MCMC.}
 }
 \references{
-(1) J. L. Chunn, A. E. Raftery, P. Gerland (2010): Bayesian Probabilistic Projections of Life Expectancy for All Countries.  Working Paper nr. 105, Center for Statistics and the Social Sciences, University of Washington. \url{http://www.csss.washington.edu/Papers}
+(1a) J. L. Chunn, A. E. Raftery, P. Gerland, H. Sevcikova (2013): Bayesian Probabilistic Projections of Life Expectancy for All Countries. Demography 50(3):777-801. <doi:10.1007/s13524-012-0193-x>
+
+(1b) J. L. Chunn, A. E. Raftery, P. Gerland (2010): Bayesian Probabilistic Projections of Life Expectancy for All Countries.  Working Paper nr. 105, Center for Statistics and the Social Sciences, University of Washington. \url{http://www.csss.washington.edu/Papers}
 
 (2a)  Oeppen J, and J.W. Vaupel (2002) Broken limits to life expectancy. Science 296:1029-1031. 
 
