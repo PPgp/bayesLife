@@ -51,7 +51,7 @@ pred <- get.e0.prediction(sim.dir = sim.dir)
 # female prediction summary
 summary(pred, country = "Canada")
 
-\donotrun{
+\dontrun{
 # male prediction summary
 # (works only if a joint male prediction exists - not the case in this toy example)
 summary(get.e0.jmale.prediction(pred), country = "Canada")}
