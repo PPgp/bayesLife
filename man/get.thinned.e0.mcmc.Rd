@@ -43,12 +43,16 @@ Hana Sevcikova
 \examples{
 \dontrun{
 sim.dir <- tempfile()
-m <- run.e0.mcmc(nr.chains=2, iter=60, thin=2, output.dir=sim.dir, verbose=TRUE)
-e0.predict(m, burnin=30) # creates thinned MCMCs
-mb <- get.thinned.e0.mcmc(m, thin=2, burnin=30)
-summary(mb, meta.only=TRUE) # length 30 = 2chains x (60-30)iters./2thin
-unlink(sim.dir, recursive=TRUE)
-}}
+m <- run.e0.mcmc(nr.chains = 2, iter = 60, thin = 2, output.dir = sim.dir, verbose = TRUE)
+pr <- e0.predict(m, burnin = 40, predict.jmale = FALSE) # creates thinned MCMCs
+mb <- get.thinned.e0.mcmc(m, thin = 2, burnin = 40)
+summary(mb, meta.only = TRUE) # length 20 = 2chains x (60-40)iters./2thin
+
+# the same chain as 
+summary(pr$mcmc.set, meta.only = TRUE)
+
+unlink(sim.dir, recursive=TRUE)}
+}
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

@@ -39,7 +39,7 @@ Logical determining if the simulation should run multiple chains in parallel.
 Relevant only if \code{parallel} is \code{TRUE}. It gives the number of nodes for running the simulation in parallel. By default it equals to the number of chains contained in the existing simulation.
 }
 \item{my.locations.file}{File name containing user-specified locations. See Details below.}
-\item{country.overwrites}{This argument allows to overwrite some of the prior parameters for specific countries, stored in the global option of the same name, see \code{\link{e0mcmc.options}}. It is a data frame where ach row corresponds to one country. Rows corresponding to countries that are not processed in this function are ignored.}
+\item{country.overwrites}{This argument allows to overwrite some of the prior parameters for specific countries, stored in the global option of the same name, see \code{\link{e0mcmc.options}}. It is a data frame where each row corresponds to one country. Rows corresponding to countries that are not processed in this function are ignored.}
   \item{verbose}{
 Logical switching log messages on and off.
 }
@@ -66,11 +66,11 @@ Hana Sevcikova
 }
 \examples{
 \dontrun{
-m <- run.e0.mcmc(nr.chains=1, iter=20, thin=1, verbose=TRUE)
-m <- run.e0.mcmc.extra(countries=c(908,924), burnin=10, verbose=TRUE)
-summary(m, country=924)
-pred <- e0.predict(burnin=10, verbose=TRUE)
-summary(pred, country=908)}
+m <- run.e0.mcmc(nr.chains = 1, iter = 20, thin = 1, verbose = TRUE)
+m <- run.e0.mcmc.extra(countries = c(908,924), burnin = 10, verbose = TRUE)
+summary(m, country = 924)
+pred <- e0.predict(burnin = 10, verbose = TRUE)
+summary(pred, country = 908)}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
