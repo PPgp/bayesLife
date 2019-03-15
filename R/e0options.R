@@ -42,7 +42,7 @@ e0.options.default <- function() {
     structure(list(
         mcmc = e0.mcmc.options.default(),
         pred = e0.pred.options.default(),
-        use = "bayesLife"
+        admin = list(package = "bayesLifeHIV")
     ))
 }
 
