@@ -106,6 +106,7 @@ e0.mcmc.options.default <- function() {
                          nr.chains = 3, thin = 225, burnin = 10000),
         estimation.function = "e0.mcmc.sampling",
         dlcurves.function = "e0.get.dlcurves",
+        parallel.init.function = function(){library(bayesLife)},
         include.hiv.countries = FALSE
     )
     Triangle <- k <- z <- NULL # to avoid R check note "no visible binding ..."

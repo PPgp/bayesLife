@@ -115,7 +115,8 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
 
 	if (parallel) { # run chains in parallel
 		chain.set <- bayesTFR:::bDem.performParallel(nr.nodes, 1:nr.chains, mcmc.run.chain.e0, 
-                                     initfun = init.nodes.e0, meta = bayesLife.mcmc.meta, 
+                                     initfun = mcoptions$parallel.init.function, 
+                                     meta = bayesLife.mcmc.meta, 
                                      thin = thin, iter = iter, 
                                      starting.values = starting.values,                                     
                                      verbose = verbose, verbose.iter = verbose.iter, ...)
@@ -207,7 +208,8 @@ continue.e0.mcmc <- function(iter, chain.ids = NULL,
         if (parallel) { # run chains in parallel
                 if(is.null(nr.nodes)) nr.nodes<-length(chain.ids)
                 chain.list <- bayesTFR:::bDem.performParallel(nr.nodes, chain.ids, continue.e0.chain, 
-                                                initfun=init.nodes.e0, mcmc.list=mcmc.set$mcmc.list, iter=iter, 
+                                                initfun=opts$parallel.init.function, 
+                                                mcmc.list=mcmc.set$mcmc.list, iter=iter, 
                                                 verbose=verbose, verbose.iter=verbose.iter, ...)
                 for (i in 1:length(chain.ids))
                         mcmc.set$mcmc.list[[chain.ids[i]]] <- chain.list[[i]]
@@ -286,7 +288,8 @@ run.e0.mcmc.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'),
 	if (parallel) { # run chains in parallel
 		if(is.null(nr.nodes)) nr.nodes<-length(chain.ids)
 		chain.list <- bayesTFR:::bDem.performParallel(nr.nodes, chain.ids, e0.mcmc.run.chain.extra, 
-						initfun=init.nodes.e0, mcmc.list=mcmc.set$mcmc.list, countries=Eini$index, 
+						initfun = mcmc.set$meta$mcmc.options$parallel.init.function, 
+						mcmc.list=mcmc.set$mcmc.list, countries=Eini$index, 
 						posterior.sample=post.idx, iter=iter, burnin=burnin, verbose=verbose, verbose.iter=verbose.iter, ...)
 		for (i in 1:length(chain.ids))
 			mcmc.set$mcmc.list[[chain.ids[i]]] <- chain.list[[i]]
@@ -321,9 +324,6 @@ e0.mcmc.run.chain.extra <- function(chain.id, mcmc.list, countries, posterior.sa
 }
 
 
-init.nodes.e0 <- function() {
-	library(bayesLife)
-}
 .get.Tcindex <- function(e0.matrix,  stop.if.less.than2=TRUE, cnames=NULL) {
 	Tc.index <- list()
 	for (country in 1:ncol(e0.matrix)) {
