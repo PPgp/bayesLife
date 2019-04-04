@@ -23,6 +23,7 @@ export(
 	e0.median.shift,
 	e0.median.set,
 	e0.median.reset,
+	e0.median.maleadjust,
 	get.e0.shift,
 	convert.e0.trajectories,
 	write.e0.projection.summary,

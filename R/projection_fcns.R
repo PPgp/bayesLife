@@ -449,6 +449,36 @@ e0.median.set <- function(sim.dir, country, values, years=NULL, joint.male=FALSE
 	invisible(new.pred)
 }
 
+e0.median.maleadjust <- function(sim.dir, countries, factors = c(1.5, 1.2)) {
+    pred <- get.e0.prediction(sim.dir)
+    if (is.null(pred)) stop('No valid prediction in ', sim.dir)
+    joint.male <- get.e0.jmale.prediction(pred)
+    if (is.null(joint.male)) stop('No valid male prediction in ', sim.dir)
+    mcmc.set <- pred$mcmc.set
+    if(is.null(countries)) {
+        cat('\nNo countries given. Nothing to be done.\n')
+        return(invisible(pred))
+    }
+    codes <- c()
+    for(country in countries) codes <- c(codes, get.country.object(country, mcmc.set$meta)$code)
+    countries.idx <- which(is.element(mcmc.set$meta$regions$country_code, codes))
+    if(length(countries.idx) == 0) {
+        cat('\nNo valid countries given. Nothing to be done.\n')
+        return(invisible(pred)) 
+    }
+    new.pred <- .do.jmale.predict(pred, joint.male, countries.idx, gap.lim=joint.male$pred.pars$gap.lim, 
+                                  eq2.age.start=joint.male$pred.pars$max.e0.eq1.pred, adj.factors = factors, 
+                                  verbose=FALSE)
+    
+    new.meds <- new.pred$joint.male$quantiles[,"0.5",-1]
+    for(icountry in 1:length(countries)) {
+        e0.median.set(sim.dir, countries[icountry], 
+                      new.meds[get.country.object(countries[icountry], mcmc.set$meta)$index,], joint.male = TRUE)
+    }
+    # reload adjusted prediction
+    invisible(get.e0.prediction(sim.dir, joint.male = TRUE))
+}
+
 e0.jmale.estimate <- function(mcmc.set, countries.index=NULL, 
 								estDof.eq1 = TRUE, start.eq1 = list(dof = 2), 
 								max.e0.eq1 = 83, estDof.eq2 = TRUE, start.eq2 = list(dof = 2), 
@@ -632,7 +662,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 
 
 .do.jmale.predict <- function(e0.pred, joint.male, countries, gap.lim, #gap.lim.eq2, 
-								eq2.age.start=NULL, verbose=FALSE) {
+								eq2.age.start=NULL, adj.factors = NULL, verbose=FALSE) {
 	predict.one.trajectory <- function(Gprev, ftraj) {
 		mtraj <- rep(NA, length(ftraj))						
 		for(time in 1:length(ftraj)) {
@@ -655,7 +685,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 							else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
 				}
 			}
-			mtraj[time] <- ftraj[time] - Gt
+			mtraj[time] <- ftraj[time] - W[time]*Gt
 			Gprev <- Gt
 		}
 		return(mtraj)
@@ -678,6 +708,9 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 		warning("Data for 1950-1955 not available. Projection of the gap model may not be correct.")
 	first.year <- as.character(first.year)
 	estimates <- joint.male$fit
+	W <- rep(1, e0.pred$nr.projections)
+	if(!is.null(adj.factors)) 
+	    W[1:length(adj.factors)] <- adj.factors
 	for (icountry in countries) {
 		country <- get.country.object(icountry, meta, index=TRUE)
 		if(verbose)
