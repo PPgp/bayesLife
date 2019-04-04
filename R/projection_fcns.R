@@ -452,44 +452,61 @@ e0.median.set <- function(sim.dir, country, values, years=NULL, joint.male=FALSE
 e0.jmale.estimate <- function(mcmc.set, countries.index=NULL, 
 								estDof.eq1 = TRUE, start.eq1 = list(dof = 2), 
 								max.e0.eq1 = 83, estDof.eq2 = TRUE, start.eq2 = list(dof = 2), 
-								constant.gap.eq2=TRUE, my.e0.file=NULL, my.locations.file=NULL, verbose=FALSE) {
+								constant.gap.eq2=TRUE, include.suppl.gap = FALSE,
+								my.e0.file=NULL, my.locations.file=NULL, verbose=FALSE) {
 	# Estimate coefficients for joint prediction of female and male e0
 	unblock.gtk('bDem.e0pred', list(bDem.e0pred.status='estimating joint male'))
 	if (is.null(countries.index)) countries.index <- 1:get.nrest.countries(mcmc.set$meta)
 	e0f.data <- get.data.matrix(mcmc.set$meta)[,countries.index]
-	e0m.data <- get.wpp.e0.data.for.countries(mcmc.set$meta, sex='M', my.e0.file=my.e0.file,
-					my.locations.file=my.locations.file, verbose=verbose)$e0.matrix[,countries.index]
-	T <- dim(e0f.data)[1] - 1 
+	e0m.data.obj <- get.wpp.e0.data.for.countries(mcmc.set$meta, sex='M', my.e0.file=my.e0.file,
+					my.locations.file=my.locations.file, verbose=verbose)
+	e0m.data <- e0m.data.obj$e0.matrix[,countries.index]
+	if(include.suppl.gap) {
+	    sdataF <- mcmc.set$meta$suppl.data$e0.matrix
+	    e0f.data <- rbind(matrix(NA, nrow = nrow(sdataF), ncol = ncol(e0f.data), 
+	                             dimnames = list(rownames(sdataF), colnames(e0f.data))),
+	                      e0f.data)
+	    e0f.data[1:nrow(sdataF), colnames(sdataF)] <- sdataF
+	    sdataM <- e0m.data.obj$suppl.data$e0.matrix
+	    e0m.data <- rbind(matrix(NA, nrow = nrow(sdataM), ncol = ncol(e0m.data), 
+	                             dimnames = list(rownames(sdataM), colnames(e0m.data))),
+	                      e0m.data)
+	    e0m.data[1:nrow(sdataM), colnames(sdataM)] <- sdataM
+	}
+	Tm <- dim(e0f.data)[1] - 1 
 	if(verbose) {
 		cat('\nEstimating coefficients for joint female and male prediction.')
-		cat('\nUsing', length(countries.index), 'countries and', T+1, 'time periods.\n\n')
+		cat('\nUsing', length(countries.index), 'countries and', Tm+1, 'time periods.\n\n')
 	}
+	
 	G <- e0f.data - e0m.data # observed gap
-
+	dep.var <- as.numeric(G[2:nrow(G),])
 	first.year <- max(1953, as.integer(rownames(e0f.data)[1])) # in case start.year is later than 1953
 	if(first.year > 1953)
-		warning("Data for 1950-1955 not available. Estimation of the gap model may not be correct.")
-	e0.1953 <- rep(e0f.data[as.character(first.year),], each=T)
-	dep.var <- as.numeric(G[2:nrow(G),])
-	e0F <- as.numeric(e0f.data[2:(T+1),])
+        warning("Data for 1950-1955 not available. Estimation of the gap model may not be correct.")
+	e0.1953 <- rep(e0f.data[as.character(first.year),], each=Tm)
+	e0F <- as.numeric(e0f.data[2:(Tm+1),])
 	data <- data.frame(
 					G=dep.var, # dependent variable
 					# covariates
 					e0.1953=e0.1953, 
-					Gprev=as.numeric(G[1:T,]),
+					Gprev=as.numeric(G[1:Tm,]),
 					e0=e0F,
 					e0d75=pmax(0,e0F-75)
-	)
-	use.eq1 <- !is.na(dep.var) & !is.na(e0F) & e0F <= max.e0.eq1
-	data.eq1 <- data[use.eq1,]
-	fit.eq1 <- tlm(G~., data=data.eq1, estDof = estDof.eq1, start=start.eq1)
-	if(verbose)
-		print(summary(fit.eq1))
+	        )
+	non.missing <- apply(data, 1, function(x) all(!is.na(x)))
+	data.eq1 <- data[non.missing & e0F <= max.e0.eq1, ]
+	fit.eq1 <- tlm(G ~ ., data = data.eq1, estDof = estDof.eq1, start = start.eq1)
+	if(verbose) {
+	    if(verbose) {
+	        cat('\n\nUsing', nrow(data.eq1), 'data points for equation 1.\n\n')
+		    print(summary(fit.eq1))
+	    }
+	}
 	errscale.eq1<-as.numeric(exp(fit.eq1$scale.fit$coefficients[1]))
 	errsd.eq1<-sqrt(errscale.eq1)
 
-	use.eq2 <- !is.na(dep.var) & !is.na(e0F) & e0F > max.e0.eq1
-	data.eq2 <- data[use.eq2,]
+	data.eq2 <- data[non.missing & e0F > max.e0.eq1,]
 	if(verbose) 
 		cat('\n\nUsing', nrow(data.eq2), 'data points for equation 2.\n\n')
 	if(!constant.gap.eq2) {
@@ -622,7 +639,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 			if(ftraj[time] <= maxe0) { # 1st part of Equation 3.1
 				Gtdeterm <- (estimates$eq1$coefficients[1] + # intercept
 				   			 estimates$eq1$coefficients['Gprev']*Gprev +
-				   			 estimates$eq1$coefficients['e0.1953']*e0f.data[first.year,icountry] +
+				   			 estimates$eq1$coefficients['e0.1953']*e0f.data[first.year,icountry] + 
 				   			 estimates$eq1$coefficients['e0']*ftraj[time] +
 					   		 estimates$eq1$coefficients['e0d75']*max(0, ftraj[time]-75))
 				Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
@@ -692,8 +709,6 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	bayesLife.prediction$joint.male$traj.mean.sd <- traj.mean.sd
 	bayesLife.prediction$joint.male$e0.matrix.reconstructed <- e0m.data
 	return(bayesLife.prediction)
-	
-	
 }
 
 get.e0.jmale.prediction <- function(e0.pred) {
