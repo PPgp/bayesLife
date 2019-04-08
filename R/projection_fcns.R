@@ -449,7 +449,7 @@ e0.median.set <- function(sim.dir, country, values, years=NULL, joint.male=FALSE
 	invisible(new.pred)
 }
 
-e0.median.adjust.jmale <- function(sim.dir, countries, by2dif = TRUE, nadj = 2, factors = c(1.2, 1.1)) {
+e0.median.adjust.jmale <- function(sim.dir, countries, factors = c(1.2, 1.1)) {
     pred <- get.e0.prediction(sim.dir)
     if (is.null(pred)) stop('No valid prediction in ', sim.dir)
     joint.male <- get.e0.jmale.prediction(pred)
@@ -466,34 +466,14 @@ e0.median.adjust.jmale <- function(sim.dir, countries, by2dif = TRUE, nadj = 2, 
         cat('\nNo valid countries given. Nothing to be done.\n')
         return(invisible(pred)) 
     }
-
-    if(by2dif) {
-        # apply method of making second differences constant
-        e0mtx <- get.e0.reconstructed(joint.male$e0.matrix.reconstructed, mcmc.set$meta)
-        obs.yrs.idx <- (nrow(e0mtx) - 1) : nrow(e0mtx)
-        present.year <- rownames(e0mtx)[obs.yrs.idx[2]]
-        for(cntry in codes) {
-            y <- e0mtx[obs.yrs.idx, as.character(cntry)] # last two observed years
-            med <- e0.trajectories.table(joint.male, cntry)[, "median"]
-            present.idx <- which(names(med) == present.year)
-            y <- c(y, med[(present.idx + 1):(present.idx + nadj + 1)])
-            difs1 <- diff(y)
-            difs2 <- diff(difs1)
-            difs2star <- rep(mean(difs2), length(difs2)) # set second differences to its average
-            difs1star <- diffinv(difs2star, xi = difs1[1])
-            ystar <- diffinv(difs1star, xi = y[1])
-            e0.median.set(sim.dir, cntry, ystar[-c(1:2, length(ystar))], joint.male = TRUE)
-        }
-    } else {
-        new.pred <- .do.jmale.predict(pred, joint.male, countries.idx, gap.lim=joint.male$pred.pars$gap.lim, 
+    new.pred <- .do.jmale.predict(pred, joint.male, countries.idx, gap.lim=joint.male$pred.pars$gap.lim, 
                                   eq2.age.start=joint.male$pred.pars$max.e0.eq1.pred, adj.factors = factors, 
                                   verbose=FALSE)
     
-        new.meds <- new.pred$joint.male$quantiles[,"0.5",-1]
-        for(icountry in 1:length(countries)) {
-            e0.median.set(sim.dir, countries[icountry], 
+    new.meds <- new.pred$joint.male$quantiles[,"0.5",-1]
+    for(icountry in 1:length(countries)) {
+        e0.median.set(sim.dir, countries[icountry], 
                       new.meds[get.country.object(countries[icountry], mcmc.set$meta)$index,], joint.male = TRUE)
-        }
     }
     # reload adjusted prediction
     invisible(get.e0.prediction(sim.dir, joint.male = TRUE))
