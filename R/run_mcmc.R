@@ -449,10 +449,10 @@ e0.mcmc.meta.ini <- function(sex = "F", nr.chains = 1, start.year = 1950, presen
 						include.hiv = mcmc.options$include.hiv.countries,
 						my.locations.file = my.locations.file, verbose = verbose)
 	part.ini <- .do.part.e0.mcmc.meta.ini(data, mcmc.input)
+	new.meta <- c(mcmc.input, part.ini)
 	if(!is.null(mcmc.options$meta.ini.fun))
-	    part.ini <- do.call(mcmc.options$meta.ini.fun, 
-	                                    list(c(mcmc.input, part.ini)))
-	return(structure(c(mcmc.input, part.ini), class = 'bayesLife.mcmc.meta'))
+	    new.meta <- do.call(mcmc.options$meta.ini.fun, list(new.meta))
+	return(structure(new.meta, class = 'bayesLife.mcmc.meta'))
 }
 
 e0.mcmc.ini <- function(chain.id, mcmc.meta, iter = 100, ini.values = NULL,
