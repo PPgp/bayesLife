@@ -1,5 +1,6 @@
 \name{include}
 \alias{include}
+\alias{include_2019}
 \alias{include_2017}
 \alias{include_2015}
 \alias{include_2010}
@@ -13,6 +14,7 @@ Inclusion Codes
 Datasets containing codes that determine which countries are to be included into a simulation or/and projections. 
 }
 \usage{
+data(include_2019)
 data(include_2017)
 data(include_2015)
 data(include_2012)
@@ -42,9 +44,9 @@ Data provided by the United Nations Population Division.
 %%  ~~ possibly secondary sources and usages ~~
 %}
 \examples{
-data(include_2017)
-head(include_2017)
+data(include_2019)
+head(include_2019)
 # select AIDS countries
-subset(include_2017, include_code == 3)
+subset(include_2019, include_code == 3)
 }
 \keyword{datasets}
