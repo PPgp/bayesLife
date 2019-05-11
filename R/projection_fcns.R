@@ -140,6 +140,7 @@ e0.predict.extra <- function(sim.dir = file.path(getwd(), 'bayesLife.output'),
 e0.prediction.setup <- function(...) {
     setup <- list(...)
     mcmc.set <- start.year <- end.year <- burnin <- replace.output <- verbose <- countries <- NULL # to avoid R check note "no visible binding ..."
+    if(is.null(setup$thin)) setup$thin <- NA # this is because thin is a method in coda and the naming clashes within the setup expression
     setup <- within(setup, {
         meta <- mcmc.set$meta
         present.year <- if(is.null(start.year)) meta$present.year else start.year - 5
@@ -149,6 +150,8 @@ e0.prediction.setup <- function(...) {
         total.iter <- get.total.iterations(mcmc.set$mcmc.list, burnin)
         stored.iter <- get.stored.mcmc.length(mcmc.set$mcmc.list, burnin)
         mcthin <- max(sapply(mcmc.set$mcmc.list, function(x) x$thin))
+        if(!exists("nr.traj")) nr.traj <- NULL
+        if(is.na(thin)) thin <- NULL
         if(!is.null(nr.traj) && !is.null(thin)) {
             warning('Both nr.traj and thin are given. Argument thin will be ignored.')
             thin <- NULL
@@ -164,7 +167,7 @@ e0.prediction.setup <- function(...) {
             stop('The number of simulations is 0. Burnin might be larger than the number of simulated values, or # trajectories is too big.')
     
         #setup output directory
-        if (is.null(output.dir)) output.dir <- meta$output.dir
+        if (!exists("output.dir") || is.null(output.dir)) output.dir <- meta$output.dir
         outdir <- file.path(output.dir, 'predictions')
     
         if(is.null(get0("countries"))) {
