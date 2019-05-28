@@ -75,6 +75,18 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
 						nr.nodes = nr.chains, compression.type = 'None',
 						verbose = FALSE, verbose.iter = 100, mcmc.options = NULL, ...) {
 						 	
+    dotargs <- list(...)
+    if(any(names(dotargs) %in% (alloldargs <- .legacy.run.mcmc.args()))) {
+        oldargs <- intersect(names(dotargs), alloldargs)
+        oldagrs.nc <- intersect(names(dotargs), .legacy.run.mcmc.args.no.name.change())
+        eg <- "E.g. mcmc.options = list("
+        if(length(oldagrs.nc) > 0) 
+            eg <- paste0(eg, oldagrs.nc[1], " = ", 
+                         if(!is.list(dotargs[[oldagrs.nc[1]]]) && length(dotargs[[oldagrs.nc[1]]]) == 1) dotargs[[oldagrs.nc[1]]] else "...", ", ")
+        eg <- paste0(eg, "z = list(ini.up = 0.7))\nSee ?e0mcmc.options")
+        stop("Using arguments ", paste(oldargs, collapse = ","), " in bayesLife > 4.0 is obsolete. Use mcmc.options instead.\n", eg)
+    }
+    
 	if(file.exists(output.dir)) {
 		if(length(list.files(output.dir)) > 0 & !replace.output)
                         stop('Non-empty directory ', output.dir, 
@@ -155,6 +167,20 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
     invisible(mcmc.set)
 }
 
+.legacy.run.mcmc.args.no.name.change <- function()
+    c("a", "delta", "tau", "outliers", "country.overwrites", "nu", 
+      "dl.p1", "dl.p2", "sumTriangle.lim", "buffer.size", "auto.conf")
+
+.legacy.run.mcmc.args <- function() {
+    c(.legacy.run.mcmc.args.no.name.change(), 
+      paste(c("Triangle", "k", "z", "lambda", "lambda.k", "lambda.z", "omega"), 
+            rep(c("ini", "ini.low", "ini.up"), each = 7), sep = "."),
+      paste(c("Triangle", "k", "z", "Triangle.c", "k.c", "z.c"),
+            rep(c("prior.low", "prior.up"), each = 6)),
+      paste(c("Triangle.c", "k.c", "z.c"),
+            rep("ini.norm", 3))
+    )
+}
 
 mcmc.run.chain.e0 <- function(chain.id, meta, thin = 1, iter = 100, starting.values = NULL, 
                               verbose = FALSE, verbose.iter = 10) {
@@ -251,7 +277,7 @@ continue.e0.chain <- function(chain.id, mcmc.list, iter, verbose=FALSE, verbose.
 
 run.e0.mcmc.extra <- function(sim.dir=file.path(getwd(), 'bayesLife.output'), 
 								countries = NULL, my.e0.file = NULL, iter = NULL,
-								thin = 1, burnin = 2000, parallel = FALSE, nr.nodes = NULL, 
+								thin = 1, burnin = 0, parallel = FALSE, nr.nodes = NULL, 
 								my.locations.file = NULL, country.overwrites = NULL, 
 								verbose = FALSE, verbose.iter = 100, ...) {
 									

@@ -10,7 +10,7 @@ Run MCMC for extra countries, areas or regions. It uses the posterior distributi
 \usage{
 run.e0.mcmc.extra(sim.dir = file.path(getwd(), "bayesLife.output"), 
     countries = NULL, my.e0.file = NULL, 
-    iter = NULL, thin = 1, burnin = 2000, 
+    iter = NULL, thin = 1, burnin = 0, 
     parallel = FALSE, nr.nodes = NULL,  my.locations.file = NULL,
     country.overwrites = NULL, verbose = FALSE, verbose.iter = 100, ...)
 }

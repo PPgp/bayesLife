@@ -22,7 +22,7 @@ get.wpp.e0.data <- function(sex = 'M', start.year = 1950, present.year = 2015,
 	    hiv.aids <- rep(FALSE, length(include))
 	    # find HIV/AIDS countries
 	    hivincl <- merge(data[,c("country_code", "include_code")], 
-	                     locations$loc_data[,c("country_code", "include_code")], 
+	                     unique(locations$loc_data[,c("country_code", "include_code")]), 
 	                     all.x = TRUE, by = "country_code", sort = FALSE)
 	    hivincl$include_code <- ifelse(hivincl$include_code.x >= 0, 
 	                                   hivincl$include_code.x, hivincl$include_code.y)
