@@ -539,14 +539,15 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL
                                    country.overwrites = NULL, verbose = FALSE) {
 	update.regions <- function(reg, ereg, id.replace, is.new, is.old) {
 		nreg <- list()
-		for (name in c('code', 'area_code', 'country_code')) {
-			reg[[name]][id.replace] <- ereg[[name]][is.old]
-			nreg[[name]] <- c(reg[[name]], ereg[[name]][is.new])
-		}
-		for (name in c('name', 'area_name', 'country_name')) {
-			reg[[name]][id.replace] <- as.character(ereg[[name]])[is.old]
-			nreg[[name]] <- c(as.character(reg[[name]]), 
-									  as.character(ereg[[name]])[is.new])
+		for(name in names(reg)) {
+		    if(is.character(reg[[name]]) || is.factor(reg[[name]])) {
+		        reg[[name]][id.replace] <- as.character(ereg[[name]])[is.old]
+		        nreg[[name]] <- c(as.character(reg[[name]]), 
+		                          as.character(ereg[[name]])[is.new])
+		    } else {
+			    reg[[name]][id.replace] <- ereg[[name]][is.old]
+			    nreg[[name]] <- c(reg[[name]], ereg[[name]][is.new])
+		    }
 		}
 		return(nreg)
 	}
