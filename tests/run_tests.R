@@ -1,7 +1,7 @@
 library(bayesLife)
 source('test_functions.R')
 
-cran <- FALSE
+cran <- TRUE
 for(wpp.year in c(2010, 2012, 2015, 2017))
     test.get.wpp.data(wpp.year)
 test.existing.simulation()

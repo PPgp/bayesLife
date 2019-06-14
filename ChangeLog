@@ -1,4 +1,4 @@
-4.0-1 (05/09/2019)
+4.0-2 (06/14/2019)
 -----
 Various arguments are now handled by options. Various internal functions changed in order to support it. The way priors are passed to run.e0.mcmc has changed - 
 see ?run.e0.mcmc and ?e0options()
