@@ -13,6 +13,7 @@ generate.e0.trajectory <- function(x, l.start, kap, n.proj = 11, p1 = 9, p2 = 9,
 
 get.nr.traj.burnin.from.diagnostics <- function(sim.dir, verbose = FALSE) {
     diag.list <- get.e0.convergence.all(sim.dir)
+    # TODO: consolidate the code below with the function bayesTFR:::get.burnin.nrtraj.from.diagnostics
     ldiag <- length(diag.list)
     if (ldiag == 0) stop('There is no diagnostics available. Use manual settings of "nr.traj" or "thin".')
     use.nr.traj <- use.burnin <- rep(NA, ldiag)
@@ -54,8 +55,8 @@ e0.predict <- function(mcmc.set = NULL, end.year = 2100,
 		# Get argument settings from existing convergence diagnostics
 	if(use.diagnostics) {
 	    diagpars <- get.nr.traj.burnin.from.diagnostics(mcmc.set$meta$output.dir, verbose = verbose)
-		nr.traj <- diagpars$nr.traj
-		burnin <- diagpars$burnin
+		nr.traj <- diagpars['nr.traj']
+		burnin <- diagpars['burnin']
 	}
 	pred <- make.e0.prediction(mcmc.set, end.year = end.year,  
 					replace.output = replace.output,  

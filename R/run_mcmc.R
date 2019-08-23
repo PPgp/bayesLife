@@ -127,7 +127,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
 
 	if (parallel) { # run chains in parallel
 		chain.set <- bayesTFR:::bDem.performParallel(nr.nodes, 1:nr.chains, mcmc.run.chain.e0, 
-                                     initfun = mcoptions$parallel.init.function, 
+                                     initfun = mcoptions$parallel.init.function, seed = seed,
                                      meta = bayesLife.mcmc.meta, 
                                      thin = thin, iter = iter, 
                                      starting.values = starting.values,                                     
