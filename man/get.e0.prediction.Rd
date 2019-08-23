@@ -33,7 +33,7 @@ Function \code{get.e0.jmale.prediction} extracts male projections from the \code
 }
 
 \value{
-	Functions \code{has.e0.prediction} and \code{has.e0.jmale. prediction} return a logical indicating if a prediction exists. 
+	Functions \code{has.e0.prediction} and \code{has.e0.jmale.prediction} return a logical indicating if a prediction exists. 
 	
 	Functions \code{get.e0.prediction} and \code{get.e0.jmale.prediction} return an
 object of class \code{\link{bayesLife.prediction}}.}
@@ -47,8 +47,14 @@ Hana Sevcikova
 }
 \examples{
 sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
-pred <- get.e0.prediction(sim.dir=sim.dir)
-summary(pred, country="Canada")
+pred <- get.e0.prediction(sim.dir = sim.dir)
+# female prediction summary
+summary(pred, country = "Canada")
+
+\dontrun{
+# male prediction summary
+# (works only if a joint male prediction exists - not the case in this toy example)
+summary(get.e0.jmale.prediction(pred), country = "Canada")}
 }
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the

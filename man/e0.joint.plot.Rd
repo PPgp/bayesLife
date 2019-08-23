@@ -6,7 +6,7 @@
 Joint Posterior Distribution of Female and Male Life Expectancy
 }
 \description{
-The functions plot the joint posterior distribution of female and male life expectancy, modeled and predicted using the joint model described in Lalic (2011). This can be done for one country (\code{e0.joint.plot}) or for all countries (\code{e0.joint.plot.all}).}
+The functions plot the joint posterior distribution of female and male life expectancy, modeled and predicted using the joint model described in Lalic (2011) and Raftery, Lalic & Gerland (2014). This can be done for one country (\code{e0.joint.plot}) or for all countries (\code{e0.joint.plot.all}).}
 
 \usage{
 e0.joint.plot(e0.pred, country, pi = 95, years, nr.points = 500, 
@@ -41,6 +41,8 @@ e0.joint.plot.all(e0.pred, output.dir = file.path(getwd(), "e0joint"),
 
 \references{
 Lalic, N. (2011). Master's thesis at the Department of Statistics, University of Washington.
+
+A. E. Raftery,  N. Lalic, P. Gerland (2014). Joint Probabilistic Projection of Female and Male Life Expectancy. Demographic Research, 30:795-822.
 }
 \author{
 Hana Sevcikova, Adrian Raftery

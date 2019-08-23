@@ -11,11 +11,9 @@ The functions convert MCMC traces (simulated using \code{\link{run.e0.mcmc}}) in
 \usage{
 e0.coda.list.mcmc(mcmc.list = NULL, country = NULL, chain.ids = NULL, 
     sim.dir = file.path(getwd(), "bayesLife.output"), 
-    par.names = e0.parameter.names(), 
-    par.names.cs = e0.parameter.names.cs(), low.memory = FALSE, \dots)
+    par.names = NULL, par.names.cs = NULL, low.memory = FALSE, \dots)
     
-\method{coda.mcmc}{bayesLife.mcmc}(mcmc, country = NULL, par.names = e0.parameter.names(), 
-    par.names.cs = e0.parameter.names.cs(), \dots)
+\method{coda.mcmc}{bayesLife.mcmc}(mcmc, country = NULL, par.names = NULL, par.names.cs = NULL, \dots)
 }
 
 \arguments{
@@ -46,7 +44,7 @@ Hana Sevcikova
 }
 \examples{
 sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
-coda.list <- e0.coda.list.mcmc(sim.dir=sim.dir, country="France", burnin=30)
+coda.list <- e0.coda.list.mcmc(sim.dir = sim.dir, country = "France", burnin = 30)
 summary(coda.list)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

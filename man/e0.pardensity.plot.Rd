@@ -11,12 +11,12 @@ Functions for plotting density of the posterior distribution of the MCMC paramet
 \usage{
 e0.pardensity.plot(mcmc.list = NULL, 
     sim.dir = file.path(getwd(), "bayesLife.output"), 
-    chain.ids = NULL, par.names = e0.parameter.names(), 
+    chain.ids = NULL, par.names = NULL, 
     burnin = NULL, dev.ncol = 5, low.memory = TRUE, ...)
     
 e0.pardensity.cs.plot(country, mcmc.list = NULL, 
     sim.dir = file.path(getwd(), "bayesLife.output"), 
-    chain.ids = NULL, par.names = e0.parameter.names.cs(), 
+    chain.ids = NULL, par.names = NULL, 
     burnin = NULL, dev.ncol = 3, low.memory = TRUE, ...)
 
 }
@@ -45,11 +45,9 @@ Hana Sevcikova
 \code{\link{e0.partraces.plot}}
 }
 \examples{
-\dontrun{
 sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
-e0.pardensity.plot(sim.dir=sim.dir, burnin=10)
-e0.pardensity.cs.plot(country="Ireland", sim.dir=sim.dir, burnin=10)
-}
+e0.pardensity.plot(sim.dir = sim.dir, burnin = 10)
+e0.pardensity.cs.plot(country = "Ireland", sim.dir = sim.dir, burnin = 10)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

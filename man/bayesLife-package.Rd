@@ -13,12 +13,12 @@ using a Bayesian hierarchical model and the United Nations demographic time seri
 \tabular{ll}{
 Package: \tab bayesLife\cr
 Type: \tab Package\cr
-Version: \tab 3.2-0\cr
-Date: \tab 2017-10-13\cr
+Version: \tab 4.0-2\cr
+Date: \tab 2019-04-14\cr
 License: \tab GPL (>= 2)\cr
 URL: \tab \url{https://bayespop.csss.washington.edu}\cr
 }
-The projection follows a method developed by Chunn et al (2010).  It uses historical data provided by the United Nations to simulate a posterior distribution of the life expectancy for all countries in the world simultaneously. 
+The projection follows a method developed by Chunn et al (2010, 2013).  It uses historical data provided by the United Nations to simulate a posterior distribution of the life expectancy for all countries in the world simultaneously. 
 
 The package is implemented in a similar way as the \pkg{bayesTFR} package and thus, many functions have their equivalents in \pkg{bayesTFR}. The main functions of the \pkg{bayesLife} package are:
 \itemize{
@@ -30,7 +30,7 @@ A number of functions analyzing results are included in the package:
 \itemize{
 \item \link{e0.trajectories.plot}: Shows the posterior trajectories for a given country, including their median and given probability intervals.
 \item \link{e0.trajectories.table}: Shows the posterior trajectories for a given country in a tabular form.
-\item \link{e0.map}: Shows a world map of life expectancy for a given projection period.
+\item \link{e0.map} and \link{e0.map.gvis}: Show a world map of life expectancy for a given projection period.
 \item \link{e0.DLcurve.plot}: Shows the posterior curves of the double logistic function used in the simulation, including their median and given probability intervals.
 \item \link{e0.partraces.plot} and \link{e0.partraces.cs.plot}: Plot the MCMC traces of country-independent parameters and country-specific parameters, respectively.
 \item \link{e0.pardensity.plot} and \link{e0.pardensity.cs.plot}: Plot the posterior density of the MCMCs for country-independent parameters and country-specific parameters, respectively.
@@ -57,6 +57,8 @@ Hana Sevcikova, Adrian Raftery, Jennifer Chunn
 Maintainer: Hana Sevcikova <hanas@uw.edu>
 }
 \references{
+J. L. Chunn, A. E. Raftery, P. Gerland, H. Sevcikova (2013): Bayesian Probabilistic Projections of Life Expectancy for All Countries. Demography 50(3):777-801. <doi:10.1007/s13524-012-0193-x>
+
 J. L. Chunn, A. E. Raftery, P. Gerland (2010): Bayesian Probabilistic Projections of Life Expectancy for All Countries.  Working Paper nr. 105, Center for Statistics and the Social Sciences, University of Washington. \url{http://www.csss.washington.edu/Papers}
 
 A. E. Raftery,  N. Li, H. Sevcikova , P. Gerland, G. K. Heilig (2012). Bayesian probabilistic population projections for all countries. Proceedings of the National Academy of Sciences 109:13915-13921.
@@ -73,11 +75,11 @@ A. E. Raftery,  N. Lalic, P. Gerland (2014). Joint Probabilistic Projection of F
 \examples{
 \dontrun{
 sim.dir <- tempfile()
-m <- run.e0.mcmc(sex='F', nr.chains=1, iter=60, seed=1, thin=1, 
-     output.dir=sim.dir, verbose=TRUE)
-pred <- e0.predict(m, burnin=30, verbose=TRUE)
-summary(pred, country="Canada")
-unlink(sim.dir, recursive=TRUE)}
+m <- run.e0.mcmc(sex = 'F', nr.chains = 1, iter = 60, seed = 1, 
+        thin = 1, output.dir = sim.dir, verbose = TRUE)
+pred <- e0.predict(m, burnin = 30, verbose = TRUE)
+summary(pred, country = "Canada")
+unlink(sim.dir, recursive = TRUE)}
 }
 %# exact commands to create data in ex-data directory
 % m <- run.e0.mcmc(sex='F', nr.chains=1, iter=60, seed=1, thin=1, verbose=TRUE, compression.type='bz', start.year=1950)

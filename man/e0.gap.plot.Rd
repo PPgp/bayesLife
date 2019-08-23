@@ -6,7 +6,7 @@
 Posterior Distribution of Gaps in Female and Male Life Expectancy
 }
 \description{
-The functions plot the posterior distribution of the gaps between female and male life expectancy, modeled and predicted using a model described in Lalic (2011). This can be done for one country (\code{e0.gap.plot}) or for all countries (\code{e0.gap.plot.all}).
+The functions plot the posterior distribution of the gaps between female and male life expectancy, modeled and predicted using a model described in Lalic (2011) and Raftery, Lalic & Gerland (2014). This can be done for one country (\code{e0.gap.plot}) or for all countries (\code{e0.gap.plot.all}).
 }
 \usage{
 e0.gap.plot(e0.pred, country, e0.pred2 = NULL, pi = c(80, 95), 
@@ -38,6 +38,8 @@ e0.gap.plot.all(e0.pred, output.dir = file.path(getwd(), "e0gaps"),
 
 \references{
 Lalic, N. (2011). Master's thesis at the Department of Statistics, University of Washington.
+
+A. E. Raftery,  N. Lalic, P. Gerland (2014). Joint Probabilistic Projection of Female and Male Life Expectancy. Demographic Research, 30:795-822.
 }
 \author{
 Hana Sevcikova

@@ -2,6 +2,7 @@
 \alias{e0.median.set}
 \alias{e0.median.shift}
 \alias{e0.median.reset}
+\alias{e0.median.adjust.jmale}
 
 \title{
 Editing the Projection Medians
@@ -15,6 +16,8 @@ e0.median.set(sim.dir, country, values, years = NULL, joint.male = FALSE)
 e0.median.shift(sim.dir, country, reset = FALSE, shift = 0, 
     from = NULL, to = NULL, joint.male = FALSE)
     
+e0.median.adjust.jmale(sim.dir, countries, factors = c(1.2, 1.1))
+
 e0.median.reset(sim.dir, countries, joint.male = FALSE)
 }
 \arguments{
@@ -29,9 +32,11 @@ e0.median.reset(sim.dir, countries, joint.male = FALSE)
   \item{shift}{Constant by which the medians should be offset. It is not used if \code{reset} is \code{TRUE}.}
   \item{from}{Year from which the offset/reset should start. By default, it starts at the first prediction period.}
   \item{to}{Year until which the offset/reset should be done. By default, it is set to the last prediction period.}
+  \item{factors}{It should be a vector where each element corresponds to one time period. The adjustment of male medians is done as \code{e0m(t) = e0f(t) - gap(t)*factor(t)}.}
 }
 \details{
-The function \code{e0.median.set} can be used to set the medians of the given country to specific values. Function \code{e0.median.shift} can be used to offset the medians by a specific constant, or to reset the medians to their original BHM values. Function \code{e0.median.reset} resets medians of the given countries to the original values.
+The function \code{e0.median.set} can be used to set the medians of the given country to specific values. Function \code{e0.median.shift} can be used to offset the medians by a specific constant, or to reset the medians to their original BHM values. Function \code{e0.median.adjust.jmale} adjusts male medians using factors that can expand or shrink the female-male gap. Function \code{e0.median.reset} resets medians of the given countries to the original values.
+
 In all cases, if a median is modified, the corresponding offset is stored in the prediction object (element \code{median.shift}). All three functions write the updated prediction object back to disk. All functions in the package that use trajectories and trajectory statistics use the \code{median.shift} values to offset the results correspondingly.  
 }
 \value{

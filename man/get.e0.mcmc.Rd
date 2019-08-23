@@ -7,7 +7,7 @@
 Accessing MCMC Results
 }
 \description{
-The function \code{get.e0.mcmc} retrieves results of an MCMC simulation and creates an object of class \code{\link{bayesLife.mcmc.set}}. Function \code{has.e0.mcmc} checks the existence of such results. Function \code{e0.mcmc} extracts a single chain and \code{e0.mcmc.list} extracts several or all chains from the simulation results. 
+The function \code{get.e0.mcmc} retrieves results of an MCMC simulation and creates an object of class \code{\link{bayesLife.mcmc.set}}. Function \code{has.e0.mcmc} checks the existence of such results. Function \code{e0.mcmc} extracts a single chain, and \code{e0.mcmc.list} extracts several or all chains from the simulation results. 
 
 }
 \usage{
@@ -18,7 +18,7 @@ has.e0.mcmc(sim.dir)
 
 e0.mcmc(mcmc.set, chain.id = 1)
 
-e0.mcmc.list(mcmc.set, chain.ids=NULL)
+e0.mcmc.list(mcmc.set, chain.ids = NULL)
 }
 \arguments{
   \item{sim.dir}{Directory where the simulation results are stored.}
@@ -50,10 +50,15 @@ sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 m <- get.e0.mcmc(sim.dir)
 summary(m)
 
-# summary of the world parameters for the single chains
-for(mc in e0.mcmc.list(m)) print(summary(mc, par.names.cs=NULL))
+# summary of the world parameters for a single chain
+# (the same as above since there is only one chain in this toy example)
+summary(e0.mcmc.list(m)[[1]], par.names.cs = NULL)
+
+# the same as
+summary(e0.mcmc(m, chain.id = 1), par.names.cs = NULL)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{ programming }
+\keyword{ manip }
 

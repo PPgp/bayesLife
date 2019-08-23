@@ -19,9 +19,12 @@ test.estimate.mcmc <- function(compression='None') {
     # run MCMC
     test.name <- 'estimating MCMC'
 	start.test(test.name)
-    m <- run.e0.mcmc(nr.chains=1, iter=10, thin=1, output.dir=sim.dir, buffer=5, compression.type=compression)
+    m <- run.e0.mcmc(nr.chains = 1, iter = 10, thin = 1, output.dir = sim.dir, 
+                     compression.type = compression, 
+                     mcmc.options = list(buffer.size = 5))
     stopifnot(m$mcmc.list[[1]]$finished.iter == 10)
 	stopifnot(get.total.iterations(m$mcmc.list, 0) == 10)
+	stopifnot(m$meta$mcmc.options$buffer.size == 5)
 	test.ok(test.name)
 	
 	# continue MCMC
@@ -114,7 +117,9 @@ test.estimate.mcmc.with.suppl.data <- function(compression='None') {
     # run MCMC
     test.name <- 'estimating MCMC using supplemental data'
 	start.test(test.name)
-    m <- run.e0.mcmc(nr.chains=1, iter=30, thin=1, output.dir=sim.dir, start.year=1750, seed=1, buffer=10, compression.type=compression)
+    m <- run.e0.mcmc(nr.chains = 1, iter = 30, thin = 1, output.dir = sim.dir, 
+                     start.year = 1750, seed = 1, compression.type = compression,
+                     mcmc.options = list(buffer.size = 10))
     stopifnot(length(m$meta$suppl.data$regions$country_code) == 29)
 	stopifnot(all(dim(m$meta$suppl.data$e0.matrix) == c(40, 29)))
 	test.ok(test.name)
@@ -132,9 +137,11 @@ test.estimate.mcmc.with.suppl.data <- function(compression='None') {
 	test.name <- 'estimating MCMC for extra areas with supplemental data'
 	start.test(test.name)
 	data.dir <- file.path(find.package("bayesLife"), 'extdata')
-	m <- run.e0.mcmc.extra(sim.dir=sim.dir, 
-					my.e0.file=file.path(data.dir, 'my_e0_template.txt'), burnin=0)
+	m <- run.e0.mcmc.extra(sim.dir = sim.dir, 
+					my.e0.file = file.path(data.dir, 'my_e0_template.txt'), 
+					burnin = 0)
 	stopifnot(is.element(900, m$meta$regions$country_code)) # 'World' should be included
+	stopifnot(m$meta$mcmc.options$buffer.size == 10) # inherited from main run
 	test.ok(test.name)
 	
 	# run prediction
@@ -198,8 +205,10 @@ test.DLcurve <- function() {
 	# world distribution
 	dlw <- e0.world.dlcurves(e0, m, burnin=10)
 	stopifnot(all(dim(dlw)==c(50,100)))
-	# median of the world DL in the e0 range of 60-70 is larger than the country-specific median in that range
-	stopifnot(all(apply(dlw[, e0 > 60 & e0 < 70], 2, median) > apply(dl[, e0 > 60 & e0 < 70], 2, median)))
+	# median of the world DL in the e0 range of 50-60 is larger than the country-specific median in that range
+	# check visually with:
+	# e0.DLcurve.plot(m, 'Slovenia'); lines(e0, apply(dlw, 2, median), col="blue")
+	stopifnot(all(apply(dlw[, e0 > 50 & e0 < 60], 2, median) > apply(dl[, e0 > 50 & e0 < 60], 2, median)))
 	test.ok(test.name)
 }
 
@@ -322,14 +331,15 @@ test.run.mcmc.simulation.auto <- function(compression='None') {
 	# run MCMC
 	test.name <- 'running auto MCMC'
 	start.test(test.name)
-	m <- run.e0.mcmc(iter='auto', output.dir=sim.dir, thin=1, compression.type=compression,
-					auto.conf=list(iter=10, iter.incr=5, max.loops=3, nr.chains=2, thin=1, burnin=5))
+	m <- run.e0.mcmc(iter = 'auto', output.dir = sim.dir, thin = 1, compression.type = compression,
+					mcmc.options = list(auto.conf = list(iter=10, iter.incr=5, max.loops=3, nr.chains=2, thin=1, burnin=5)))
 	stopifnot(get.total.iterations(m$mcmc.list, 0) == 40)
 	test.ok(test.name)
 
 	test.name <- 'continuing auto MCMC'
 	start.test(test.name)
-	m <- continue.e0.mcmc(iter='auto', output.dir=sim.dir, auto.conf=list(max.loops=2))
+	m <- continue.e0.mcmc(iter='auto', output.dir=sim.dir, 
+	                      auto.conf=list(max.loops=2))
 	stopifnot(get.total.iterations(m$mcmc.list, 0) == 60)
 	test.ok(test.name)
 
@@ -346,16 +356,17 @@ test.estimate.mcmc.with.overwrites <- function() {
 							Triangle_3.c.prior.up=c(0, NA)
 						)
 	# run MCMC
-    m <- run.e0.mcmc(nr.chains=1, iter=50, thin=1, output.dir=sim.dir, 
-    				Triangle.c.prior.low=c(0, 0, -20, 0), country.overwrites=overwrites,
-    				seed=10)
+    m <- run.e0.mcmc(nr.chains = 1, iter = 50, thin = 1, output.dir = sim.dir, 
+                     mcmc.options = list(Triangle.c = list(prior.low =c(0, 0, -20, 0)),
+                                         country.overwrites = overwrites),
+    				seed = 10)
     iNiger <- get.country.object(562, m$meta)
     iSene <- get.country.object(686, m$meta)
     
     stopifnot((m$meta$country.bounds$k.c.prior.up[iNiger$index] == 5) && (m$meta$country.bounds$k.c.prior.up[iSene$index] == 7) && 
     			all(m$meta$country.bounds$k.c.prior.up[-c(iNiger$index,iSene$index)]==10))
     stopifnot((m$meta$country.bounds$Triangle_3.c.prior.low[iSene$index] == 0) &&  
-    			all(m$meta$country.bounds$Triangle_3.c.prior.low[-iSene$index]==-20))
+    			all(m$meta$country.bounds$Triangle_3.c.prior.low[-iSene$index] == -20))
     #check traces		
     traces.Niger <- get.e0.parameter.traces.cs(m$mcmc.list, get.country.object('Niger', m$meta), 
     					par.names=c('Triangle.c', 'k.c'))
@@ -367,10 +378,11 @@ test.estimate.mcmc.with.overwrites <- function() {
 	
 	test.name <- 'estimating MCMC for extra countries with country overwrites'
 	start.test(test.name)
-	overwrites <- data.frame(country_code=c(800, 900), #Uganda, World
-							k.c.prior.up=c(3, 8),
-							k.c.prior.low=c(2, NA))
-	m <- run.e0.mcmc.extra(sim.dir=sim.dir, countries=c(800,900), burnin=0, country.overwrites=overwrites)
+	overwrites <- data.frame(country_code = c(800, 900), #Uganda, World
+							k.c.prior.up = c(3, 8),
+							k.c.prior.low = c(2, NA))
+	m <- run.e0.mcmc.extra(sim.dir = sim.dir, countries = c(800, 900), burnin = 0, 
+	                       country.overwrites = overwrites)
 	Ug <- get.country.object('Uganda', m$meta)
 	Wrld <- get.country.object(900, m$meta)
 	stopifnot((m$meta$country.bounds$k.c.prior.up[Ug$index] == 3) && (m$meta$country.bounds$k.c.prior.up[iSene$index] == 7) && 
@@ -390,13 +402,15 @@ test.run.mcmc.simulation.auto.parallel <- function() {
 	test.name <- 'running auto MCMC in parallel'
 	start.test(test.name)
 	m <- run.e0.mcmc(iter='auto', output.dir=sim.dir, parallel=TRUE, cltype='SOCK', thin=1,
-					auto.conf=list(iter=10, iter.incr=5, max.loops=3, nr.chains=2, thin=1, burnin=5))
+					mcmc.options = list(auto.conf=list(iter=10, iter.incr=5, max.loops=3, nr.chains=2, thin=1, burnin=5)))
 	stopifnot(get.total.iterations(m$mcmc.list, 0) == 40)
 	test.ok(test.name)
 
 	test.name <- 'continuing auto MCMC in parallel'
 	start.test(test.name)
-	m <- continue.e0.mcmc(iter='auto', output.dir=sim.dir, auto.conf=list(max.loops=2), parallel=TRUE, cltype='SOCK')
+	m <- continue.e0.mcmc(iter='auto', output.dir=sim.dir, 
+	                      auto.conf=list(max.loops=2), 
+	                      parallel=TRUE, cltype='SOCK')
 	stopifnot(get.total.iterations(m$mcmc.list, 0) == 60)
 	test.ok(test.name)
 	unlink(sim.dir, recursive=TRUE)

@@ -1,13 +1,15 @@
 
 # import
 import(
-    bayesTFR, hett, coda, wpp2017
+    bayesTFR, hett, coda, wpp2017, data.table
 )
 importFrom(car, dataEllipse)
 importFrom("graphics", "abline", "grid", "legend", "lines", "plot", "points", "text")
 importFrom("grDevices", "rainbow")
-importFrom("stats", "dgamma", "dnorm", "dunif", "median", "pnorm", "quantile", "rexp", "rgamma", "rnorm", "rt", "runif", "sd")
-
+importFrom("stats", "dgamma", "dnorm", "dunif", "median", "pnorm", "quantile", "rexp", "rgamma", 
+           "rnorm", "rt", "runif", "sd", "C", "approxfun", "lowess", "na.omit")
+importFrom("utils", "modifyList")
+           
 #exportPattern("^[[:alpha:]]+")
 useDynLib(bayesLife, .registration = TRUE)
 
@@ -21,6 +23,7 @@ export(
 	e0.median.shift,
 	e0.median.set,
 	e0.median.reset,
+	e0.median.adjust.jmale,
 	get.e0.shift,
 	convert.e0.trajectories,
 	write.e0.projection.summary,
@@ -72,7 +75,13 @@ export(
 	e0.gap.plot,
 	e0.gap.plot.all,
 	e0.joint.plot,
-	e0.joint.plot.all
+	e0.joint.plot.all,
+	e0options,
+	e0mcmc.options,
+	e0pred.options,
+	compute.loess,
+	compute.residuals,
+	using.bayesLife
 )
 
 # register S3 methods

@@ -43,16 +43,17 @@ Hana Sevcikova
 sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 pred.dir <- file.path(getwd(), "exampleLEpred")
 
-# stores 10 trajectories out of 26 (2x(60-35)/2 + 1) into 
-# exampleLEpred/predictions/ascii_trajectories.csv
-e0.predict(sim.dir=sim.dir, output.dir=pred.dir, 
-            burnin=35, save.as.ascii=10, verbose=TRUE)
+# stores 10 trajectories out of 30 (60-30) into 
+# exampleLEpred/predictions/ascii_trajectories.csv (for female)
+# and exampleLEpred/predictions/joint_male/ascii_trajectories.csv (for male)
+e0.predict(sim.dir = sim.dir, output.dir = pred.dir, 
+            burnin = 30, save.as.ascii = 10, verbose = TRUE)
             
-# stores all 26 trajectories into the current directory
-convert.e0.trajectories(dir=pred.dir, n="all", output.dir=".", verbose=TRUE)
+# stores all 30 trajectories into the current directory
+convert.e0.trajectories(dir = pred.dir, n = "all", output.dir = ".", verbose = TRUE)
 
 # Note: If the output.dir argument in e0.predict is omitted, 
-# call convert.e0.trajectories with dir=sim.dir 
+# call convert.e0.trajectories with dir = sim.dir 
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

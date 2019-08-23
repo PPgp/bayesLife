@@ -1,3 +1,11 @@
+4.0-2 (06/14/2019)
+-----
+Various arguments are now handled by options. Various internal functions changed in order to support it. The way priors are passed to run.e0.mcmc has changed - 
+see ?run.e0.mcmc and ?e0options()
+
+Support for wpp2019 added.
+
+
 3.2-0 (10/13/2017)
 -----
 To approximate the UN settings for WPP2017, defaults changed for:

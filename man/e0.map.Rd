@@ -64,15 +64,17 @@ Hana Sevcikova, Adrian Raftery
 \examples{
 \dontrun{
 sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
-pred <- get.e0.prediction(sim.dir=sim.dir)
+pred <- get.e0.prediction(sim.dir = sim.dir)
 # Uses heat colors and seven categories by default
 e0.map(pred)
 # Uses more colors with more suitable categorization
 params <- get.e0.map.parameters(pred)
 do.call('e0.map', params)
 # Another projection year on the same scale
-do.call('e0.map', c(list(year=2043), params))
-}
+do.call('e0.map', c(list(year = 2043), params))
+
+# Interactive map (requires Flash)
+e0.map.gvis(pred, year = 2043)}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

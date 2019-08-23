@@ -51,22 +51,23 @@ Hana Sevcikova
 \examples{
 \dontrun{
 sim.dir <- tempfile()
-m <- run.e0.mcmc(sex='F', nr.chains=1, iter=30, thin=1, output.dir=sim.dir)
-pred <- e0.predict(m, burnin=15, verbose=FALSE, save.as.ascii=0)
+m <- run.e0.mcmc(sex = 'F', nr.chains = 1, iter = 30, thin = 1, output.dir = sim.dir)
+pred <- e0.predict(m, burnin = 15, verbose = FALSE, save.as.ascii = 0, 
+                    predict.jmale = FALSE)
 both.pred <- e0.jmale.predict(pred)
 e0.trajectories.plot(both.pred, 'Guatemala') # Female
 e0.trajectories.plot(get.e0.jmale.prediction(both.pred), 'Guatemala') # Male
 
 # Marginal distribution of the sex-specific projections
-e0.trajectories.plot(both.pred, 'Guatemala', both.sexes=TRUE,  pi=80)
+e0.trajectories.plot(both.pred, 'Guatemala', both.sexes = TRUE,  pi = 80)
 
 # Plotting the gaps
 e0.gap.plot(both.pred, 'Guatemala')
 
 # Joint distribution of the sex-specific projections
-e0.joint.plot(both.pred, 'Guatemala', pi=80, years=c(2013, 2043, 2093))
+e0.joint.plot(both.pred, 'Guatemala', pi = 80, years = c(2013, 2043, 2093))
 
-unlink(sim.dir, recursive=TRUE)
+unlink(sim.dir, recursive = TRUE)
 }}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

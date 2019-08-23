@@ -36,7 +36,7 @@ e0.predict(mcmc.set = NULL, end.year = 2100,
   \item{\dots}{Additional arguments passed to the \code{\link{e0.jmale.predict}} function.}
 }
 \details{
-The trajectories are generated using the double logistic function (Chunn et al. 2010). Parameter samples  simulated via \code{\link{run.e0.mcmc}} are used from all chains, from which the given burnin was discarded. They are evenly thinned to match \code{nr.traj} or using the \code{thin} argument. Such thinned parameter traces, collapsed into one chain, if they do not already exist, are stored on disk into the sub-directory \file{thinned_mcmc_\emph{t}_\emph{b}} where \emph{t} is the value  of \code{thin} and \emph{b} the value of \code{burnin} (see \code{\link{create.thinned.e0.mcmc}}). 
+The trajectories are generated using the double logistic function (Chunn et al. 2013). Parameter samples  simulated via \code{\link{run.e0.mcmc}} are used from all chains, from which the given burnin was discarded. They are evenly thinned to match \code{nr.traj} or using the \code{thin} argument. Such thinned parameter traces, collapsed into one chain, if they do not already exist, are stored on disk into the sub-directory \file{thinned_mcmc_\emph{t}_\emph{b}} where \emph{t} is the value  of \code{thin} and \emph{b} the value of \code{burnin} (see \code{\link{create.thinned.e0.mcmc}}). 
 	
 The projection is run for all missing values before the present year, if any. Medians over the trajectories are used as  imputed values and the trajectories are discarded. The process then continues by projecting the future values where all generated trajectories are kept.
 
@@ -48,7 +48,7 @@ The resulting prediction object is saved into \file{\{output.dir\}/predictions}.
 \value{
 	Object of class \code{bayesLife.prediction} which is a list containing components:
 	\item{quantiles}{A \eqn{n \times q \times p}{n x q x p} array of quantile values computed on the trajectories. \eqn{n} is the number of countries,
-		\eqn{q} is the number of quantile bounds and \eqn{p} is the number of projections.}
+		\eqn{q} is the number of quantiles and \eqn{p} is the number of projections. Which quantiles are to be computed is determined by the global option \code{\link{e0pred.options}("quantiles")}.}
 	\item{traj.mean.sd}{A \eqn{n \times 2 \times p}{n x 2 x p} array holding the mean of all trajectories in the first column and the standard deviation in the second column.
 		\eqn{n} and \eqn{p} are the number of countries and number of projections, respectively.}
 	\item{nr.traj}{Number of trajectories.}
@@ -57,13 +57,12 @@ The resulting prediction object is saved into \file{\{output.dir\}/predictions}.
 	\item{nr.projections}{Number of projections.}
 	\item{burnin}{Burnin used for this prediction.}
 	\item{end.year}{The end year of this prediction.}
+	\item{start.year}{The \code{start.year} input argument.}
 	\item{mcmc.set}{Object of class \code{\link{bayesLife.mcmc.set}} used for this prediction, i.e. the burned, thinned, and collapsed MCMC chain.}
 	\item{joint.male}{If \code{\link{e0.jmale.predict}} was invoked, this is an object of class \code{bayesLife.prediction} containing male projections. In addition to the components above, it contains elements \code{fit} (estimation results from \code{\link{e0.jmale.estimate}}) and \code{meta.changes} (components of \code{\link{bayesLife.mcmc.meta}} that differ from the female meta component).}
 }
 \references{
-J. L. Chunn, A. E. Raftery, P. Gerland (2010): Bayesian Probabilistic Projections of Life Expectancy for All Countries.  Working Paper nr. 105, Center for Statistics and the Social Sciences, University of Washington. \url{http://www.csss.washington.edu/Papers}
-
-
+J. L. Chunn, A. E. Raftery, P. Gerland, H. Sevcikova (2013): Bayesian Probabilistic Projections of Life Expectancy for All Countries. Demography 50(3):777-801. <doi:10.1007/s13524-012-0193-x>
 }
 \author{
 Hana Sevcikova, using code from Jennifer Chunn
@@ -77,10 +76,9 @@ Hana Sevcikova, using code from Jennifer Chunn
 }
 \examples{
 \dontrun{
-m <- run.e0.mcmc(nr.chains=1, iter=50, thin=1, verbose=TRUE)
-pred <- e0.predict(m, burnin=25, verbose=TRUE)
-summary(pred, country="Portugal")
-}
+m <- run.e0.mcmc(nr.chains = 1, iter = 50, thin = 1, verbose = TRUE)
+pred <- e0.predict(m, burnin = 25, verbose = TRUE)
+summary(pred, country = "Portugal")}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

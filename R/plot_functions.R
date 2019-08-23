@@ -478,7 +478,8 @@ e0.world.dlcurves <- function(x, mcmc.list, burnin=NULL, ...) {
 	}
 	if(is.null(burnin)) burnin <- 0
     mcmc.list <- get.mcmc.list(mcmc.list)
-	return(e0.get.dlcurves(x, mcmc.list, country.code=NULL,  burnin=burnin, ...))
+	return(do.call(get.from.options("dlcurves.function", mcmc.list[[1]]$meta$mcmc.options, "e0.get.dlcurves"), 
+	               list(x, mcmc.list, country.code = NULL,  burnin = burnin, ...)))
 }
 
 e0.country.dlcurves <- function(x, mcmc.list, country, burnin=NULL, ...) {
@@ -494,10 +495,12 @@ e0.country.dlcurves <- function(x, mcmc.list, country, burnin=NULL, ...) {
     country.obj <- get.country.object(country, mcmc.list[[1]]$meta)
     if(is.null(country.obj$code))
 	    stop("Country ", country, " not found.")
-    return(e0.get.dlcurves(x, mcmc.list, country.code=country.obj$code,  burnin=burnin, ...))
+    return(do.call(get.from.options("dlcurves.function", mcmc.list[[1]]$meta$mcmc.options, "e0.get.dlcurves"), 
+        list(x, mcmc.list, country.code = country.obj$code,  burnin = burnin, ...)))
 }
 
-e0.get.dlcurves <- function(x, mcmc.list, country.code, burnin, nr.curves=2000, predictive.distr=FALSE) {
+e0.get.dlcurves <- function(x, mcmc.list, country.code, burnin, 
+                            nr.curves = 2000, predictive.distr = FALSE) {
 	dlc <- c()
     nr.curves.from.mc <- if (!is.null(nr.curves)) ceiling(max(nr.curves, 2000)/length(mcmc.list))
     						else NULL
@@ -512,10 +515,13 @@ e0.get.dlcurves <- function(x, mcmc.list, country.code, burnin, nr.curves=2000, 
 	} else {
 		dl.par.names <- c('Triangle_1', 'Triangle_2', 'Triangle_3', 'Triangle_4', 'k', 'z')
 	}
+    meta <- mcmc.list[[1]]$meta
+    opts <- meta$mcmc.options
 	if(predictive.distr) {
-		loessSD <- loess.lookup(x)
-		if(!is.null(mcmc.list[[1]]$meta$constant.variance) && mcmc.list[[1]]$meta$constant.variance)
-			loessSD[] <- 1
+	    if(isTRUE(meta$constant.variance))
+	        loessSD <- rep(1, length(x))
+	    else
+		    loessSD <- loess.lookup(x)
 	}
     for (mcmc in mcmc.list) {
     	th.burnin <- bayesTFR:::get.thinned.burnin(mcmc,burnin)
@@ -528,14 +534,14 @@ e0.get.dlcurves <- function(x, mcmc.list, country.code, burnin, nr.curves=2000, 
 		else traces <- load.e0.parameter.traces(mcmc, burnin=th.burnin, 
 								thinning.index=thincurves.mc$index)				
 		dl.pars <- traces[,dl.par.names, drop=FALSE]
-		omegas <- load.e0.parameter.traces(mcmc, par.names='omega', burnin=th.burnin, 
-								thinning.index=thincurves.mc$index)
-		dl <- t(apply(dl.pars, 1, g.dl6, l=x, p1 = mcmc$meta$dl.p1, p2 = mcmc$meta$dl.p2))
+		dl <- t(apply(dl.pars, 1, g.dl6, l = x, p1 = opts$dl.p1, p2 = opts$dl.p2))
 		if(predictive.distr) {
-			errors <- matrix(NA, nrow=dim(dl)[1], ncol=dim(dl)[2])
+		    omegas <- load.e0.parameter.traces(mcmc, par.names = 'omega', burnin = th.burnin, 
+		                                       thinning.index = thincurves.mc$index)
+			errors <- matrix(NA, nrow = dim(dl)[1], ncol = dim(dl)[2])
 			n <- ncol(errors)
 			for(i in 1:nrow(errors))
-				errors[i,] <- rnorm(n, mean=0, sd=omegas[i]*loessSD)
+				errors[i,] <- rnorm(n, mean = 0, sd = omegas[i]*loessSD)
         	dlc <- rbind(dlc, dl+errors)
         } else dlc <- rbind(dlc, dl)
     }
@@ -571,8 +577,9 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
     }
     if (is.null(e0.lim)) e0.lim <- c(min(40, obs.data), max(90, obs.data))
     x <- seq(e0.lim[1], e0.lim[2], length=1000)
-    dlc <- e0.get.dlcurves(x, mcmc.list, country$code,  burnin, nr.curves, 
-    						predictive.distr=predictive.distr)
+    dlc <- do.call(get.from.options("dlcurves.function", meta$mcmc.options, "e0.get.dlcurves"), 
+                   list(x, mcmc.list, country$code,  burnin, nr.curves, 
+    						predictive.distr = predictive.distr))
     thincurves <- bayesTFR:::get.thinning.index(nr.curves, dim(dlc)[1])
     ltype <- "l"
     if (thincurves$nr.points == 0) {
@@ -628,7 +635,8 @@ e0.parDL.plot <- function(mcmc.set, country=NULL, burnin = NULL, lty=2, ann=TRUE
     parmeans <- summary(mcmc.set, country=country.obj$code, burnin=burnin)$statistics[,'Mean']
     sink(type='output')
     close(con)
-	parnames.all <- if(is.null(country)) e0.parameter.names.extended() else e0.parameter.names.cs.extended(country.obj$code)
+	parnames.all <- if(is.null(country)) e0.parameter.names.extended(opts = mcmc.set$meta$mcmc.options) else e0.parameter.names.cs.extended(country.obj$code,
+	                                                                                                                                 opts = mcmc.set$meta$mcmc.options)
 	parnames <- grep("^Triangle|k", parnames.all, value=TRUE)
 	k <- parmeans[parnames[5]]
 	xDelta1 <- parmeans[parnames[1]]
@@ -649,56 +657,68 @@ e0.parDL.plot <- function(mcmc.set, country=NULL, burnin = NULL, lty=2, ann=TRUE
 }
 
 
-e0.partraces.plot <- function(mcmc.list=NULL, sim.dir=file.path(getwd(), 'bayesLife.output'),
-								chain.ids=NULL, par.names=e0.parameter.names(), 
-                                nr.points=NULL, dev.ncol=5, low.memory=TRUE, ...) {
+e0.partraces.plot <- function(mcmc.list=NULL, sim.dir = file.path(getwd(), 'bayesLife.output'),
+								chain.ids = NULL, par.names = NULL, 
+                                nr.points = NULL, dev.ncol = 5, low.memory = TRUE, ...) {
 	if (is.null(mcmc.list))
 		mcmc.list <- get.e0.mcmc(sim.dir, low.memory=low.memory)
-	bayesTFR:::do.plot.tfr.partraces(mcmc.list, load.e0.parameter.traces, chain.ids=chain.ids, 
-        						nr.points=nr.points, par.names=par.names, dev.ncol=dev.ncol, ...)
+	if(missing(par.names)) 
+	    par.names <- e0.parameter.names(get.mcmc.meta(mcmc.list)$mcmc.options)
+	
+	bayesTFR:::do.plot.tfr.partraces(mcmc.list, load.e0.parameter.traces, chain.ids = chain.ids, 
+        						nr.points = nr.points, par.names = par.names, dev.ncol = dev.ncol, ...)
 }
 
 e0.partraces.cs.plot <- function(country, mcmc.list=NULL, sim.dir=file.path(getwd(), 'bayesLife.output'),
-									chain.ids=NULL, par.names=e0.parameter.names.cs(),
-                                    nr.points=NULL, dev.ncol=3, low.memory=TRUE, ...) {
+									chain.ids = NULL, par.names = NULL,
+                                    nr.points = NULL, dev.ncol = 3, low.memory = TRUE, ...) {
 
 	if (is.null(mcmc.list))
 		mcmc.list <- get.e0.mcmc(sim.dir, low.memory=low.memory)
 	mcmc.list <- get.mcmc.list(mcmc.list)
+	if(missing(par.names)) 
+	    par.names <- e0.parameter.names.cs(get.mcmc.meta(mcmc.list)$mcmc.options)
+	
 	country.obj <- get.country.object(country, mcmc.list[[1]]$meta)
 	if (is.null(country.obj$name))
 		stop('Country ', country, ' not found.')
 	bayesTFR:::do.plot.tfr.partraces(mcmc.list, load.e0.parameter.traces.cs, 
-		main.postfix=paste('(',country.obj$name,')', sep=''), chain.ids=chain.ids, nr.points=nr.points, 
-		country=country.obj$code, par.names=par.names, dev.ncol=dev.ncol, ...)
+		main.postfix = paste0('(',country.obj$name,')'), chain.ids = chain.ids, 
+		nr.points = nr.points, country = country.obj$code, par.names = par.names, 
+		dev.ncol = dev.ncol, ...)
 }
 
-e0.pardensity.plot <- function(mcmc.list=NULL, sim.dir=file.path(getwd(), 'bayesLife.output'), 
-									chain.ids=NULL, par.names=e0.parameter.names(), 
-									burnin=NULL, dev.ncol=5, low.memory=TRUE, ...) {
+e0.pardensity.plot <- function(mcmc.list=NULL, sim.dir = file.path(getwd(), 'bayesLife.output'), 
+									chain.ids = NULL, par.names = NULL, 
+									burnin = NULL, dev.ncol = 5, low.memory = TRUE, ...) {
 	if (is.null(mcmc.list))
-		mcmc.list <- get.e0.mcmc(sim.dir, low.memory=low.memory)
-	bayesTFR:::do.plot.tfr.pardensity(mcmc.list, get.e0.parameter.traces, chain.ids=chain.ids, par.names=par.names,
-			par.names.ext=bayesTFR:::get.full.par.names(par.names, 
-						e0.get.all.parameter.names.extended()),
-			burnin=burnin, dev.ncol=dev.ncol, ...)
+		mcmc.list <- get.e0.mcmc(sim.dir, low.memory = low.memory)
+	if(missing(par.names)) 
+	    par.names <- e0.parameter.names(get.mcmc.meta(mcmc.list)$mcmc.options)
+	bayesTFR:::do.plot.tfr.pardensity(mcmc.list, get.e0.parameter.traces, chain.ids = chain.ids, par.names = par.names,
+			par.names.ext = bayesTFR:::get.full.par.names(par.names, 
+						e0.get.all.parameter.names.extended(opts = get.mcmc.meta(mcmc.list)$mcmc.options)),
+			burnin = burnin, dev.ncol = dev.ncol, ...)
 }
 
-e0.pardensity.cs.plot <- function(country, mcmc.list=NULL, sim.dir=file.path(getwd(), 'bayesLife.output'), 
-									chain.ids=NULL, par.names=e0.parameter.names.cs(), 
-									burnin=NULL, dev.ncol=3, low.memory=TRUE, ...) {
+e0.pardensity.cs.plot <- function(country, mcmc.list = NULL, sim.dir = file.path(getwd(), 'bayesLife.output'), 
+									chain.ids = NULL, par.names = NULL, 
+									burnin = NULL, dev.ncol = 3, low.memory = TRUE, ...) {
 	if (is.null(mcmc.list))
 		mcmc.list <- get.e0.mcmc(sim.dir, low.memory=low.memory)
 	mcmc.l <- get.mcmc.list(mcmc.list)
 	country.obj <- get.country.object(country, mcmc.l[[1]]$meta)
 	if (is.null(country.obj$name))
 		stop('Country ', country, ' not found.')
-	bayesTFR:::do.plot.tfr.pardensity(mcmc.list, get.e0.parameter.traces.cs, chain.ids=chain.ids, par.names=par.names,
+	if(missing(par.names)) 
+	    par.names <- e0.parameter.names.cs(get.mcmc.meta(mcmc.l)$mcmc.options)
+	bayesTFR:::do.plot.tfr.pardensity(mcmc.list, get.e0.parameter.traces.cs, chain.ids = chain.ids, par.names = par.names,
 		par.names.ext=bayesTFR:::get.full.par.names.cs(par.names, 
-								e0.parameter.names.cs.extended(country.obj$code)),
-		main.postfix=paste('(',country.obj$name,')', sep=''),
-		func.args=list(country.obj=country.obj),
-		burnin=burnin, dev.ncol=dev.ncol, ...)
+								e0.parameter.names.cs.extended(country.obj$code, 
+								                               opts = get.mcmc.meta(mcmc.l)$mcmc.options)),
+		main.postfix = paste0('(',country.obj$name,')'),
+		func.args = list(country.obj = country.obj),
+		burnin = burnin, dev.ncol = dev.ncol, ...)
 }
 
 .get.gamma.pars.bayesLife.prediction <- function(pred, ...) {
@@ -737,7 +757,7 @@ bdem.map.gvis.bayesLife.prediction <- function(pred, ...) {
 }
 
 par.names.for.worldmap.bayesLife.prediction <- function(pred, ...) {
-	return(e0.parameter.names.cs.extended())
+	return(e0.parameter.names.cs.extended(opts = get.mcmc.meta(pred)$mcmc.options))
 }
 
 get.data.for.worldmap.bayesLife.prediction <- function(pred, ...)

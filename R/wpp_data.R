@@ -1,5 +1,6 @@
-get.wpp.e0.data <- function(sex='M', start.year=1950, present.year=2015, wpp.year=2017, my.e0.file=NULL, 
-							my.locations.file=NULL, verbose=FALSE) {
+get.wpp.e0.data <- function(sex = 'M', start.year = 1950, present.year = 2015, 
+                            wpp.year = 2017, my.e0.file = NULL, include.hiv = FALSE,
+							my.locations.file = NULL, verbose = FALSE) {
 	sex <- toupper(sex)
 	if(sex != 'M' && sex != 'F')
 		stop('Allowed values for argument "sex" are "M" and "F".')
@@ -16,17 +17,36 @@ get.wpp.e0.data <- function(sex='M', start.year=1950, present.year=2015, wpp.yea
 	include <- locations$include
 	prediction.only <- locations$prediction.only
 
+	# include HIV/AIDS countries
+	if(include.hiv) {
+	    hiv.aids <- rep(FALSE, length(include))
+	    # find HIV/AIDS countries
+	    hivincl <- merge(data[,c("country_code", "include_code")], 
+	                     unique(locations$loc_data[,c("country_code", "include_code")]), 
+	                     all.x = TRUE, by = "country_code", sort = FALSE)
+	    hivincl$include_code <- ifelse(hivincl$include_code.x >= 0, 
+	                                   hivincl$include_code.x, hivincl$include_code.y)
+	    hiv.aids <- hivincl$include_code == 3
+	    include[hiv.aids] <- TRUE
+	    hiv.aids <- hiv.aids[include]
+	}
+	
 	data_incl <- data[include,]
 	nr_countries_estimation <- nrow(data_incl)
 	if(any(!is.na(prediction.only))) { # move prediction countries at the end of data
 		data_prediction <- data[prediction.only,]
 		data_incl <- rbind(data_incl, data_prediction)
+		if(include.hiv)
+		    hiv.aids <- c(hiv.aids, rep(FALSE, nrow(data_prediction)))
 	}
 	
 	LEXmatrix.regions <- bayesTFR:::get.observed.time.matrix.and.regions(
 							data_incl, loc_data, 
 							start.year=start.year, 
 							present.year=present.year)
+	if(include.hiv)
+    	LEXmatrix.regions$regions$hiv.pred <- hiv.aids
+	
 	if (verbose) 
 		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')
 
@@ -34,15 +54,28 @@ get.wpp.e0.data <- function(sex='M', start.year=1950, present.year=2015, wpp.yea
 									start.year, present.year)
 	if(!is.null(un.object$suppl.data.object) && verbose) 
 		cat('Dimension of the supplemental e0 matrix:', dim(LEXmatrixsuppl.regions$obs_matrix), '\n')
-									
-	return(list(e0.matrix=LEXmatrix.regions$obs_matrix, 
-				e0.matrix.all=LEXmatrix.regions$obs_matrix_all, 
-				regions=LEXmatrix.regions$regions, 
-				nr.countries.estimation=nr_countries_estimation,
-				suppl.data=bayesTFR:::.get.suppl.data.list(LEXmatrixsuppl.regions, matrix.name='e0.matrix')
+	suppl.data <- bayesTFR:::.get.suppl.data.list(LEXmatrixsuppl.regions, matrix.name='e0.matrix')
+	suppl.data$regionsDT <- create.regionsDT(suppl.data$regions)
+	return(list(e0.matrix = LEXmatrix.regions$obs_matrix, 
+				e0.matrix.all = LEXmatrix.regions$obs_matrix_all, 
+				regions = LEXmatrix.regions$regions, 
+				regionsDT = create.regionsDT(LEXmatrix.regions$regions),
+				nr.countries.estimation = nr_countries_estimation,
+				suppl.data = suppl.data
 				))
 }
 
+create.regionsDT <- function(reglist) {
+    # convert regions from list to data.table
+    if(is.null(reglist)) return(NULL)
+    dt <- as.data.table(reglist)
+    # convert factors to character
+    fcols <- colnames(dt)[sapply(dt,class) == "factor"]
+    if(length(fcols) > 0)
+        dt[,(fcols):= lapply(.SD, as.character), .SDcols = fcols]
+    return(dt)
+}
+    
 read.UNe0 <- function(sex, wpp.year, my.e0.file=NULL, ...) {
 	un.dataset <- paste('e0', sex, sep='')
 	un.suppl.dataset <- paste('e0', sex, '_supplemental', sep='')
