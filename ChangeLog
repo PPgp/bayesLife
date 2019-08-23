@@ -1,3 +1,7 @@
+4.0-3 
+-----
+Fixed reproducibility if running run.e0.mcmc in parallel (thanks to Budi Setiawan).
+
 4.0-2 (06/14/2019)
 -----
 Various arguments are now handled by options. Various internal functions changed in order to support it. The way priors are passed to run.e0.mcmc has changed - 
