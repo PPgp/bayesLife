@@ -1,7 +1,7 @@
 
 # import
 import(
-    bayesTFR, hett, coda, wpp2017, data.table
+    bayesTFR, hett, coda, wpp2019, data.table
 )
 importFrom(car, dataEllipse)
 importFrom("graphics", "abline", "grid", "legend", "lines", "plot", "points", "text")
