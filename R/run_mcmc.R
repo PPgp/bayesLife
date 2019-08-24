@@ -93,6 +93,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
                         ' already exists.\nSet replace.output=TRUE if you want to overwrite existing results.')
         unlink(output.dir, recursive=TRUE)
 	}
+    if(!is.null(seed)) set.seed(seed)
     dir.create(output.dir)
     old.opts <- e0mcmc.options()
     if(!is.null(mcmc.options))
@@ -111,8 +112,6 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
 		cat('Using configuration for ', e0.options("use"))
 		cat('Initialize simulation -', nr.chains, 'chain(s) in total.\n')
 	}
-	if(!is.null(seed)) set.seed(seed)
-
 	sex <- substr(match.arg(sex), 1, 1)
 	bayesLife.mcmc.meta <- e0.mcmc.meta.ini(sex=sex, nr.chains = nr.chains,
                                    		start.year = start.year, present.year = present.year, 
