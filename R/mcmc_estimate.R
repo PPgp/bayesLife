@@ -381,7 +381,8 @@ logdensity.Triangle.k.z.c <- function(x, mean, sd, dlx, low, up, par.idx, p1, p2
 	res <- .C("dologdensityTrianglekz", as.double(x), as.double(mean), as.double(sd), as.double(low), 
 				as.double(up), as.integer(par.idx), as.double(dlx), 
 				as.double(p1), as.double(p2), as.double(DLdata['e0',]), as.integer(ncol(DLdata)), 
-				as.double(DLdata['dct',]), as.double(omega*DLdata['loess',]), logdens=logdens)
+				as.double(DLdata['dct',]), as.double(omega*DLdata['loess',]), logdens=logdens,
+				PACKAGE = "bayesLife")
 	return(res$logdens)	
 }
 
