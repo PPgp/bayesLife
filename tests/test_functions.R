@@ -178,7 +178,7 @@ test.existing.simulation <- function() {
 	pred <- get.e0.prediction(sim.dir)
 	s <- summary(pred, country='Japan')
 	stopifnot(s$nr.traj == 30)
-	stopifnot(all(dim(s$projections)==c(18,11)))
+	stopifnot(all(dim(s$projections)==c(17,11)))
 	# comment out if thinned mcmcs are not included in the package
 	#mb <- get.thinned.e0.mcmc(m, thin=2, burnin=30)
 	#s <- summary(mb, meta.only=TRUE)
