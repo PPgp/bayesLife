@@ -25,6 +25,8 @@ test.estimate.mcmc <- function(compression='None') {
     stopifnot(m$mcmc.list[[1]]$finished.iter == 10)
 	stopifnot(get.total.iterations(m$mcmc.list, 0) == 10)
 	stopifnot(m$meta$mcmc.options$buffer.size == 5)
+	ncountries <- nrow(get.countries.table(m))
+	stopifnot(ncountries == 180) # in include_2019 there are 180 default countries for e0 
 	test.ok(test.name)
 	
 	# continue MCMC
@@ -53,7 +55,7 @@ test.estimate.mcmc <- function(compression='None') {
 	stopifnot(spred$nr.traj == 20)
 	stopifnot(!is.element(903, pred$mcmc.set$regions$country_code))
 	stopifnot(all(dim(pred$joint.male$quantiles) == dim(pred$quantiles)))
-	stopifnot(dim(pred$joint.male$quantiles)[3] == 18)
+	stopifnot(dim(pred$joint.male$quantiles)[3] == 17)
 	npred <- dim(pred$e0.matrix.reconstructed)[2]
 	t <- e0.trajectories.table(pred, "Australia", pi=80, both.sexes=TRUE)
 	stopifnot(all(dim(t) == c(30, 3)))
@@ -71,7 +73,7 @@ test.estimate.mcmc <- function(compression='None') {
 	stopifnot(is.element(903, pred$mcmc.set$meta$regions$country_code))
 	stopifnot(!is.null(bayesTFR:::get.trajectories(pred, 903)$trajectories))
 	stopifnot(all(dim(pred$joint.male$quantiles) == dim(pred$quantiles)))
-	stopifnot(dim(pred$joint.male$quantiles)[1] == 180)
+	stopifnot(dim(pred$joint.male$quantiles)[1] == (ncountries + 2))
 	test.ok(test.name)
     
 	test.name <- 'shifting the median'
@@ -82,8 +84,8 @@ test.estimate.mcmc <- function(compression='None') {
     e0.median.shift(sim.dir, country=country, shift=5.3, from=2051, to=2080)
 	shifted.pred <- get.e0.prediction(sim.dir)
 	shifted.projs <- summary(shifted.pred, country=country)$projections
-	stopifnot(all(projs[9:14,c(1,3:dim(projs)[2])]+5.3 == shifted.projs[9:14,c(1,3:dim(projs)[2])]))
-	stopifnot(all(projs[c(1:8, 15:18),c(1,3:dim(projs)[2])] == shifted.projs[c(1:8, 15:18),
+	stopifnot(all(projs[8:13,c(1,3:dim(projs)[2])]+5.3 == shifted.projs[8:13,c(1,3:dim(projs)[2])]))
+	stopifnot(all(projs[c(1:7, 14:17),c(1,3:dim(projs)[2])] == shifted.projs[c(1:7, 14:17),
 								c(1,3:dim(projs)[2])]))
 	test.ok(test.name)
 	
@@ -97,11 +99,11 @@ test.estimate.mcmc <- function(compression='None') {
 	test.name <- 'setting the median'
 	start.test(test.name)
 	expert.values <- c(90.5, 91, 93.8)
-    shift <- expert.values - pred$quantiles[country.idx, '0.5',3:5] # Netherlands has index 106
+    shift <- expert.values - pred$quantiles[country.idx, '0.5',2:4] # Netherlands has index 106
 	mod.pred <- e0.median.set(sim.dir, country=country, values=expert.values, years=2024)
 	mod.projs <- summary(mod.pred, country=country)$projections
-	stopifnot(all(mod.projs[3:5, c(1,3:dim(projs)[2])]==projs[3:5, c(1,3:dim(projs)[2])]+shift))
-	stopifnot(all(mod.projs[c(1:2,6:18), c(1,3:dim(projs)[2])]==projs[c(1:2,6:18), c(1,3:dim(projs)[2])]))
+	stopifnot(all(mod.projs[2:4, c(1,3:dim(projs)[2])]==projs[2:4, c(1,3:dim(projs)[2])]+shift))
+	stopifnot(all(mod.projs[c(1,5:17), c(1,3:dim(projs)[2])]==projs[c(1,5:17), c(1,3:dim(projs)[2])]))
 	test.ok(test.name)
 	
 	test.name <- 'converting trajectories'
@@ -176,7 +178,7 @@ test.existing.simulation <- function() {
 	pred <- get.e0.prediction(sim.dir)
 	s <- summary(pred, country='Japan')
 	stopifnot(s$nr.traj == 30)
-	stopifnot(all(dim(s$projections)==c(18,11)))
+	stopifnot(all(dim(s$projections)==c(17,11)))
 	# comment out if thinned mcmcs are not included in the package
 	#mb <- get.thinned.e0.mcmc(m, thin=2, burnin=30)
 	#s <- summary(mb, meta.only=TRUE)
@@ -434,7 +436,7 @@ test.imputation <- function() {
 	test.name <- 'running projections with imputation'
 	start.test(test.name)
 	pred <- e0.predict(m, burnin=0, verbose=FALSE)
-	stopifnot(length(pred$joint.male$meta.changes$Tc.index[[cindex]])==13)
+	stopifnot(length(pred$joint.male$meta.changes$Tc.index[[cindex]])==14)
 	spred <- summary(pred)
 	stopifnot(spred$nr.traj == 5)	
 	test.ok(test.name)
@@ -525,4 +527,35 @@ test.my.locations.extra <- function() {
 	unlink(fdata)
 	unlink(sim.dir, recursive=TRUE)
 	test.ok(test.name)
+}
+
+test.reproduce.simulation <- function() {
+    sim.dir <- tempfile()
+    test.name <- 'reproducing simulation'
+    start.test(test.name)
+    seed <- 1234
+    
+    m1 <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, seed = seed, verbose = FALSE)
+    res1 <- summary(m1)$statistics
+    m2 <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, seed = seed, replace.output = TRUE, verbose = FALSE)
+    res2 <- summary(m2)$statistics
+    stopifnot(all(res1 == res2))
+    
+    m3 <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, replace.output = TRUE) # no seed
+    res3 <- summary(m3)$statistics
+    stopifnot(!all(res3 == res2))
+    
+    # parallel
+    m1p <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, seed = seed, replace.output = TRUE, parallel = TRUE, ft_verbose = FALSE)
+    res1p <- summary(m1p)$statistics
+    m2p <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, seed = seed, replace.output = TRUE, parallel = TRUE, ft_verbose = FALSE)
+    res2p <- summary(m2p)$statistics
+    stopifnot(all(res1p == res2p))
+    
+    m3p <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, replace.output = TRUE, parallel = TRUE, ft_verbose = TRUE) # no seed
+    res3p <- summary(m3p)$statistics
+    stopifnot(!all(res3p == res2p))
+
+    test.ok(test.name)
+    unlink(sim.dir, recursive=TRUE)
 }

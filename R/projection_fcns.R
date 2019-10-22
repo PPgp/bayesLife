@@ -13,28 +13,7 @@ generate.e0.trajectory <- function(x, l.start, kap, n.proj = 11, p1 = 9, p2 = 9,
 
 get.nr.traj.burnin.from.diagnostics <- function(sim.dir, verbose = FALSE) {
     diag.list <- get.e0.convergence.all(sim.dir)
-    ldiag <- length(diag.list)
-    if (ldiag == 0) stop('There is no diagnostics available. Use manual settings of "nr.traj" or "thin".')
-    use.nr.traj <- use.burnin <- rep(NA, ldiag)
-    for(idiag in 1:ldiag) {
-        if (bayesTFR::has.mcmc.converged(diag.list[[idiag]])) {
-            use.nr.traj[idiag] <- diag.list[[idiag]]$use.nr.traj
-            use.burnin[idiag] <- diag.list[[idiag]]$burnin
-        }
-    }
-    if(all(is.na(use.nr.traj)))
-        stop('There is no diagnostics indicating convergence of the MCMCs. Use manual settings of "nr.traj" or "thin".')
-    # Try to select those that suggest nr.traj >= 2000 (take the minimum of those)
-    traj.is.notna <- !is.na(use.nr.traj)
-    larger2T <- traj.is.notna & use.nr.traj >= 2000
-    nr.traj.idx <- if(sum(larger2T) > 0) 
-                        (1:ldiag)[larger2T][which.min(use.nr.traj[larger2T])] 
-                    else (1:ldiag)[traj.is.notna][which.max(use.nr.traj[traj.is.notna])]
-    nr.traj <- use.nr.traj[nr.traj.idx]
-    burnin <- use.burnin[nr.traj.idx]
-    if(verbose)
-        cat('\nUsing convergence settings: nr.traj=', nr.traj, ', burnin=', burnin, '\n')
-    return(c(nr.traj = nr.traj, burnin = burnin))
+    return(bayesTFR:::.find.burnin.nr.traj.from.diag(diag.list))
 }
 
 e0.predict <- function(mcmc.set = NULL, end.year = 2100, 
@@ -54,8 +33,8 @@ e0.predict <- function(mcmc.set = NULL, end.year = 2100,
 		# Get argument settings from existing convergence diagnostics
 	if(use.diagnostics) {
 	    diagpars <- get.nr.traj.burnin.from.diagnostics(mcmc.set$meta$output.dir, verbose = verbose)
-		nr.traj <- diagpars$nr.traj
-		burnin <- diagpars$burnin
+		nr.traj <- diagpars['nr.traj']
+		burnin <- diagpars['burnin']
 	}
 	pred <- make.e0.prediction(mcmc.set, end.year = end.year,  
 					replace.output = replace.output,  

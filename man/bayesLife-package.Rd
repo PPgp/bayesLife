@@ -13,9 +13,8 @@ using a Bayesian hierarchical model and the United Nations demographic time seri
 \tabular{ll}{
 Package: \tab bayesLife\cr
 Type: \tab Package\cr
-Version: \tab 4.0-2\cr
-Date: \tab 2019-04-14\cr
-License: \tab GPL (>= 2)\cr
+Version: \tab 4.1-0\cr
+Date: \tab 2019-10-17\cr
 URL: \tab \url{https://bayespop.csss.washington.edu}\cr
 }
 The projection follows a method developed by Chunn et al (2010, 2013).  It uses historical data provided by the United Nations to simulate a posterior distribution of the life expectancy for all countries in the world simultaneously. 
@@ -41,7 +40,7 @@ For MCMC diagnostics, function \link{e0.coda.list.mcmc} creates an object of typ
 
 Existing simulation results can be accessed using the \link{get.e0.mcmc} function.  An existing prediction can be accessed via \link{get.e0.prediction}.
 
-Historical data are taken from one of the packages \pkg{wpp2017} (default), \pkg{wpp2015}, \pkg{wpp2012} or \pkg{wpp2010}, depending on users settings.
+Historical data are taken from one of the packages \pkg{wpp2019} (default), \pkg{wpp2017}, \pkg{wpp2015}, \pkg{wpp2012} or \pkg{wpp2010}, depending on users settings.
 
 }
 

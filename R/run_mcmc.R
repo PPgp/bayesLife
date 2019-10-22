@@ -69,7 +69,7 @@ match.ini.to.chains <- function(nr.chains) {
 run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000, 
 						output.dir = file.path(getwd(), 'bayesLife.output'), 
                         thin = 10, replace.output = FALSE,
-                        start.year = 1873, present.year = 2015, wpp.year = 2017,
+                        start.year = 1873, present.year = 2020, wpp.year = 2019,
                         my.e0.file = NULL, my.locations.file = NULL, 
 						constant.variance = FALSE, seed = NULL, parallel = FALSE, 
 						nr.nodes = nr.chains, compression.type = 'None',
@@ -93,6 +93,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
                         ' already exists.\nSet replace.output=TRUE if you want to overwrite existing results.')
         unlink(output.dir, recursive=TRUE)
 	}
+    if(!is.null(seed)) set.seed(seed)
     dir.create(output.dir)
     old.opts <- e0mcmc.options()
     if(!is.null(mcmc.options))
@@ -111,8 +112,6 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
 		cat('Using configuration for ', e0.options("use"))
 		cat('Initialize simulation -', nr.chains, 'chain(s) in total.\n')
 	}
-	if(!is.null(seed)) set.seed(seed)
-
 	sex <- substr(match.arg(sex), 1, 1)
 	bayesLife.mcmc.meta <- e0.mcmc.meta.ini(sex=sex, nr.chains = nr.chains,
                                    		start.year = start.year, present.year = present.year, 
@@ -127,7 +126,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
 
 	if (parallel) { # run chains in parallel
 		chain.set <- bayesTFR:::bDem.performParallel(nr.nodes, 1:nr.chains, mcmc.run.chain.e0, 
-                                     initfun = mcoptions$parallel.init.function, 
+                                     initfun = mcoptions$parallel.init.function, seed = seed,
                                      meta = bayesLife.mcmc.meta, 
                                      thin = thin, iter = iter, 
                                      starting.values = starting.values,                                     
@@ -187,7 +186,6 @@ mcmc.run.chain.e0 <- function(chain.id, meta, thin = 1, iter = 100, starting.val
 	cat('\n\nChain nr.', chain.id, '\n')
     if (verbose) 
     	cat('************\n')
-
 	this.sv <- list()
 	for(var in names(starting.values)) {
 		this.sv[[var]] <- if (is.list(starting.values[[var]])) sapply(starting.values[[var]], function(x) x[chain.id])
@@ -201,7 +199,6 @@ mcmc.run.chain.e0 <- function(chain.id, meta, thin = 1, iter = 100, starting.val
         cat('Store initial values into ', mcmc$output.dir, '\n')
     }
 	store.e0.mcmc(mcmc, append = FALSE, flush.buffer = TRUE, verbose = verbose)
-
 	if (verbose) 
     	cat('Start sampling -', mcmc$iter, 'iterations in total.\n')
 	mcmc <- do.call(meta$mcmc.options$estimation.function, 
@@ -459,8 +456,8 @@ e0.mcmc.run.chain.extra <- function(chain.id, mcmc.list, countries, posterior.sa
 }
 
 
-e0.mcmc.meta.ini <- function(sex = "F", nr.chains = 1, start.year = 1950, present.year = 2015, 
-								wpp.year = 2017, my.e0.file = NULL, my.locations.file = NULL,
+e0.mcmc.meta.ini <- function(sex = "F", nr.chains = 1, start.year = 1950, present.year = 2020, 
+								wpp.year = 2019, my.e0.file = NULL, my.locations.file = NULL,
 								output.dir = file.path(getwd(), 'bayesLife.output'),
 								mcmc.options = NULL, ..., verbose=FALSE) {
 	mcmc.input <- c(list(sex = sex, nr.chains = nr.chains,
@@ -496,6 +493,7 @@ e0.mcmc.ini <- function(chain.id, mcmc.meta, iter = 100, ini.values = NULL,
     }                            
 	nr_countries <- mcmc.meta$nr.countries
     if (!exists(".Random.seed")) runif(1)
+	
 	ini.values[["Triangle"]] <- scale.Triangle(ini.values[["Triangle"]])
 	mclist <- list(ini.values = ini.values)
 	for(par in names(opts$world.parameters)) {

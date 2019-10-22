@@ -1,6 +1,17 @@
+4.1-0 (10/17/2019)
+-----
+Defaults are now set to use the wpp2019 data.
+
+License file added.
+
+4.0-3 (08/23/2019)
+-----
+Fixed reproducibility if running run.e0.mcmc in parallel (thanks to Budi Setiawan).
+
 4.0-2 (06/14/2019)
 -----
-Various arguments are now handled by options. Various internal functions changed in order to support it. The way priors are passed to run.e0.mcmc has changed - 
+Various arguments are now handled by options. Various internal functions changed in order to support it. 
+The way priors are passed to run.e0.mcmc has changed - 
 see ?run.e0.mcmc and ?e0options()
 
 Support for wpp2019 added.

@@ -2,7 +2,7 @@ library(bayesLife)
 source('test_functions.R')
 
 cran <- TRUE
-for(wpp.year in c(2010, 2012, 2015, 2017))
+for(wpp.year in c(2010, 2012, 2015, 2017, 2019))
     test.get.wpp.data(wpp.year)
 test.existing.simulation()
 test.e0trajectories()
@@ -25,4 +25,5 @@ if(!cran) {
 	test.run.mcmc.simulation.auto.parallel()
 	test.imputation()
 	test.my.locations.extra()
+	test.reproduce.simulation()
 }
