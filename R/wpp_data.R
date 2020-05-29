@@ -1,6 +1,6 @@
 get.wpp.e0.data <- function(sex = 'M', start.year = 1950, present.year = 2015, 
                             wpp.year = 2017, my.e0.file = NULL, include.hiv = FALSE,
-							my.locations.file = NULL, verbose = FALSE) {
+							my.locations.file = NULL, annual = FALSE, verbose = FALSE) {
 	sex <- toupper(sex)
 	if(sex != 'M' && sex != 'F')
 		stop('Allowed values for argument "sex" are "M" and "F".')
@@ -8,7 +8,8 @@ get.wpp.e0.data <- function(sex = 'M', start.year = 1950, present.year = 2015,
 	# set data and match with areas
 	########################################
 	un.object <- read.UNe0(sex=sex, wpp.year=wpp.year, my.e0.file=my.e0.file, 
-								present.year=present.year, verbose=verbose)
+								present.year=present.year, annual = annual,
+								verbose=verbose)
 	data <- un.object$data.object$data
 	# get region and area data
 	locations <- bayesTFR:::read.UNlocations(data, wpp.year=wpp.year, my.locations.file=my.locations.file,
@@ -43,17 +44,19 @@ get.wpp.e0.data <- function(sex = 'M', start.year = 1950, present.year = 2015,
 	LEXmatrix.regions <- bayesTFR:::get.observed.time.matrix.and.regions(
 							data_incl, loc_data, 
 							start.year=start.year, 
-							present.year=present.year)
+							present.year=present.year, annual = annual)
 	if(include.hiv)
     	LEXmatrix.regions$regions$hiv.pred <- hiv.aids
 	
 	if (verbose) 
 		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')
 
-	LEXmatrixsuppl.regions <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, LEXmatrix.regions, loc_data, 
+	if(!annual) {
+	    LEXmatrixsuppl.regions <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, LEXmatrix.regions, loc_data, 
 									start.year, present.year)
-	if(!is.null(un.object$suppl.data.object) && verbose) 
-		cat('Dimension of the supplemental e0 matrix:', dim(LEXmatrixsuppl.regions$obs_matrix), '\n')
+	    if(!is.null(un.object$suppl.data.object) && verbose) 
+		    cat('Dimension of the supplemental e0 matrix:', dim(LEXmatrixsuppl.regions$obs_matrix), '\n')
+	} else LEXmatrixsuppl.regions <- NULL
 	suppl.data <- bayesTFR:::.get.suppl.data.list(LEXmatrixsuppl.regions, matrix.name='e0.matrix')
 	suppl.data$regionsDT <- create.regionsDT(suppl.data$regions)
 	return(list(e0.matrix = LEXmatrix.regions$obs_matrix, 
@@ -85,10 +88,11 @@ read.UNe0 <- function(sex, wpp.year, my.e0.file=NULL, ...) {
 	return(list(data.object=data, suppl.data.object=suppl.data))
 }
 
-set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, my.locations.file=NULL, verbose=FALSE) {
+set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, my.locations.file=NULL, 
+                             annual = FALSE, verbose=FALSE) {
 	#'countries' is a vector of country or region codes 
 	un.object <- read.UNe0(sex=meta$sex, wpp.year=meta$wpp.year, my.e0.file=my.e0.file, 
-							present.year=meta$present.year, verbose=verbose)
+							present.year=meta$present.year, annual = annual, verbose=verbose)
 	data <- un.object$data.object
 	extra.wpp <- bayesTFR:::.extra.matrix.regions(data=data, countries=countries, meta=meta, 
 							package="bayesLife", my.locations.file=my.locations.file, verbose=verbose)
@@ -115,7 +119,7 @@ get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, my.loc
 	# set data and match with areas
 	########################################
 	un.object <- read.UNe0(sex=sex, wpp.year=meta$wpp.year, present.year=meta$present.year, 
-						my.e0.file=my.e0.file, verbose=verbose)
+						my.e0.file=my.e0.file, annual = meta$annual.simulation, verbose=verbose)
 	data <- un.object$data.object$data
 	# get region and area data
 	locations <- bayesTFR:::read.UNlocations(data, wpp.year=meta$wpp.year, 
