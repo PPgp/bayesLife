@@ -11,6 +11,7 @@ get.e0.mcmc <- function(sim.dir = file.path(getwd(), 'bayesLife.output'),
 	}
 	load(file = mcmc.file.path)
 	bayesLife.mcmc.meta$output.dir <- normalizePath(sim.dir)
+	if(is.null(bayesLife.mcmc.meta$annual.simulation)) bayesLife.mcmc.meta$annual.simulation <- FALSE
 	if(is.null(bayesLife.mcmc.meta$mcmc.options)) {
 	    bayesLife.mcmc.meta <- .convert.meta.from.legacy.form(bayesLife.mcmc.meta)
 	}

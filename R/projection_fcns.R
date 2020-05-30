@@ -122,9 +122,10 @@ e0.prediction.setup <- function(...) {
     if(is.null(setup$thin)) setup$thin <- NA # this is because thin is a method in coda and the naming clashes within the setup expression
     setup <- within(setup, {
         meta <- mcmc.set$meta
-        present.year <- if(is.null(start.year)) meta$present.year else start.year - 5
-        nr_project <- length(seq(present.year+5, end.year, by=5))
-        cat('\nPrediction from', present.year+5, 'until', end.year, '(i.e.', nr_project, 'projections)\n\n')
+        year.step <- if(meta$annual.simulation) 1 else 5
+        present.year <- if(is.null(start.year)) meta$present.year else start.year - year.step
+        nr_project <- length(seq(present.year+year.step, end.year, by=year.step))
+        cat('\nPrediction from', present.year+year.step, 'until', end.year, '(i.e.', nr_project, 'projections)\n\n')
     
         total.iter <- get.total.iterations(mcmc.set$mcmc.list, burnin)
         stored.iter <- get.stored.mcmc.length(mcmc.set$mcmc.list, burnin)
