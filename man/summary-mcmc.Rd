@@ -12,11 +12,11 @@ Summary of an object \code{\link{bayesLife.mcmc.set}} or \code{\link{bayesLife.m
 }
 \usage{
 \method{summary}{bayesLife.mcmc.set}(object, country = NULL, chain.id = NULL, 
-    par.names = NULL, par.names.cs = NULL, 
-    meta.only = FALSE, thin = 1, burnin = 0, \dots)
+    par.names = NULL, par.names.cs = NULL, meta.only = FALSE, 
+    thin = 1, burnin = 0, \dots)
 	
 \method{summary}{bayesLife.mcmc}(object, country = NULL,
-    par.names = NULL, par.names.cs = NULL, \dots)
+    par.names = NULL, par.names.cs = NULL, thin = 1, burnin = 0, \dots)
 }
 
 \arguments{
@@ -28,7 +28,7 @@ Summary of an object \code{\link{bayesLife.mcmc.set}} or \code{\link{bayesLife.m
   \item{meta.only}{Logical. If it is \code{TRUE}, only meta information of the simulation is included.}
   \item{thin}{Thinning interval. Only used if larger than the \code{thin} argument used in \code{\link{run.e0.mcmc}}.}
   \item{burnin}{Number of iterations to be discarded from the beginning of each chain before computing the summary.}
-  \item{\dots}{For \code{summary.bayesLife.mcmc}, arguments \code{thin} and \code{burnin} can be passed here. In addition, both functions accept arguments passed to the \code{\link[coda]{summary.mcmc}} function of the \pkg{coda} package.}
+  \item{\dots}{Additional arguments passed to the \code{\link[coda]{summary.mcmc}} function of the \pkg{coda} package.}
 }
 
 \author{

@@ -536,24 +536,24 @@ test.reproduce.simulation <- function() {
     seed <- 1234
     
     m1 <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, seed = seed, verbose = FALSE)
-    res1 <- summary(m1)$statistics
+    res1 <- summary(m1)$results$statistics
     m2 <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, seed = seed, replace.output = TRUE, verbose = FALSE)
-    res2 <- summary(m2)$statistics
+    res2 <- summary(m2)$results$statistics
     stopifnot(all(res1 == res2))
     
     m3 <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, replace.output = TRUE) # no seed
-    res3 <- summary(m3)$statistics
+    res3 <- summary(m3)$results$statistics
     stopifnot(!all(res3 == res2))
     
     # parallel
     m1p <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, seed = seed, replace.output = TRUE, parallel = TRUE, ft_verbose = FALSE)
-    res1p <- summary(m1p)$statistics
+    res1p <- summary(m1p)$results$statistics
     m2p <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, seed = seed, replace.output = TRUE, parallel = TRUE, ft_verbose = FALSE)
-    res2p <- summary(m2p)$statistics
+    res2p <- summary(m2p)$results$statistics
     stopifnot(all(res1p == res2p))
     
     m3p <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, replace.output = TRUE, parallel = TRUE, ft_verbose = TRUE) # no seed
-    res3p <- summary(m3p)$statistics
+    res3p <- summary(m3p)$results$statistics
     stopifnot(!all(res3p == res2p))
 
     test.ok(test.name)
