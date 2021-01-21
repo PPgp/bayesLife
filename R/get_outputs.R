@@ -269,11 +269,20 @@ get.mcmc.meta.bayesLife.prediction <- function(meta, ...) return(meta$mcmc.set$m
 
 
 summary.bayesLife.mcmc <- function(object, country = NULL, 
-								par.names = NULL, par.names.cs = NULL, ...) {
+								par.names = NULL, par.names.cs = NULL, thin = 1, burnin = 0, ...) {
+    res <- list()
+    class(res) <- "summary.bayesTFR.mcmc"
     if(missing(par.names)) par.names <- e0.parameter.names(get.mcmc.meta(object)$mcmc.options)
     if(missing(par.names.cs)) par.names.cs <- e0.parameter.names.cs(get.mcmc.meta(object)$mcmc.options)
-	return (bayesTFR:::summary.bayesTFR.mcmc(object, country = country,
-				par.names = par.names, par.names.cs = par.names.cs, ...))
+    if (!is.null(country)) {
+        country.obj <- get.country.object(country, object$meta)
+        if(is.null(country.obj$name)) stop("Country ", country, " not found.")
+        res$country.name <- country.obj$name
+        country <- country.obj$code
+    } 
+    res$results <- summary(coda.mcmc(object, country=country, par.names=par.names,
+                                     par.names.cs=par.names.cs, thin=thin, burnin=burnin), ...)
+	return(res)
 }
 
 summary.bayesLife.mcmc.set <- function(object, country=NULL, chain.id=NULL, 
@@ -283,39 +292,90 @@ summary.bayesLife.mcmc.set <- function(object, country=NULL, chain.id=NULL,
     if(missing(par.names)) par.names <- e0.parameter.names(get.mcmc.meta(object)$mcmc.options)
     if(missing(par.names.cs) && !is.null(country)) par.names.cs <- e0.parameter.names.cs(get.mcmc.meta(object)$mcmc.options)
 
-	cat('\nSimulation:', get.sex.label(object$meta), 'life expectancy')
-	cat('\nWPP:', object$meta$wpp.year)
-	cat('\nInput data: e0 for period', object$meta$start.year, '-', object$meta$present.year,'\n')
-	
-	cat('\nMCMC parameters estimated for', object$meta$nr.countries, 'countries.')
-	cat('\nHyperparameters estimated using', object$meta$nr.countries.estimation, 'countries.')
-	cat('\n')
+	res <- list(meta = summary(object$meta))
+	class(res) <- "summary.bayesLife.mcmc.set"
 	if(meta.only) {
-		get.iter <- function(x) x$finished.iter
-		res <- list(nr.chains=object$meta$nr.chains, 
-					iters=sapply(object$mcmc.list, get.iter),
-					thin=object$mcmc.list[[1]]$thin)
-		class(res) <- 'summary.bayesLife.mcmc.set.meta'
-
-		return(res)
-	} 
-	if (!is.null(chain.id))
-		return(summary(object$mcmc.list[[chain.id]], country = country, 
-		               par.names = par.names, par.names.cs = par.names.cs, 
-		               thin = thin, burnin = burnin, ...))
-	if (!is.null(country)) {
-		country.obj <- get.country.object(country, object$meta)
-		if(is.null(country.obj$name)) stop("Country ", country, " not found.")
-		cat('\nCountry:', country.obj$name, '\n')
-		country <- country.obj$code
+	    res$chain.info <- bayesTFR:::chain.info(object)
+	    return(res)
 	}
-	summary(coda.list.mcmc(object, country = country, par.names = par.names,
+	if (!is.null(chain.id)) {
+	    res$mcmc <- summary(object$mcmc.list[[chain.id]], country = country, 
+	                        par.names = par.names, par.names.cs = par.names.cs, 
+	                        thin = thin, burnin = burnin, ...)
+        return(res)
+	}
+	if (!is.null(country)) {
+	    country.obj <- get.country.object(country, object$meta)
+	    if(is.null(country.obj$name)) stop("Country ", country, " not found.")
+	    res$country.name <- country.obj$name
+	    country <- country.obj$code
+	}
+	res$results <- summary(coda.list.mcmc(object, country = country, par.names = par.names,
 							par.names.cs = par.names.cs, thin = thin, 
 							burnin = burnin), ...)
+	return(res)
 }
 
-print.summary.bayesLife.mcmc.set.meta <- function(x, ...) 
-    return(bayesTFR:::print.summary.bayesTFR.mcmc.set.meta(x, ...))
+summary.bayesLife.mcmc.meta <- function(object, ...) {
+    res <- list(sex.label = get.sex.label(object),
+                est.period = paste(object$start.year, object$present.year, sep = '-'),
+                nr.countries = object$nr.countries,
+                nr.countries.est = object$nr.countries.estimation,
+                wpp.year = object$wpp.year,
+                annual = if(!is.null(object$annual.simulation)) object$annual.simulation else FALSE
+                )
+    class(res) <- "summary.bayesLife.mcmc.meta"
+    return(res)
+}
+
+print.summary.bayesLife.mcmc.meta <- function(x, ...) {
+    cat('\nSimulation:', x$sex.label, 'life expectancy')
+    cat('\nNumber of countries:', x$nr.countries)
+    cat('\nHyperparameters estimated using', x$nr.countries.est, 'countries.')
+    cat('\nWPP:', x$wpp.year)
+    cat('\nInput data: e0 for period', x$est.period)
+    cat('\nTime interval: ')
+    if(x$annual) cat('annual') else cat('5-year') 
+    cat('\n')
+}
+
+print.summary.bayesLife.mcmc.set <- function(x, ...) {
+    print(x$meta)
+    if(!is.null(x$chain.info)) bayesTFR:::print.summary.chain.info(x$chain.info)
+    if(!is.null(x$mcmc)) print(x$mcmc)
+    if(!is.null(x$country.name)){
+        cat('\nCountry:', x$country.name, '\n')
+        if (is.null(x$results))
+            cat('\tnot used for estimation.\n')
+    }
+    if(!is.null(x$results)) print(x$results)
+}
+
+print.bayesLife.mcmc <- function(x, ...) {
+    print(summary(x, ...))
+}
+
+print.summary.bayesLife.mcmc <- function(x, ...) {
+    if(!is.null(x$country.name)){
+        cat('\nCountry:', x$country.name, '\n')
+        if (is.null(x$results))
+            cat('\tnot used for estimation.\n')
+    }
+    if(!is.null(x$results))
+        print(x$results)
+}
+
+print.bayesLife.mcmc.set <- function(x, ...) {
+    print(summary(x, ...))
+}
+
+print.bayesLife.mcmc.meta <- function(x, ...) {
+    print(summary(x, ...))
+}
+
+print.bayesLife.prediction <- function(x, ...) {
+    print(summary(x, ...))
+}
 
 summary.bayesLife.prediction <- function(object, country = NULL, compact = TRUE, ...) {
 	res <- bayesTFR:::get.prediction.summary.data(object, 
@@ -345,6 +405,9 @@ print.summary.bayesLife.prediction <- function(x, digits = 3, ...) {
 		print(x$projections, digits=digits, ...)
 	}
 }
+
+
+
 
 summary.bayesLife.convergence <- function(object, expand=FALSE, ...) {
 	return(bayesTFR:::summary.bayesTFR.convergence(object, expand=expand, ...))
