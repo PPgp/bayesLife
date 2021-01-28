@@ -44,7 +44,7 @@ get.wpp.e0.data <- function(sex = 'M', start.year = 1950, present.year = 2015,
 	LEXmatrix.regions <- bayesTFR:::get.observed.time.matrix.and.regions(
 							data_incl, loc_data, 
 							start.year=start.year, 
-							present.year=present.year, annual = annual)
+							present.year=present.year, annual = annual, my.tfr.file = !is.null(my.e0.file))
 	if(include.hiv)
     	LEXmatrix.regions$regions$hiv.pred <- hiv.aids
 	

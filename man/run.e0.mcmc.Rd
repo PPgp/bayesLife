@@ -12,7 +12,7 @@ Runs (or continues running) MCMCs for simulating the life expectancy for all cou
 \usage{
 run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 160000, 
     output.dir = file.path(getwd(), "bayesLife.output"), 
-    thin = 10, replace.output = FALSE, 
+    thin = 10, replace.output = FALSE, annual = FALSE,
     start.year = 1873, present.year = 2020, wpp.year = 2019, 
     my.e0.file = NULL, my.locations.file = NULL, constant.variance = FALSE, 
     seed = NULL, parallel = FALSE, nr.nodes = nr.chains, compression.type = 'None',
@@ -31,6 +31,7 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{output.dir}{Directory which the simulation output should be written into.}
   \item{thin}{Thinning interval between consecutive observations to be stored on disk.}
   \item{replace.output}{If \code{TRUE}, existing outputs in \code{output.dir} will be replaced by results of this simulation.}
+  \item{annual}{If \code{TRUE}, the model will be trained based on annual data. in such a case, argument \code{my.e0.file} must be used to provide the annual observed data.}
   \item{start.year}{Start year for using historical data.}
   \item{present.year}{End year for using historical data.}
   \item{wpp.year}{Year for which WPP data is used. The functions loads a package called \pkg{wpp}\eqn{x} where \eqn{x} is the \code{wpp.year} and uses the \code{\link[wpp2019]{e0}*} datasets.}
@@ -56,7 +57,9 @@ The function \code{run.e0.mcmc} creates an object of class \code{\link{bayesLife
 Using the function \code{continue.e0.mcmc} one can continue simulating an existing MCMCs by \code{iter} iterations for either all or selected chains. The global options used for generating the existing MCMCs will be used. Only the \code{auto.conf} option can be overwritten by passing the new value as an argument.
 
 The function loads observed data (further denoted as WPP dataset), depending on the specified sex,  from the \code{\link[wpp2019]{e0F}} (\code{\link[wpp2019]{e0M}}) and \code{\link[wpp2019]{e0F_supplemental}} (\code{\link[wpp2019]{e0M_supplemental}}) datasets in a \pkg{wpp}\eqn{x} package where \eqn{x} is the \code{wpp.year}. It is then merged with the  \code{\link{include}} dataset that corresponds to the same \code{wpp.year}. The argument \code{my.e0.file} can be used to overwrite those default data. Such a file can include a subset of countries contained in the WPP dataset, as well as a set of new countries. In the former case,
-  	the function replaces the corresponding country data from the WPP dataset with values in this file. Only columns are replaced that match column names of the WPP dataset, and in addition, columns \sQuote{last.observed} and \sQuote{include_code} are used, if present. Countries are merged with WPP using the column \sQuote{country_code}. In addition, in order the countries to be included in the simulation, in both cases (whether they are included in the WPP dataset or not), they must be contained in the table of locations (\code{\link[wpp2019]{UNlocations}}). In addition, their corresponding \sQuote{include_code} must be set to 2. If the column \sQuote{include_code} is present in \code{my.e0.file}, its value overwrites the default include code, unless is -1.
+  	the function replaces the corresponding country data from the WPP dataset with values in this file. Only columns are replaced that match column names of the WPP dataset, and in addition, columns \sQuote{last.observed} and \sQuote{include_code} are used, if present. Countries are merged with WPP using the column \sQuote{country_code}. In addition, in order the countries to be included in the simulation, in both cases (whether they are included in the WPP dataset or not), they must be contained in the table of locations (\code{\link[wpp2019]{UNlocations}}). In addition, their corresponding \sQuote{include_code} must be set to 2. If the column \sQuote{include_code} is present in \code{my.e0.file}, its value overwrites the default include code, unless is -1. 
+  	
+If \code{annual} is \code{TRUE} the default WPP dataset is not used and the \code{my.e0.file} argument must provide the dataset to be used for estimation. Its time-related columns should be single years.
 
 The default UN table of locations mentioned above can be overwritten/extended by using a file passed as the \code{my.locations.file} argument. Such a file must have the same structure as the \code{\link[wpp2019]{UNlocations}} dataset. Entries in this file will overwrite corresponding entries in \code{\link[wpp2019]{UNlocations}} matched by the column \sQuote{country_code}. If there is no such entry in the default dataset, it will be appended. This option of appending new locations is especially useful in cases when \code{my.e0.file} contains new countries/regions that are not included in \code{\link[wpp2019]{UNlocations}}. In such a case, one must provide a \code{my.locations.file} with a definition of those countries/regions.
 
