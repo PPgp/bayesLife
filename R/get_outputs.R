@@ -137,6 +137,23 @@ get.e0.prediction <- function(mcmc=NULL, sim.dir=NULL, joint.male=FALSE, mcmc.di
 	return(pred)
 }
 
+get.rege0.prediction <- function(sim.dir, country = NULL, method = "ar1"){
+    dir <- file.path(sim.dir, paste0('subnat_', method))
+    if(!file.exists(dir)) stop("No subnational predictions in ", sim.dir)
+    cdirs <- list.files(dir, pattern='^c[0-9]+', full.names=FALSE)
+    if(length(cdirs)==0) stop("No subnational predictions in ", sim.dir)
+    if (!is.null(country)) {
+        cdirs <- cdirs[cdirs == paste0("c", country)]
+        if(length(cdirs)==0) stop("No subnational predictions for country ", country, " in ", sim.dir)
+        return(get.e0.prediction(sim.dir=file.path(dir, cdirs[1]), mcmc.dir=NA))
+    }
+    preds <- NULL
+    for (d in cdirs) 
+        preds[[sub("c", "", d)]] <- get.e0.prediction(sim.dir=file.path(dir, d), mcmc.dir=NA)
+    return(preds)
+}
+
+
 get.e0.convergence.all <- function(sim.dir=file.path(getwd(), 'bayesLife.output')) {
 	return(bayesTFR:::.do.get.convergence.all('e0', 'bayesLife', sim.dir=sim.dir))
 }

@@ -151,3 +151,30 @@ get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, my.loc
 				suppl.data=bayesTFR:::.get.suppl.data.list(LEXmatrixsuppl.regions, matrix.name='e0.matrix')
 				))
 }
+
+get.wpp.e0.subnat <- function(country, start.year=1950, present.year=2010, my.e0.file=NULL, annual = FALSE) {
+    data <- bayesTFR:::do.read.subnat.file(my.e0.file, present.year = present.year)
+    data <- data[data$country_code == country,]
+    locations <- bayesTFR:::create.sublocation.dataset(data)
+    loc_data <- locations$loc_data
+    include <- locations$include
+    prediction.only <- locations$prediction.only
+    
+    data_countries <- data[include | locations$prediction.only,]
+    nr_countries_estimation <- sum(include)
+    #stop("")
+    LEXmatrix.regions <- bayesTFR:::get.observed.time.matrix.and.regions(
+                                data_countries, loc_data, start.year = start.year, 
+                                present.year = present.year, annual = annual, 
+                                my.tfr.file = !is.null(my.e0.file),
+                                datacolnames=c(country.code='reg_code', country.name='name', reg.name='reg_name',
+                                               reg.code='NA', area.name='country', area.code='country_code'))
+    
+    return(list(e0.matrix = LEXmatrix.regions$obs_matrix, 
+                e0.matrix.all = LEXmatrix.regions$obs_matrix_all, 
+                regions = LEXmatrix.regions$regions, 
+                regionsDT = create.regionsDT(LEXmatrix.regions$regions),
+                nr.countries.estimation = nr_countries_estimation,
+                suppl.data = bayesTFR:::.get.suppl.data.list(NULL)
+            ))
+}
