@@ -704,6 +704,7 @@ e0.mcmc.meta.ini.subnat <- function(meta, country, start.year = 1950, present.ye
                              my.e0.file = my.e0.file, annual = annual.simulation)
     data$nr.countries <- ncol(data$e0.matrix)
     data$Tc.index <- .get.Tcindex(data$e0.matrix, cnames=data$regions$country_name, stop.if.less.than2 = FALSE)
+    data$subnat <- TRUE
     bounds <- .do.country.specific.ini(data$nr.countries, c(data, meta))
     this.meta <- c(data, bounds)
     for (item in names(meta))

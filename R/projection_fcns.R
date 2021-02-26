@@ -555,8 +555,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 		estimates <- e0.jmale.estimate(e0.pred$mcmc.set, verbose=verbose, 
 								my.e0.file=my.e0.file, my.locations.file=my.locations.file, ...)
 
-	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, 
-											my.locations.file=my.locations.file, verbose=verbose)
+	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, my.locations.file=my.locations.file, verbose=verbose)
 	e0m.data <- e0mwpp$e0.matrix
 	meta.changes <- list(sex='M', e0.matrix=e0m.data, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
 	meta.changes$Tc.index <- .get.Tcindex(meta.changes$e0.matrix, cnames=meta$regions$country_name)
@@ -645,7 +644,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 
 
 .do.jmale.predict <- function(e0.pred, joint.male, countries, gap.lim, #gap.lim.eq2, 
-								eq2.age.start=NULL, adj.factors = NULL, verbose=FALSE) {
+								eq2.age.start=NULL, adj.factors = NULL, verbose=FALSE, supress.warnings = FALSE) {
 	predict.one.trajectory <- function(Gprev, ftraj) {
 		mtraj <- rep(NA, length(ftraj))						
 		for(time in 1:length(ftraj)) {
@@ -686,10 +685,6 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	maxe0 <- if(is.null(eq2.age.start)) max(e0f.data) else eq2.age.start
 	e0m.data <- joint.male$e0.matrix.reconstructed
 	quantiles.to.keep <- as.numeric(dimnames(e0.pred$quantiles)[[2]])
-	first.year <- max(1953, as.integer(rownames(e0f.data)[1]))
-	if(first.year > 1953)
-		warning("Data for 1950-1955 not available. Projection of the gap model may not be correct.")
-	first.year <- as.character(first.year)
 	estimates <- joint.male$fit
 	W <- rep(1, e0.pred$nr.projections)
 	if(!is.null(adj.factors)) 
@@ -699,6 +694,10 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 		if(verbose)
 			cat('\ne0 male projection for country', icountry, country$name, 
  						'(code', country$code, ')')
+		first.year <- max(1953, as.integer(rownames(e0f.data[!is.na(e0f.data[,icountry]),, drop = FALSE])[1]))
+		if(first.year > 1953 && !supress.warnings)
+		    warning("Data for 1950-1955 not available. Projection of the gap model may not be correct.")
+		first.year <- as.character(first.year)
 		trajectoriesF <- bayesTFR:::get.trajectories(e0.pred, country$code)$trajectories
 		Mtraj <- matrix(NA, nrow=nrow(trajectoriesF), ncol=ncol(trajectoriesF))
 		#G1 <- e0f.data[Tc[icountry],icountry] - e0m.data[Tc[icountry],icountry]

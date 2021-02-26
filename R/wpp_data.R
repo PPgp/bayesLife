@@ -136,11 +136,14 @@ get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, my.loc
 	LEXmatrix.regions <- bayesTFR:::get.observed.time.matrix.and.regions(
 							data_incl, loc_data, 
 							start.year=meta$start.year, 
-							present.year=meta$present.year)
+							present.year=meta$present.year, annual = meta$annual, 
+							my.tfr.file = !is.null(my.e0.file))
 	if (verbose) 
 		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')
-	LEXmatrixsuppl.regions <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, LEXmatrix.regions, loc_data, 
+	if(is.null(meta$annual.simulation) || !meta$annual.simulation) {
+	    LEXmatrixsuppl.regions <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, LEXmatrix.regions, loc_data, 
 									meta$start.year, meta$present.year)
+	} else LEXmatrixsuppl.regions <- NULL
 	if(!is.null(un.object$suppl.data.object) && verbose) 
 		cat('Dimension of the supplemental e0 matrix:', dim(LEXmatrixsuppl.regions$obs_matrix), '\n')
 											
@@ -177,4 +180,34 @@ get.wpp.e0.subnat <- function(country, start.year=1950, present.year=2010, my.e0
                 nr.countries.estimation = nr_countries_estimation,
                 suppl.data = bayesTFR:::.get.suppl.data.list(NULL)
             ))
+}
+
+get.wpp.e0.subnat.joint <- function(country, meta, my.e0.file) {
+    data <- bayesTFR:::do.read.subnat.file(my.e0.file, present.year = meta$present.year)
+    data <- data[data$country_code == country,]
+    locations <- bayesTFR:::create.sublocation.dataset(data)
+    loc_data <- locations$loc_data
+    include <- c()
+    for (i in 1:length(meta$regions$country_code)) { # put regions into the same order as in meta
+        loc_index <- which(data$reg_code == meta$regions$country_code[i])
+        if(length(loc_index) <= 0) 
+            stop('Region ', meta$regions$country_code[i], ' not found.')
+        include <- c(include, loc_index)
+    }
+    data_countries <- data[include,]	
+    
+    LEXmatrix.regions <- bayesTFR:::get.observed.time.matrix.and.regions(
+        data_countries, loc_data, start.year = meta$start.year, 
+        present.year = meta$present.year, annual = meta$annual, 
+        my.tfr.file = !is.null(my.e0.file),
+        datacolnames=c(country.code='reg_code', country.name='name', reg.name='reg_name',
+                       reg.code='NA', area.name='country', area.code='country_code'))
+    
+    return(list(e0.matrix = LEXmatrix.regions$obs_matrix, 
+                e0.matrix.all = LEXmatrix.regions$obs_matrix_all, 
+                regions = LEXmatrix.regions$regions, 
+                regionsDT = create.regionsDT(LEXmatrix.regions$regions),
+                nr.countries.estimation = nrow(data_countries),
+                suppl.data = bayesTFR:::.get.suppl.data.list(NULL)
+    ))
 }
