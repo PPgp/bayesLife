@@ -644,9 +644,10 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 
 
 .do.jmale.predict <- function(e0.pred, joint.male, countries, gap.lim, #gap.lim.eq2, 
-								eq2.age.start=NULL, adj.factors = NULL, verbose=FALSE, supress.warnings = FALSE) {
+								eq2.age.start=NULL, adj.factors = NULL,
+								verbose=FALSE, supress.warnings = FALSE) {
 	predict.one.trajectory <- function(Gprev, ftraj) {
-		mtraj <- rep(NA, length(ftraj))						
+		mtraj <- rep(NA, length(ftraj))
 		for(time in 1:length(ftraj)) {
 			if(ftraj[time] <= maxe0) { # 1st part of Equation 3.1
 				Gtdeterm <- (estimates$eq1$coefficients[1] + # intercept
@@ -655,14 +656,14 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 				   			 estimates$eq1$coefficients['e0']*ftraj[time] +
 					   		 estimates$eq1$coefficients['e0d75']*max(0, ftraj[time]-75))
 				Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
-				while(Gt < gap.lim[1] || Gt > gap.lim[2]) 
+				while(Gt < min(Gprev, gap.lim[1]) || Gt > gap.lim[2]) 
 					Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
 			} else {  # 2nd part of Equation 3.1
 				Gtdeterm <- estimates$eq2$coefficients['Gprev']*Gprev
 				error <- if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
 			    			else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
 				Gt <- Gtdeterm + error					
-				while(Gt < gap.lim[1] || Gt > gap.lim[2]) {
+				while(Gt < min(Gprev, gap.lim[1]) || Gt > gap.lim[2]) {
 					Gt <- Gtdeterm + if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
 							else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
 				}
