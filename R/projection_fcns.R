@@ -20,7 +20,7 @@ e0.predict <- function(mcmc.set = NULL, end.year = 2100,
                        sim.dir = file.path(getwd(), 'bayesLife.output'),
                        replace.output = FALSE, predict.jmale = TRUE, 
                        nr.traj = NULL, thin = NULL, burnin = 10000, 
-                       use.diagnostics = FALSE, save.as.ascii = 1000, start.year = NULL,
+                       use.diagnostics = FALSE, save.as.ascii = 0, start.year = NULL,
                        output.dir = NULL, low.memory = TRUE, seed = NULL, verbose = TRUE, ...){
 	if(!is.null(mcmc.set)) {
 		if (class(mcmc.set) != 'bayesLife.mcmc.set') {
@@ -646,7 +646,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 .do.jmale.predict <- function(e0.pred, joint.male, countries, gap.lim, #gap.lim.eq2, 
 								eq2.age.start=NULL, adj.factors = NULL,
 								verbose=FALSE, supress.warnings = FALSE) {
-	predict.one.trajectory <- function(Gprev, ftraj) {
+	predict.one.trajectory <- function(Gprev, ftraj, determ = FALSE) {
 		mtraj <- rep(NA, length(ftraj))
 		for(time in 1:length(ftraj)) {
 			if(ftraj[time] <= maxe0) { # 1st part of Equation 3.1
@@ -655,17 +655,23 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 				   			 estimates$eq1$coefficients['e0.1953']*e0f.data[first.year,icountry] + 
 				   			 estimates$eq1$coefficients['e0']*ftraj[time] +
 					   		 estimates$eq1$coefficients['e0d75']*max(0, ftraj[time]-75))
-				Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
-				while(Gt < min(Gprev, gap.lim[1]) || Gt > gap.lim[2]) 
-					Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
+				if(determ) Gt <- Gtdeterm
+				else {
+				    Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
+				    while(Gt < min(Gprev, gap.lim[1]) || Gt > gap.lim[2]) 
+					    Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
+				}
 			} else {  # 2nd part of Equation 3.1
 				Gtdeterm <- estimates$eq2$coefficients['Gprev']*Gprev
-				error <- if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
+				if(determ) Gt <- Gtdeterm
+				else {
+				    error <- if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
 			    			else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
-				Gt <- Gtdeterm + error					
-				while(Gt < min(Gprev, gap.lim[1]) || Gt > gap.lim[2]) {
-					Gt <- Gtdeterm + if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
+				    Gt <- Gtdeterm + error					
+				    while(Gt < min(Gprev, gap.lim[1]) || Gt > gap.lim[2]) {
+					    Gt <- Gtdeterm + if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
 							else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
+				    }
 				}
 			}
 			mtraj[time] <- ftraj[time] - W[time]*Gt
@@ -706,8 +712,8 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 		G1 <- e0f.data[Tc,icountry] - e0m.data[Tc,icountry]
 		last.obs.index <- if(is.null(e0.pred$present.year.index)) nrow(e0m.data) else e0.pred$present.year.index
 		if(Tc < last.obs.index) { # imputing data
-			imp.index <- (last.obs.index - Tc + 1):last.obs.index
-			e0m.data[imp.index,icountry] <- predict.one.trajectory(G1, e0f.data[imp.index, icountry])
+			imp.index <- (Tc + 1):last.obs.index
+			e0m.data[imp.index,icountry] <- predict.one.trajectory(G1, e0f.data[imp.index, icountry], determ = TRUE)
 			G1 <- e0f.data[last.obs.index,icountry] - e0m.data[last.obs.index,icountry]
 		}
 		for (itraj in 1:dim(trajectoriesF)[2]) {
@@ -727,13 +733,3 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	return(bayesLife.prediction)
 }
 
-get.e0.jmale.prediction <- function(e0.pred) {
-	male.pred <- e0.pred$joint.male
-	if(is.null(male.pred)) stop('A joint male prediction does not exist for the given object. Use e0.jmale.predict to simulate male projections from existing female projections.')
-	male.pred$mcmc.set <- e0.pred$mcmc.set
-	for(item in names(male.pred$meta.changes))
-		male.pred$mcmc.set$meta[[item]] <- male.pred$meta.changes[[item]]
-	return(male.pred)
-}
-
-has.e0.jmale.prediction <- function(e0.pred) return(!is.null(e0.pred$joint.male))

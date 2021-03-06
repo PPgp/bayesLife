@@ -24,6 +24,8 @@ if(!cran) {
 	test.run.mcmc.simulation.auto(compression='gz')
 	test.run.mcmc.simulation.auto.parallel()
 	test.imputation()
+	test.run.annual.simulation()
+	test.subnational.predictions()
 	test.my.locations.extra()
 	test.reproduce.simulation()
 }

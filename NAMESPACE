@@ -74,6 +74,8 @@ export(
 	e0.jmale.estimate,
 	e0.jmale.predict,
 	e0.predict.subnat,
+	e0.jmale.predict.subnat,
+	subnat.gap.estimates,
 	e0.gap.plot,
 	e0.gap.plot.all,
 	e0.joint.plot,

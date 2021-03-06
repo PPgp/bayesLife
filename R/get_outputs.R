@@ -137,7 +137,18 @@ get.e0.prediction <- function(mcmc=NULL, sim.dir=NULL, joint.male=FALSE, mcmc.di
 	return(pred)
 }
 
-get.rege0.prediction <- function(sim.dir, country = NULL, method = "ar1"){
+get.e0.jmale.prediction <- function(e0.pred) {
+    male.pred <- e0.pred$joint.male
+    if(is.null(male.pred)) stop('A joint male prediction does not exist for the given object. Use e0.jmale.predict to simulate male projections from existing female projections.')
+    male.pred$mcmc.set <- e0.pred$mcmc.set
+    for(item in names(male.pred$meta.changes))
+        male.pred$mcmc.set$meta[[item]] <- male.pred$meta.changes[[item]]
+    return(male.pred)
+}
+
+has.e0.jmale.prediction <- function(e0.pred) return(!is.null(e0.pred$joint.male))
+
+get.rege0.prediction <- function(sim.dir, country = NULL, method = "ar1", joint.male = FALSE){
     dir <- file.path(sim.dir, paste0('subnat_', method))
     if(!file.exists(dir)) stop("No subnational predictions in ", sim.dir)
     cdirs <- list.files(dir, pattern='^c[0-9]+', full.names=FALSE)
@@ -145,11 +156,11 @@ get.rege0.prediction <- function(sim.dir, country = NULL, method = "ar1"){
     if (!is.null(country)) {
         cdirs <- cdirs[cdirs == paste0("c", country)]
         if(length(cdirs)==0) stop("No subnational predictions for country ", country, " in ", sim.dir)
-        return(get.e0.prediction(sim.dir=file.path(dir, cdirs[1]), mcmc.dir=NA))
+        return(get.e0.prediction(sim.dir=file.path(dir, cdirs[1]), mcmc.dir=NA, joint.male = joint.male))
     }
     preds <- NULL
     for (d in cdirs) 
-        preds[[sub("c", "", d)]] <- get.e0.prediction(sim.dir=file.path(dir, d), mcmc.dir=NA)
+        preds[[sub("c", "", d)]] <- get.e0.prediction(sim.dir=file.path(dir, d), mcmc.dir=NA, joint.male = joint.male)
     return(preds)
 }
 

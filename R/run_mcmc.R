@@ -191,6 +191,10 @@ mcmc.run.chain.e0 <- function(chain.id, meta, thin = 1, iter = 100, starting.val
 		this.sv[[var]] <- if (is.list(starting.values[[var]])) sapply(starting.values[[var]], function(x) x[chain.id])
 							else starting.values[[var]][chain.id]
 	}
+	if(iter[chain.id] < thin) {
+	    warning("Argument iter is smaller than thin. Adjusted to ", thin, ".")
+	    iter[chain.id] <- thin
+	}
 	mcmc <- e0.mcmc.ini(chain.id, meta, iter = iter[chain.id], ini.values = this.sv)
 
     if (verbose) {
@@ -579,7 +583,7 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL
 	#create e0 matrix only for the extra countries
 	e0.with.regions <- set.e0.wpp.extra(meta, countries=countries, 
 									  my.e0.file = my.e0.file, my.locations.file = my.locations.file, 
-									  verbose = verbose)
+									  annual = meta$annual.simulation, verbose = verbose)
 	if(is.null(e0.with.regions)) return(list(meta = meta, index = c()))
 	# join old and new country.overwrites option; remove possible duplicates
 	if(!is.null(country.overwrites)) { 

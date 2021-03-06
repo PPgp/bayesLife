@@ -44,7 +44,8 @@ get.wpp.e0.data <- function(sex = 'M', start.year = 1950, present.year = 2015,
 	LEXmatrix.regions <- bayesTFR:::get.observed.time.matrix.and.regions(
 							data_incl, loc_data, 
 							start.year=start.year, 
-							present.year=present.year, annual = annual, my.tfr.file = !is.null(my.e0.file))
+							present.year=present.year, annual = annual, 
+							interpolate = annual && is.null(my.e0.file))
 	if(include.hiv)
     	LEXmatrix.regions$regions$hiv.pred <- hiv.aids
 	
@@ -95,7 +96,10 @@ set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, my.locations
 							present.year=meta$present.year, annual = annual, verbose=verbose)
 	data <- un.object$data.object
 	extra.wpp <- bayesTFR:::.extra.matrix.regions(data=data, countries=countries, meta=meta, 
-							package="bayesLife", my.locations.file=my.locations.file, verbose=verbose)
+							package="bayesLife", my.locations.file=my.locations.file, 
+							annual = annual,
+							interpolate = is.null(my.e0.file) && annual,
+							verbose=verbose)
 	if(!is.null(extra.wpp)) {
 		extra.wpp <- list(e0.matrix=extra.wpp$tfr_matrix, 
 						  e0.matrix.all=extra.wpp$tfr_matrix_all, 
@@ -137,7 +141,7 @@ get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, my.loc
 							data_incl, loc_data, 
 							start.year=meta$start.year, 
 							present.year=meta$present.year, annual = meta$annual, 
-							my.tfr.file = !is.null(my.e0.file))
+							interpolate = meta$annual && is.null(my.e0.file),)
 	if (verbose) 
 		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')
 	if(is.null(meta$annual.simulation) || !meta$annual.simulation) {
@@ -169,7 +173,6 @@ get.wpp.e0.subnat <- function(country, start.year=1950, present.year=2010, my.e0
     LEXmatrix.regions <- bayesTFR:::get.observed.time.matrix.and.regions(
                                 data_countries, loc_data, start.year = start.year, 
                                 present.year = present.year, annual = annual, 
-                                my.tfr.file = !is.null(my.e0.file),
                                 datacolnames=c(country.code='reg_code', country.name='name', reg.name='reg_name',
                                                reg.code='NA', area.name='country', area.code='country_code'))
     
@@ -199,7 +202,6 @@ get.wpp.e0.subnat.joint <- function(country, meta, my.e0.file) {
     LEXmatrix.regions <- bayesTFR:::get.observed.time.matrix.and.regions(
         data_countries, loc_data, start.year = meta$start.year, 
         present.year = meta$present.year, annual = meta$annual, 
-        my.tfr.file = !is.null(my.e0.file),
         datacolnames=c(country.code='reg_code', country.name='name', reg.name='reg_name',
                        reg.code='NA', area.name='country', area.code='country_code'))
     
