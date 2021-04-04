@@ -1,5 +1,5 @@
 e0.predict.subnat <- function(countries, my.e0.file, sim.dir=file.path(getwd(), 'bayesLife.output'),
-                              method = c("ar1", "constant", "scale"), predict.jmale = FALSE, my.e0M.file = NULL,
+                              method = c("ar1", "shift", "scale"), predict.jmale = FALSE, my.e0M.file = NULL,
                                end.year=2100, start.year=NULL, output.dir = NULL, nr.traj=NULL, seed = NULL, 
                                ar.pars = c(rho = 0.95, U = 82.5, a = 0.0482, b = -0.0154), 
                                save.as.ascii = 0, verbose = TRUE, jmale.estimates = NULL, ...) {
@@ -19,14 +19,14 @@ e0.predict.subnat <- function(countries, my.e0.file, sim.dir=file.path(getwd(), 
     generate.trajectory.scale <- function(e0c, alpha0) {
         return(e0c * alpha0)
     }
-    generate.trajectory.constant <- function(e0c, alpha0) {
+    generate.trajectory.shift <- function(e0c, alpha0) {
         return(e0c + alpha0)
     }
     compute.alpha.ar1 <- function(e0, e0c)
         return(e0 - e0c)
     compute.alpha.scale <- function(e0, e0c)
         return(e0/e0c)
-    compute.alpha.constant <- function(...)
+    compute.alpha.shift <- function(...)
         return(compute.alpha.ar1(...))
     
     joint.male.est <- subnat.gap.estimates()

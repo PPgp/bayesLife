@@ -1,6 +1,10 @@
-4.1-0.9* (01/28/2021)
+5.0-0 (04/04/2021)
 -----
-Option of an annual simulation added.
+Support for annual simulations added.
+
+Support for subnational projections added (e0.predict.sunat).
+
+Updated to work with bayesTFR >= 7.0-*.
 
 4.1-0 (10/17/2019)
 -----

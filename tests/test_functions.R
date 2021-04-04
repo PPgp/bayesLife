@@ -586,17 +586,17 @@ test.subnational.predictions <- function() {
     stopifnot(size > 0)
     
     # generate predictions with different method
-    preds.const <- e0.predict.subnat(c(36, 360), my.e0.file = my.sub.file, method = "constant",
+    preds.const <- e0.predict.subnat(c(36, 360), my.e0.file = my.sub.file, method = "shift",
                                sim.dir=nat.dir, output.dir=sim.dir, predict.jmale = TRUE, 
                                my.e0M.file = my.sub.file) # using the same e0 for male just for testing purposes
-    stopifnot(identical(preds.const[["360"]]$quantiles, get.rege0.prediction(sim.dir, 360, method = "constant")$quantiles))
+    stopifnot(identical(preds.const[["360"]]$quantiles, get.rege0.prediction(sim.dir, 360, method = "shift")$quantiles))
     stopifnot(!identical(preds.const[["360"]]$quantiles, preds[["360"]]$quantiles))
     
     stopifnot(!has.e0.jmale.prediction(preds[["36"]])) # default AR1 prediction does not have male predictions
     
-    prF <- get.rege0.prediction(sim.dir, 360, method = "constant")
+    prF <- get.rege0.prediction(sim.dir, 360, method = "shift")
     prM1 <- get.e0.jmale.prediction(prF)
-    prM2 <- get.rege0.prediction(sim.dir, 360, method = "constant", joint.male = TRUE)
+    prM2 <- get.rege0.prediction(sim.dir, 360, method = "shift", joint.male = TRUE)
     stopifnot(identical(prM1$quantiles, prM2$quantiles))
     stopifnot(!identical(prM1$quantiles, prF$quantiles))
     
