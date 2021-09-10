@@ -37,6 +37,7 @@ export(
 	has.e0.prediction,
 	get.e0.jmale.prediction,
 	has.e0.jmale.prediction,
+	get.rege0.prediction,
 	get.e0.convergence.all,
 	get.e0.convergence,
 	e0.dl.coverage,
@@ -72,6 +73,9 @@ export(
 	store.bayesLife.prediction,
 	e0.jmale.estimate,
 	e0.jmale.predict,
+	e0.predict.subnat,
+	e0.jmale.predict.subnat,
+	subnat.gap.estimates,
 	e0.gap.plot,
 	e0.gap.plot.all,
 	e0.joint.plot,
@@ -99,12 +103,19 @@ S3method(get.mcmc.meta, bayesLife.prediction)
 S3method(coda.mcmc, bayesLife.mcmc)
 
 S3method(summary, bayesLife.mcmc.set)
+S3method(summary, bayesLife.mcmc.meta)
 S3method(summary, bayesLife.mcmc)
 S3method(summary, bayesLife.prediction)
 S3method(summary, bayesLife.convergence)
 
+S3method(print, bayesLife.mcmc)
+S3method(print, bayesLife.mcmc.set)
+S3method(print, bayesLife.mcmc.meta)
+S3method(print, bayesLife.prediction)
 S3method(print, summary.bayesLife.prediction)
-S3method(print, summary.bayesLife.mcmc.set.meta)
+S3method(print, summary.bayesLife.mcmc.meta)
+S3method(print, summary.bayesLife.mcmc.set)
+S3method(print, summary.bayesLife.mcmc)
 
 S3method(get.traj.ascii.header, bayesLife.mcmc.meta)
 S3method(get.nr.countries, bayesLife.mcmc.meta)

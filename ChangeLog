@@ -1,3 +1,11 @@
+5.0-1 (04/04/2021)
+-----
+Support for annual simulations added.
+
+Support for subnational projections added (e0.predict.sunat).
+
+Updated to work with bayesTFR >= 7.0-*.
+
 4.1-0 (10/17/2019)
 -----
 Defaults are now set to use the wpp2019 data.

@@ -489,6 +489,8 @@ test.imputation <- function() {
 	stopifnot(length(pred$joint.male$meta.changes$Tc.index[[cindex]])==6)
 	stopifnot(length(pred$joint.male$meta.changes$Tc.index[[get.country.object(900, m$meta)$index]])==8)
 	stopifnot(length(m$meta$Tc.index[[get.country.object(900, m$meta)$index]]) == 9)
+	test.ok(test.name)
+	
 	test.name <- 'plotting imputed F&M e0 trajectories for extra countries'
 	start.test(test.name)
 	filename <- tempfile()
@@ -536,26 +538,170 @@ test.reproduce.simulation <- function() {
     seed <- 1234
     
     m1 <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, seed = seed, verbose = FALSE)
-    res1 <- summary(m1)$statistics
+    res1 <- summary(m1)$results$statistics
     m2 <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, seed = seed, replace.output = TRUE, verbose = FALSE)
-    res2 <- summary(m2)$statistics
+    res2 <- summary(m2)$results$statistics
     stopifnot(all(res1 == res2))
     
     m3 <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, replace.output = TRUE) # no seed
-    res3 <- summary(m3)$statistics
+    res3 <- summary(m3)$results$statistics
     stopifnot(!all(res3 == res2))
     
     # parallel
     m1p <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, seed = seed, replace.output = TRUE, parallel = TRUE, ft_verbose = FALSE)
-    res1p <- summary(m1p)$statistics
+    res1p <- summary(m1p)$results$statistics
     m2p <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, seed = seed, replace.output = TRUE, parallel = TRUE, ft_verbose = FALSE)
-    res2p <- summary(m2p)$statistics
+    res2p <- summary(m2p)$results$statistics
     stopifnot(all(res1p == res2p))
     
     m3p <- run.e0.mcmc(iter=5, nr.chains=2, thin = 1, output.dir=sim.dir, start.year=1950, replace.output = TRUE, parallel = TRUE, ft_verbose = TRUE) # no seed
-    res3p <- summary(m3p)$statistics
+    res3p <- summary(m3p)$results$statistics
     stopifnot(!all(res3p == res2p))
 
     test.ok(test.name)
     unlink(sim.dir, recursive=TRUE)
 }
+
+test.subnational.predictions <- function() {
+    sim.dir <- tempfile()
+    test.name <- 'predicting subnational e0'
+    start.test(test.name)
+    
+    my.sub.file <- file.path(find.package("bayesLife"), 'extdata', 'subnational_e0_template.txt')
+    nat.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
+    
+    # Subnational female projections for Australia and Canada; start 1 time period before national projections
+    preds <- e0.predict.subnat(c(36, 124), my.e0.file=my.sub.file,
+                                sim.dir=nat.dir, output.dir=sim.dir, start.year=2018)
+    stopifnot(all(names(preds) %in% c("36", "124")))
+    stopifnot(nrow(get.countries.table(preds[["36"]]))==8)
+    stopifnot(identical(preds[["124"]]$quantiles, get.rege0.prediction(sim.dir, 124)$quantiles))
+    filename <- tempfile()
+    pdf(file=filename)
+    e0.trajectories.plot(preds[["36"]], "Queensland")
+    e0.trajectories.plot(preds[["124"]], "Quebec")
+    dev.off()
+    size <- file.info(filename)['size']
+    unlink(filename)
+    stopifnot(size > 0)
+    
+    # generate predictions with different method
+    preds.const <- e0.predict.subnat(c(36, 360), my.e0.file = my.sub.file, method = "shift",
+                               sim.dir=nat.dir, output.dir=sim.dir, predict.jmale = TRUE, 
+                               my.e0M.file = my.sub.file) # using the same e0 for male just for testing purposes
+    stopifnot(identical(preds.const[["360"]]$quantiles, get.rege0.prediction(sim.dir, 360, method = "shift")$quantiles))
+    stopifnot(!identical(preds.const[["360"]]$quantiles, preds[["360"]]$quantiles))
+    
+    stopifnot(!has.e0.jmale.prediction(preds[["36"]])) # default AR1 prediction does not have male predictions
+    
+    prF <- get.rege0.prediction(sim.dir, 360, method = "shift")
+    prM1 <- get.e0.jmale.prediction(prF)
+    prM2 <- get.rege0.prediction(sim.dir, 360, method = "shift", joint.male = TRUE)
+    stopifnot(identical(prM1$quantiles, prM2$quantiles))
+    stopifnot(!identical(prM1$quantiles, prF$quantiles))
+    
+    unlink(sim.dir, recursive=TRUE)
+    test.ok(test.name)
+    
+    test.name <- 'predicting subnational e0 with imputation'
+    start.test(test.name)
+    sim.dir <- tempfile()
+    preds <- e0.predict.subnat("Canada", my.e0.file = my.sub.file,
+                                sim.dir = nat.dir, output.dir = sim.dir, start.year = 2021)
+    stopifnot(all(names(preds) %in% c("124")))
+    spred <- summary(preds[["124"]], "Quebec")
+    stopifnot(min(spred$projection.years) == 2023)
+    stopifnot(!has.e0.jmale.prediction(get.rege0.prediction(sim.dir, 124)))
+    
+    # generate male prediction
+    predCan <- e0.jmale.predict.subnat(preds[["124"]], my.e0.file = my.sub.file)
+    stopifnot(has.e0.jmale.prediction(get.rege0.prediction(sim.dir, 124)))
+    
+    filename <- tempfile()
+    pdf(file=filename)
+    e0.trajectories.plot(predCan, "Ontario", both.sexes = TRUE)
+    dev.off()
+    size <- file.info(filename)['size']
+    unlink(filename)
+    stopifnot(size > 0)
+    
+    unlink(sim.dir, recursive=TRUE)
+    
+    # Subnational projections for Canada with one region (Alberta) having imputed values
+    sim.dir <- tempfile()
+    mye0 <- read.delim(my.sub.file, check.names = FALSE)
+    mye0[mye0$country_code == 124 & mye0$reg_code == 658, "last.observed"] <- 1999
+    my.sub.file.mis <- tempfile()
+    write.table(mye0, file = my.sub.file.mis, row.names = FALSE, quote = FALSE, sep = "\t")
+    preds <- e0.predict.subnat("Canada", my.e0.file=my.sub.file.mis,
+                                sim.dir=nat.dir, output.dir=sim.dir, start.year=2018, 
+                               predict.jmale = TRUE, my.e0M.file = my.sub.file)
+    obs <- preds[["124"]]$mcmc.set$meta$e0.matrix[,"658"]
+    recon <- preds[["124"]]$e0.matrix.reconstructed[,"658"]
+    stopifnot(all(is.na(obs[c("2003", "2008")]))) # observed is NA
+    stopifnot(all(!is.na(obs["1998"]))) # last observed non-NA 
+    stopifnot(all(!is.na(recon[c("2003", "2008")]))) # missing values were reconstructed
+    unlink(sim.dir, recursive=TRUE)
+    unlink(my.sub.file.mis)
+    
+    # Subnational projections for all countries in the file
+    sim.dir <- tempfile()
+    preds <- e0.predict.subnat(c(36, 360, 124), my.e0.file=my.sub.file, sim.dir=nat.dir, 
+                                output.dir=sim.dir, end.year=2050)
+    stopifnot(length(preds) == 3)
+    
+    # Retrieve results for all countries
+    preds <- get.rege0.prediction(sim.dir)
+    stopifnot(length(preds) == 3)
+    t <- e0.trajectories.table(preds[["360"]], "Maluku")
+    stopifnot(all(dim(t) == c(21, 5)))
+    
+    # Retrieve results for one country
+    pred <- get.rege0.prediction(sim.dir, 124)
+    spred <- summary(pred, "British Columbia")
+    stopifnot(max(spred$projection.years) == 2048)
+    
+    # Retrieve trajectories
+    trajs <- get.e0.trajectories(preds[["36"]], "Victoria")
+    stopifnot(all(dim(trajs) == c(7, 30)))
+    
+    test.ok(test.name)
+    unlink(sim.dir, recursive=TRUE)
+}
+
+test.run.annual.simulation <- function() {
+    sim.dir <- tempfile()
+    
+    test.name <- 'running MCMC with annual data'
+    start.test(test.name)
+    m <- run.e0.mcmc(iter = 5, nr.chains = 2, thin = 1, output.dir = sim.dir, 
+                     annual = TRUE, present.year = 2018)
+    stopifnot(get.total.iterations(m$mcmc.list, 0) == 10)
+    stopifnot(all(1953:2018 %in% rownames(m$meta$e0.matrix)))
+    test.ok(test.name)
+    
+    test.name <- 'running annual MCMC for extra country'
+    start.test(test.name)
+    countries <- c(900, 908)
+    m <- run.e0.mcmc.extra(sim.dir = sim.dir, countries = countries, burnin = 0)
+    stopifnot(countries %in% m$meta$regions$country_code)
+    test.ok(test.name)
+    
+    test.name <- 'running annual projections'
+    start.test(test.name)
+    pred <- e0.predict(m, burnin=1, verbose = FALSE)
+    spred <- summary(pred)
+    stopifnot(spred$nr.traj == 8)
+    stopifnot(all(2019:2100 %in% spred$projection.years))
+    stopifnot(all(c(908, 900) %in% get.countries.table(pred)$code))
+    
+    mpred <- get.e0.jmale.prediction(pred)
+    smpred <- summary(mpred)
+    stopifnot(all(2019:2100 %in% smpred$projection.years))
+    stopifnot(all(c(908, 900) %in% get.countries.table(mpred)$code))
+    
+    test.ok(test.name)
+    
+    unlink(sim.dir, recursive=TRUE)
+}
+

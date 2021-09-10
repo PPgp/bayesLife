@@ -20,7 +20,7 @@ e0.predict <- function(mcmc.set = NULL, end.year = 2100,
                        sim.dir = file.path(getwd(), 'bayesLife.output'),
                        replace.output = FALSE, predict.jmale = TRUE, 
                        nr.traj = NULL, thin = NULL, burnin = 10000, 
-                       use.diagnostics = FALSE, save.as.ascii = 1000, start.year = NULL,
+                       use.diagnostics = FALSE, save.as.ascii = 0, start.year = NULL,
                        output.dir = NULL, low.memory = TRUE, seed = NULL, verbose = TRUE, ...){
 	if(!is.null(mcmc.set)) {
 		if (class(mcmc.set) != 'bayesLife.mcmc.set') {
@@ -122,9 +122,10 @@ e0.prediction.setup <- function(...) {
     if(is.null(setup$thin)) setup$thin <- NA # this is because thin is a method in coda and the naming clashes within the setup expression
     setup <- within(setup, {
         meta <- mcmc.set$meta
-        present.year <- if(is.null(start.year)) meta$present.year else start.year - 5
-        nr_project <- length(seq(present.year+5, end.year, by=5))
-        cat('\nPrediction from', present.year+5, 'until', end.year, '(i.e.', nr_project, 'projections)\n\n')
+        year.step <- if(meta$annual.simulation) 1 else 5
+        present.year <- if(is.null(start.year)) meta$present.year else start.year - year.step
+        nr_project <- length(seq(present.year+year.step, end.year, by=year.step))
+        cat('\nPrediction from', present.year+year.step, 'until', end.year, '(i.e.', nr_project, 'projections)\n\n')
     
         total.iter <- get.total.iterations(mcmc.set$mcmc.list, burnin)
         stored.iter <- get.stored.mcmc.length(mcmc.set$mcmc.list, burnin)
@@ -554,8 +555,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 		estimates <- e0.jmale.estimate(e0.pred$mcmc.set, verbose=verbose, 
 								my.e0.file=my.e0.file, my.locations.file=my.locations.file, ...)
 
-	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, 
-											my.locations.file=my.locations.file, verbose=verbose)
+	e0mwpp <- get.wpp.e0.data.for.countries(meta, sex='M', my.e0.file=my.e0.file, my.locations.file=my.locations.file, verbose=verbose)
 	e0m.data <- e0mwpp$e0.matrix
 	meta.changes <- list(sex='M', e0.matrix=e0m.data, e0.matrix.all=e0mwpp$e0.matrix.all, suppl.data=e0mwpp$suppl.data)
 	meta.changes$Tc.index <- .get.Tcindex(meta.changes$e0.matrix, cnames=meta$regions$country_name)
@@ -644,9 +644,10 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 
 
 .do.jmale.predict <- function(e0.pred, joint.male, countries, gap.lim, #gap.lim.eq2, 
-								eq2.age.start=NULL, adj.factors = NULL, verbose=FALSE) {
-	predict.one.trajectory <- function(Gprev, ftraj) {
-		mtraj <- rep(NA, length(ftraj))						
+								eq2.age.start=NULL, adj.factors = NULL,
+								verbose=FALSE, supress.warnings = FALSE) {
+	predict.one.trajectory <- function(Gprev, ftraj, determ = FALSE) {
+		mtraj <- rep(NA, length(ftraj))
 		for(time in 1:length(ftraj)) {
 			if(ftraj[time] <= maxe0) { # 1st part of Equation 3.1
 				Gtdeterm <- (estimates$eq1$coefficients[1] + # intercept
@@ -654,17 +655,23 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 				   			 estimates$eq1$coefficients['e0.1953']*e0f.data[first.year,icountry] + 
 				   			 estimates$eq1$coefficients['e0']*ftraj[time] +
 					   		 estimates$eq1$coefficients['e0d75']*max(0, ftraj[time]-75))
-				Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
-				while(Gt < gap.lim[1] || Gt > gap.lim[2]) 
-					Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
+				if(determ) Gt <- Gtdeterm
+				else {
+				    Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
+				    while(Gt < min(Gprev, gap.lim[1]) || Gt > gap.lim[2]) 
+					    Gt <- Gtdeterm + estimates$eq1$sigma*rt(1,estimates$eq1$dof)
+				}
 			} else {  # 2nd part of Equation 3.1
 				Gtdeterm <- estimates$eq2$coefficients['Gprev']*Gprev
-				error <- if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
+				if(determ) Gt <- Gtdeterm
+				else {
+				    error <- if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
 			    			else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
-				Gt <- Gtdeterm + error					
-				while(Gt < gap.lim[1] || Gt > gap.lim[2]) {
-					Gt <- Gtdeterm + if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
+				    Gt <- Gtdeterm + error					
+				    while(Gt < min(Gprev, gap.lim[1]) || Gt > gap.lim[2]) {
+					    Gt <- Gtdeterm + if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
 							else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
+				    }
 				}
 			}
 			mtraj[time] <- ftraj[time] - W[time]*Gt
@@ -685,10 +692,6 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	maxe0 <- if(is.null(eq2.age.start)) max(e0f.data) else eq2.age.start
 	e0m.data <- joint.male$e0.matrix.reconstructed
 	quantiles.to.keep <- as.numeric(dimnames(e0.pred$quantiles)[[2]])
-	first.year <- max(1953, as.integer(rownames(e0f.data)[1]))
-	if(first.year > 1953)
-		warning("Data for 1950-1955 not available. Projection of the gap model may not be correct.")
-	first.year <- as.character(first.year)
 	estimates <- joint.male$fit
 	W <- rep(1, e0.pred$nr.projections)
 	if(!is.null(adj.factors)) 
@@ -698,6 +701,10 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 		if(verbose)
 			cat('\ne0 male projection for country', icountry, country$name, 
  						'(code', country$code, ')')
+		first.year <- max(1953, as.integer(rownames(e0f.data[!is.na(e0f.data[,icountry]),, drop = FALSE])[1]))
+		if(first.year > 1953 && !supress.warnings)
+		    warning("Data for 1950-1955 not available. Projection of the gap model may not be correct.")
+		first.year <- as.character(first.year)
 		trajectoriesF <- bayesTFR:::get.trajectories(e0.pred, country$code)$trajectories
 		Mtraj <- matrix(NA, nrow=nrow(trajectoriesF), ncol=ncol(trajectoriesF))
 		#G1 <- e0f.data[Tc[icountry],icountry] - e0m.data[Tc[icountry],icountry]
@@ -705,8 +712,8 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 		G1 <- e0f.data[Tc,icountry] - e0m.data[Tc,icountry]
 		last.obs.index <- if(is.null(e0.pred$present.year.index)) nrow(e0m.data) else e0.pred$present.year.index
 		if(Tc < last.obs.index) { # imputing data
-			imp.index <- (last.obs.index - Tc + 1):last.obs.index
-			e0m.data[imp.index,icountry] <- predict.one.trajectory(G1, e0f.data[imp.index, icountry])
+			imp.index <- (Tc + 1):last.obs.index
+			e0m.data[imp.index,icountry] <- predict.one.trajectory(G1, e0f.data[imp.index, icountry], determ = TRUE)
 			G1 <- e0f.data[last.obs.index,icountry] - e0m.data[last.obs.index,icountry]
 		}
 		for (itraj in 1:dim(trajectoriesF)[2]) {
@@ -726,13 +733,3 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	return(bayesLife.prediction)
 }
 
-get.e0.jmale.prediction <- function(e0.pred) {
-	male.pred <- e0.pred$joint.male
-	if(is.null(male.pred)) stop('A joint male prediction does not exist for the given object. Use e0.jmale.predict to simulate male projections from existing female projections.')
-	male.pred$mcmc.set <- e0.pred$mcmc.set
-	for(item in names(male.pred$meta.changes))
-		male.pred$mcmc.set$meta[[item]] <- male.pred$meta.changes[[item]]
-	return(male.pred)
-}
-
-has.e0.jmale.prediction <- function(e0.pred) return(!is.null(e0.pred$joint.male))

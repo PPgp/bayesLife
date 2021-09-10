@@ -68,7 +68,7 @@ match.ini.to.chains <- function(nr.chains) {
 
 run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000, 
 						output.dir = file.path(getwd(), 'bayesLife.output'), 
-                        thin = 10, replace.output = FALSE,
+                        thin = 10, replace.output = FALSE, annual = FALSE,
                         start.year = 1873, present.year = 2020, wpp.year = 2019,
                         my.e0.file = NULL, my.locations.file = NULL, 
 						constant.variance = FALSE, seed = NULL, parallel = FALSE, 
@@ -115,8 +115,8 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
 	sex <- substr(match.arg(sex), 1, 1)
 	bayesLife.mcmc.meta <- e0.mcmc.meta.ini(sex=sex, nr.chains = nr.chains,
                                    		start.year = start.year, present.year = present.year, 
-                                        wpp.year = wpp.year, my.e0.file = my.e0.file, 
-                                   		my.locations.file = my.locations.file,
+                                        wpp.year = wpp.year, annual.simulation = annual, 
+                                   		my.e0.file = my.e0.file, my.locations.file = my.locations.file,
                                         output.dir = output.dir, mcmc.options = mcoptions, 
                                         constant.variance = constant.variance, 
                                         compression.type = compression.type, verbose = verbose)
@@ -190,6 +190,10 @@ mcmc.run.chain.e0 <- function(chain.id, meta, thin = 1, iter = 100, starting.val
 	for(var in names(starting.values)) {
 		this.sv[[var]] <- if (is.list(starting.values[[var]])) sapply(starting.values[[var]], function(x) x[chain.id])
 							else starting.values[[var]][chain.id]
+	}
+	if(iter[chain.id] < thin) {
+	    warning("Argument iter is smaller than thin. Adjusted to ", thin, ".")
+	    iter[chain.id] <- thin
 	}
 	mcmc <- e0.mcmc.ini(chain.id, meta, iter = iter[chain.id], ini.values = this.sv)
 
@@ -458,11 +462,11 @@ e0.mcmc.run.chain.extra <- function(chain.id, mcmc.list, countries, posterior.sa
 
 e0.mcmc.meta.ini <- function(sex = "F", nr.chains = 1, start.year = 1950, present.year = 2020, 
 								wpp.year = 2019, my.e0.file = NULL, my.locations.file = NULL,
-								output.dir = file.path(getwd(), 'bayesLife.output'),
+								annual.simulation = FALSE, output.dir = file.path(getwd(), 'bayesLife.output'),
 								mcmc.options = NULL, ..., verbose=FALSE) {
 	mcmc.input <- c(list(sex = sex, nr.chains = nr.chains,
 						start.year = start.year, present.year = present.year, 
-						wpp.year = wpp.year, my.e0.file = my.e0.file,
+						wpp.year = wpp.year, my.e0.file = my.e0.file, annual.simulation = annual.simulation,
 						output.dir = output.dir, mcmc.options = mcmc.options), list(...))
 
 	if(present.year - 3 > wpp.year) 
@@ -470,7 +474,8 @@ e0.mcmc.meta.ini <- function(sex = "F", nr.chains = 1, start.year = 1950, presen
     data <- get.wpp.e0.data (sex, start.year = start.year, present.year = present.year, 
 						wpp.year = wpp.year, my.e0.file = my.e0.file, 
 						include.hiv = mcmc.options$include.hiv.countries,
-						my.locations.file = my.locations.file, verbose = verbose)
+						my.locations.file = my.locations.file, 
+						annual = annual.simulation, verbose = verbose)
 	part.ini <- .do.part.e0.mcmc.meta.ini(data, mcmc.input)
 	new.meta <- c(mcmc.input, part.ini)
 	if(!is.null(mcmc.options$meta.ini.fun))
@@ -578,7 +583,7 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL
 	#create e0 matrix only for the extra countries
 	e0.with.regions <- set.e0.wpp.extra(meta, countries=countries, 
 									  my.e0.file = my.e0.file, my.locations.file = my.locations.file, 
-									  verbose = verbose)
+									  annual = meta$annual.simulation, verbose = verbose)
 	if(is.null(e0.with.regions)) return(list(meta = meta, index = c()))
 	# join old and new country.overwrites option; remove possible duplicates
 	if(!is.null(country.overwrites)) { 
@@ -605,14 +610,10 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL
 	} else {id.replace <- c()}
 	new.meta <- list(nr.countries=nr_countries.all, mcmc.options = meta$mcmc.options)
 					
-	for (name in c('e0.matrix', 'e0.matrix.all', 'e0.matrix.observed', 'd.ct', 'loessSD')) {
+	for (name in c('e0.matrix', 'e0.matrix.all', 'd.ct', 'loessSD')) {
 		meta[[name]][,id.replace] <- Emeta[[name]][,is.old]
 		new.meta[[name]] <- cbind(meta[[name]], Emeta[[name]][,is.new])
 	}
-	#for (name in c('T.end.c')) {
-	#	meta[[name]][id.replace] <- Emeta[[name]][is.old]
-	#	new.meta[[name]] <- c(meta[[name]], Emeta[[name]][is.new])
-	#}
 	new.meta[['Tc.index']] <- update.Tc.index(meta$Tc.index, Emeta$Tc.index, id.replace, is.old)
 	new.meta[['regions']] <- update.regions(meta$regions, Emeta$regions, id.replace, is.new, is.old)
 	new.meta[['regionsDT']] <- create.regionsDT(new.meta[['regions']])
@@ -697,5 +698,21 @@ e0.mcmc.ini.extra <- function(mcmc, countries, index.replace = NULL) {
 							sd = opts$z.c$ini.norm[2]), samplpars$z.c.prior.low[eidx]), samplpars$z.c.prior.up[eidx]))
 	}
 	return(mcmc)
+}
+
+e0.mcmc.meta.ini.subnat <- function(meta, country, start.year = 1950, present.year = 2020, 
+                             my.e0.file = NULL, annual.simulation = FALSE, verbose = FALSE) {
+    meta$start.year <- start.year
+    meta$present.year <- present.year
+    data <- get.wpp.e0.subnat(country, start.year = start.year, present.year = present.year, 
+                             my.e0.file = my.e0.file, annual = annual.simulation)
+    data$nr.countries <- ncol(data$e0.matrix)
+    data$Tc.index <- .get.Tcindex(data$e0.matrix, cnames=data$regions$country_name, stop.if.less.than2 = FALSE)
+    data$subnat <- TRUE
+    bounds <- .do.country.specific.ini(data$nr.countries, c(data, meta))
+    this.meta <- c(data, bounds)
+    for (item in names(meta))
+        if(!(item %in% names(this.meta))) this.meta[[item]] <- meta[[item]]
+    return(structure(this.meta, class = 'bayesLife.mcmc.meta'))
 }
 
