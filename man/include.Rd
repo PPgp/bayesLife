@@ -25,7 +25,7 @@ data(include_2010)
   Data frames containing one record per country or region. It has the following variables:
   \describe{
     \item{country}{Name of country or region. Not used.}
-    \item{country_code}{Numerical Location Code (3-digit codes following ISO 3166-1 numeric standard) - see \url{http://en.wikipedia.org/wiki/ISO_3166-1_numeric}.}
+    \item{country_code}{Numerical Location Code (3-digit codes following ISO 3166-1 numeric standard) - see \url{https://en.wikipedia.org/wiki/ISO_3166-1_numeric}.}
     \item{include_code}{Entries for which \code{include_code=2} are included in MCMC simulations (i.e. estimation of the model parameters). Entries for which \code{include_code} is 1 or 2 are included in the prediction.}}
 }
 \details{
