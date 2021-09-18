@@ -5,9 +5,9 @@ e0.raftery.diag <- function(mcmc = NULL,
 							 country.sampling.prop = 1,
 							 verbose = TRUE, ...) {
     mcmc.set <- if (is.null(mcmc)) get.e0.mcmc(sim.dir = sim.dir, low.memory = TRUE) else mcmc
-    if(is.null(par.names)) 
+    if(bayesTFR:::is.missing(par.names)) 
         par.names <- e0.parameter.names(mcmc.set$meta$mcmc.options)
-    if(is.null(par.names.cs)) 
+    if(bayesTFR:::is.missing(par.names.cs)) 
         par.names.cs <- e0.parameter.names.cs(mcmc.set$meta$mcmc.options)
     
     return(bayesTFR::tfr.raftery.diag(mcmc = mcmc.set, sim.dir = sim.dir, burnin = burnin,
