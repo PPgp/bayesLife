@@ -20,8 +20,8 @@ UN development groups	1803	0	0
 More developed regions	901	0	0
 Less developed regions	902	0	0
 Least developed countries	941	0	0
-Less developed regions, excluding least developed countries	934	0	0
-Less developed regions, excluding China	948	0	0
+"Less developed regions, excluding least developed countries"	934	0	0
+"Less developed regions, excluding China"	948	0	0
 Land-locked Developing Countries (LLDC)	1636	0	0
 Small Island Developing States (SIDS)	1637	0	0
 World Bank Income Groups	1802	0	0
@@ -131,9 +131,9 @@ Pakistan	586	2	0
 Sri Lanka	144	2	0
 Eastern Asia	906	0	0
 China	156	2	0
-China, Hong Kong SAR	344	2	0
-China, Macao SAR	446	2	0
-China, Taiwan Province of China	158	2	0
+"China, Hong Kong SAR"	344	2	0
+"China, Macao SAR"	446	2	0
+"China, Taiwan Province of China"	158	2	0
 Dem. People's Republic of Korea	408	2	0
 Japan	392	2	0
 Mongolia	496	2	0
@@ -156,7 +156,7 @@ Antigua and Barbuda	28	2	0
 Aruba	533	2	0
 Bahamas	44	2	1
 Barbados	52	2	1
-Bonaire, Sint Eustatius and Saba	535	2	0
+"Bonaire, Sint Eustatius and Saba"	535	2	0
 British Virgin Islands	92	2	0
 Cayman Islands	136	2	0
 Cuba	192	2	0
@@ -241,14 +241,15 @@ Russian Federation	643	2	1
 Slovakia	703	2	0
 Ukraine	804	2	1
 Northern Europe	924	0	0
-Channel Islands	830	2	0
 Denmark	208	2	0
 Estonia	233	2	0
 Faroe Islands	234	2	0
 Finland	246	2	0
+Guernsey	831	2	0
 Iceland	352	2	0
 Ireland	372	2	0
 Isle of Man	833	2	0
+Jersey	832	2	0
 Latvia	428	2	0
 Lithuania	440	2	0
 Norway	578	2	0
@@ -263,6 +264,7 @@ Gibraltar	292	2	0
 Greece	300	2	0
 Holy See	336	2	0
 Italy	380	2	0
+Kosovo (under UNSC res. 1244)	412	2	0
 Malta	470	2	0
 Montenegro	499	2	0
 North Macedonia	807	2	0

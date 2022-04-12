@@ -286,7 +286,7 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 		y1.part2 <- NULL
 		lpart2 <- min(dim(e0.mtx)[1], e0pred$present.year.index) - T_end_c + suppl.T
 		if (lpart2 > 0) { # imputed values
-			p2idx <- (T_end_c+1-suppl.T):nrow(e0.matrix.reconstructed)
+			p2idx <- (T_end_c+1-suppl.T):min(nrow(e0.matrix.reconstructed), e0pred$present.year.index)
 			y1.part2 <- e0.matrix.reconstructed[p2idx,country$index]
 			names(y1.part2) <- rownames(e0.matrix.reconstructed)[p2idx]
 		}

@@ -21,7 +21,8 @@ e0.predict <- function(mcmc.set = NULL, end.year = 2100,
                        replace.output = FALSE, predict.jmale = TRUE, 
                        nr.traj = NULL, thin = NULL, burnin = 10000, 
                        use.diagnostics = FALSE, save.as.ascii = 0, start.year = NULL,
-                       output.dir = NULL, low.memory = TRUE, seed = NULL, verbose = TRUE, ...){
+                       output.dir = NULL, low.memory = TRUE, ignore.last.observed = FALSE,
+                       seed = NULL, verbose = TRUE, ...){
 	if(!is.null(mcmc.set)) {
 		if (class(mcmc.set) != 'bayesLife.mcmc.set') {
 			stop('Wrong type of mcmc.set. Must be of type bayesLife.mcmc.set.')
@@ -40,7 +41,8 @@ e0.predict <- function(mcmc.set = NULL, end.year = 2100,
 					replace.output = replace.output,  
 					nr.traj = nr.traj, thin = thin, burnin = burnin, 
 					save.as.ascii = save.as.ascii, start.year = start.year,
-					output.dir = output.dir, verbose = verbose)
+					output.dir = output.dir, ignore.last.observed = ignore.last.observed,
+					verbose = verbose)
 	if(predict.jmale && mcmc.set$meta$sex == 'F')
 		pred <- e0.jmale.predict(pred, ..., save.as.ascii = save.as.ascii, verbose = verbose)
 	invisible(pred)
@@ -76,7 +78,8 @@ e0.predict.extra <- function(sim.dir = file.path(getwd(), 'bayesLife.output'),
 									nr.traj=pred$nr.traj, burnin=pred$burnin,
 									countries=countries.idx, save.as.ascii=0, output.dir=prediction.dir,
 									force.creating.thinned.mcmc=TRUE,
-									write.summary.files=FALSE, verbose=verbose)
+									write.summary.files=FALSE, ignore.last.observed = pred$ignore.last.observed,
+									verbose=verbose)
 									
 	# merge the two predictions
 	code.other.countries <- setdiff(pred$mcmc.set$meta$regions$country_code, 
@@ -177,7 +180,9 @@ e0.prediction.setup <- function(...) {
     
         prediction.countries <- if(is.null(get0("countries"))) 1:meta$nr.countries else countries
         nr_countries <- meta$nr.countries
-        e0.matrix.reconstructed <- get.e0.reconstructed(meta$e0.matrix, meta)
+        if (!exists("ignore.last.observed")) ignore.last.observed <- FALSE
+        data.mtx.name <- if(ignore.last.observed) "e0.matrix.all" else "e0.matrix"
+        e0.matrix.reconstructed <- get.e0.reconstructed(meta[[data.mtx.name]], meta)
         present.year.index <- bayesTFR:::get.estimation.year.index(meta, present.year)
         le0.matrix <- present.year.index
     
@@ -199,6 +204,7 @@ run.e0.projection.for.all.countries <- function(setup, traj.fun = "generate.e0.t
     with(setup, {
         country.counter <- 0
         status.for.gui <- paste('out of', length(prediction.countries), 'countries.')
+        
         gui.options <- list()
         #########################################
         for (country in prediction.countries){
@@ -229,10 +235,23 @@ run.e0.projection.for.all.countries <- function(setup, traj.fun = "generate.e0.t
                     selected.simu$index <- sample(selected.simu$index, nr_simu, replace=TRUE)
                 cs.par.values <- cs.par.values[selected.simu$index,]
             }
-            all.e0 <- meta$e0.matrix[, country]
+            all.e0 <- meta[[data.mtx.name]][, country]
             lall.e0 <- length(all.e0)
             this.Tc_end <-  meta$Tc.index[[country]][length(meta$Tc.index[[country]])]
             this.T_end <- min(this.Tc_end, le0.matrix)
+            if (ignore.last.observed && this.T_end < le0.matrix) {
+                while(this.T_end < le0.matrix) { # shift the end as long as there are no NAs
+                    this.T_end <- this.T_end + 1
+                    this.Tc_end <-  this.Tc_end + 1
+                    if(is.na(all.e0[this.T_end])){
+                        this.T_end <- this.T_end - 1
+                        this.Tc_end <-  this.Tc_end - 1
+                        break
+                    }
+                }
+                if(this.T_end < lall.e0)
+                    e0.matrix.reconstructed[(this.T_end+1):lall.e0,country] <- NA
+            } 
             nmissing <- le0.matrix - this.T_end
             missing <- (this.T_end+1):le0.matrix
         
