@@ -180,7 +180,7 @@ e0.prediction.setup <- function(...) {
     
         prediction.countries <- if(is.null(get0("countries"))) 1:meta$nr.countries else countries
         nr_countries <- meta$nr.countries
-        if (!exists("ignore.last.observed")) ignore.last.observed <- FALSE
+        if (!exists("ignore.last.observed") || is.null(ignore.last.observed)) ignore.last.observed <- FALSE
         data.mtx.name <- if(ignore.last.observed) "e0.matrix.all" else "e0.matrix"
         e0.matrix.reconstructed <- get.e0.reconstructed(meta[[data.mtx.name]], meta)
         present.year.index <- bayesTFR:::get.estimation.year.index(meta, present.year)
@@ -304,6 +304,7 @@ run.e0.projection.for.all.countries <- function(setup, traj.fun = "generate.e0.t
             burnin = burnin,
             end.year = end.year,
             start.year = get0("start.year"),
+            ignore.last.observed = ignore.last.observed,
             present.year.index = present.year.index,
             present.year.index.all = present.year.index + (
                 if(!is.null(meta$suppl.data$regions)) nrow(meta$suppl.data$e0.matrix) else 0)
@@ -613,7 +614,8 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	meta <- e0.pred$mcmc.set$meta # from female sim
 	male.meta <- joint.male$meta.changes
 	meta$sex <- "M"
-	e0mwpp <- set.e0.wpp.extra(meta, meta$regions$country_code[countries.idx], my.e0.file=my.e0.file, my.locations.file=my.locations.file)
+	e0mwpp <- set.e0.wpp.extra(meta, meta$regions$country_code[countries.idx], my.e0.file=my.e0.file, 
+	                           my.locations.file=my.locations.file, annual = meta$annual.simulation)
 	# merge e0 matrices
 	for(mat in c("e0.matrix", "e0.matrix.all")) {
 		tmp <- meta[[mat]] # the right size

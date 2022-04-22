@@ -543,6 +543,7 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL
 	update.regions <- function(reg, ereg, id.replace, is.new, is.old) {
 		nreg <- list()
 		for(name in names(reg)) {
+		    if(!name %in% names(ereg)) next
 		    if(is.character(reg[[name]]) || is.factor(reg[[name]])) {
 		        reg[[name]][id.replace] <- as.character(ereg[[name]])[is.old]
 		        nreg[[name]] <- c(as.character(reg[[name]]), 
