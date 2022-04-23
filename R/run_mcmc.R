@@ -543,7 +543,7 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL
 	update.regions <- function(reg, ereg, id.replace, is.new, is.old) {
 		nreg <- list()
 		for(name in names(reg)) {
-		    if(!name %in% names(ereg)) next
+		    #if(!name %in% names(ereg)) next
 		    if(is.character(reg[[name]]) || is.factor(reg[[name]])) {
 		        reg[[name]][id.replace] <- as.character(ereg[[name]])[is.old]
 		        nreg[[name]] <- c(as.character(reg[[name]]), 
@@ -614,6 +614,12 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL
 	for (name in c('e0.matrix', 'e0.matrix.all', 'd.ct', 'loessSD')) {
 		meta[[name]][,id.replace] <- Emeta[[name]][,is.old]
 		new.meta[[name]] <- cbind(meta[[name]], Emeta[[name]][,is.new])
+	}
+	if(meta$mcmc.options$include.hiv.countries){
+	    for(name in c("hiv.pred", "hiv.est")){
+	        if(!is.null(meta$regions[[name]]) && is.null(Emeta$regions[[name]]))
+	            Emeta$regions[[name]] <- rep(FALSE, length(Emeta$regions$country_code))
+	    }
 	}
 	new.meta[['Tc.index']] <- update.Tc.index(meta$Tc.index, Emeta$Tc.index, id.replace, is.old)
 	new.meta[['regions']] <- update.regions(meta$regions, Emeta$regions, id.replace, is.new, is.old)

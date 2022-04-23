@@ -1,7 +1,7 @@
 Package: bayesLife
 Type: Package
 Title: Bayesian Projection of Life Expectancy
-Version: 5.0-3.9002
+Version: 5.0-3.9003
 Date: 2022-04-22
 Author: Hana Sevcikova, Adrian Raftery, Jennifer Chunn 
 Maintainer: Hana Sevcikova <hanas@uw.edu>
