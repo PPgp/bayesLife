@@ -272,7 +272,9 @@ continue.e0.chain <- function(chain.id, mcmc.list, iter, verbose=FALSE, verbose.
         mcmc$iter <- mcmc$finished.iter + iter
         if (verbose) 
                 cat('Continue sampling -', iter, 'additional iterations,', mcmc$iter, 'iterations in total.\n')
-        mcmc <- e0.mcmc.sampling(mcmc, thin=mcmc$thin, start.iter=mcmc$finished.iter+1, verbose=verbose, verbose.iter=verbose.iter)
+        mcmc <- do.call(mcmc$meta$mcmc.options$estimation.function, 
+                        list(mcmc, thin = mcmc$thin, start.iter=mcmc$finished.iter+1, 
+                             verbose = verbose, verbose.iter = verbose.iter))
         return(mcmc)
 }
 
