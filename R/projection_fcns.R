@@ -531,10 +531,8 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 	data.eq1 <- data[non.missing & e0F <= max.e0.eq1, ]
 	fit.eq1 <- tlm(G ~ ., data = data.eq1, estDof = estDof.eq1, start = start.eq1)
 	if(verbose) {
-	    if(verbose) {
-	        cat('\n\nUsing', nrow(data.eq1), 'data points for equation 1.\n\n')
-		    print(summary(fit.eq1))
-	    }
+	    cat('\n\nUsing', nrow(data.eq1), 'data points for equation 1.\n\n')
+	    print(summary(fit.eq1))
 	}
 	errscale.eq1<-as.numeric(exp(fit.eq1$scale.fit$coefficients[1]))
 	errsd.eq1<-sqrt(errscale.eq1)
