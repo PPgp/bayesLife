@@ -561,7 +561,7 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 
 e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim.eq2=c(3,9),	
 								max.e0.eq1.pred=86, my.e0.file=NULL, my.locations.file=NULL, 
-								save.as.ascii=1000, verbose=TRUE, ...) {
+								save.as.ascii=1000, resample.outrange = TRUE, verbose=TRUE, ...) {
 	# Predicting male e0 from female predictions. estimates is the result of 
 	# the e0.jmale.estimate function. If it is NULL, the estimation is performed 
 	# using the ... arguments
@@ -594,7 +594,8 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	dir.create(joint.male$output.directory, recursive=TRUE)
 	bayesLife.prediction <- .do.jmale.predict(e0.pred, joint.male, 1:get.nr.countries(meta),  
 								gap.lim=gap.lim, #gap.lim.eq2=gap.lim.eq2, 
-								eq2.age.start=max.e0.eq1.pred, verbose=verbose)
+								eq2.age.start=max.e0.eq1.pred, verbose=verbose,
+								resample.outrange = resample.outrange)
 	save(bayesLife.prediction, file=prediction.file)
 	cat('\nPrediction stored into', joint.male$output.directory, '\n')
 	bayesTFR:::do.convert.trajectories(pred=get.e0.jmale.prediction(bayesLife.prediction), n=save.as.ascii, 
@@ -664,7 +665,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 
 .do.jmale.predict <- function(e0.pred, joint.male, countries, gap.lim, #gap.lim.eq2, 
 								eq2.age.start=NULL, adj.factors = NULL,
-								verbose=FALSE, supress.warnings = FALSE) {
+								verbose=FALSE, supress.warnings = FALSE, resample.outrange = TRUE) {
 	predict.one.trajectory <- function(Gprev, ftraj, determ = FALSE) {
 		mtraj <- rep(NA, length(ftraj))
 		for(time in 1:length(ftraj)) {
@@ -686,10 +687,16 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 				else {
 				    error <- if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
 			    			else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
-				    Gt <- Gtdeterm + error					
-				    while(Gt < min(Gprev, gap.lim[1]) || Gt > gap.lim[2]) {
-					    Gt <- Gtdeterm + if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
-							else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
+				    Gt <- Gtdeterm + error
+				    if(resample.outrange){
+				        while(Gt < min(Gprev, gap.lim[1]) || Gt > gap.lim[2]) {
+					        Gt <- Gtdeterm + if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
+					    		else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
+				        }
+				    } else {
+				        Gt <- Gtdeterm + if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
+				                            else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
+				        Gt <- max(min(Gt, gap.lim[2]), gap.lim[1])
 				    }
 				}
 			}
