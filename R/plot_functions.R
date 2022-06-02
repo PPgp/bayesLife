@@ -192,8 +192,8 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 								  xlim=NULL, ylim=NULL, type='b', 
 								  xlab='Year', ylab='Life expectancy at birth', main=NULL, 
 								  lwd=c(2,2,2,2,1), col=c('black', 'green', 'red', 'red', '#00000020'),
-								  col2=c('gray39', 'greenyellow', 'hotpink', 'hotpink', '#00000020'),
-								  show.legend=TRUE, add=FALSE, ...
+								  col2=c('gray39', 'greenyellow', 'hotpink', 'hotpink', '#00000020'), 
+								  pch = c(1, 2), show.legend=TRUE, add=FALSE, ...
 								  ) {
 	# lwd/col is a vector of 5 line widths/colors for: 
 	#	1. observed data, 2. imputed missing data, 3. median, 4. quantiles, 5. trajectories
@@ -225,6 +225,11 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 		col <- rep(col, 5)
 		col[(lcol+1):5] <- c('black', 'green', 'red', 'red', '#00000020')[(lcol+1):5]
 	}
+	if(length(pch) < 2) {
+	    if(length(pch) == 0) pch <- 1
+	    pch <- rep(pch, 2)
+	}
+	if(!type %in% c("b", "p", "o")) pch <- rep(-1, 2)
 	country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
 	if(is.null(country.obj$code)) stop("Country ", country, " not found.")
 	country <- country.obj
@@ -351,14 +356,14 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 				}
 			}
 		    # plot historical data: observed
-			plot(plot.data[[ipred]]$obs.x, plot.data[[ipred]]$obs.y, type=type, xlim=xlim, ylim=ylim, ylab=ylab, xlab=xlab, main=main, 
+			plot(plot.data[[ipred]]$obs.x, plot.data[[ipred]]$obs.y, type=type, pch = pch[1], xlim=xlim, ylim=ylim, ylab=ylab, xlab=xlab, main=main, 
 				panel.first = grid(), lwd=lwd[1], col=this.col[1], ...
 					)
 		} else # add to an existing plot
-			points(plot.data[[ipred]]$obs.x, plot.data[[ipred]]$obs.y, type=type, lwd=lwd[1], col=this.col[1], ...
+			points(plot.data[[ipred]]$obs.x, plot.data[[ipred]]$obs.y, type=type, pch = pch[1], lwd=lwd[1], col=this.col[1], ...
 					)
 		if(!is.null(plot.data[[ipred]]$rec.x)) { # plot reconstructed missing data
-			lines(plot.data[[ipred]]$rec.x, plot.data[[ipred]]$rec.y, pch=2, type='b', col=this.col[2], lwd=lwd[2])
+			lines(plot.data[[ipred]]$rec.x, plot.data[[ipred]]$rec.y, pch=pch[2], type=type, col=this.col[2], lwd=lwd[2])
 			lines(c(plot.data[[ipred]]$obs.x[length(plot.data[[ipred]]$obs.x)], plot.data[[ipred]]$rec.x[1]), 
 				c(plot.data[[ipred]]$obs.y[length(plot.data[[ipred]]$obs.y)], plot.data[[ipred]]$rec.y[1]), 
 				col=this.col[2], lwd=lwd[2]) # connection between the two parts
@@ -390,7 +395,7 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 		}
 		legend <- c(legend, paste('observed', if(do.both.sexes) paste(lowerize(get.sex.label(meta)), 'e0') else 'e0'))
 		lty <- c(lty, 1)
-		pch <- c(rep(-1, length(legend)-1), 1)
+		pchs <- c(rep(-1, length(legend)-1), pch[1])
 		lwds <- c(lwd[3], rep(lwd[4], length(pi)), lwd[1])
 		cols <- c(this.col[3], rep(this.col[4], length(pi)), this.col[1])
 		if(!adjusted.only) { # plot unadjusted median
@@ -407,13 +412,13 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 			legend <- c(legend, paste('imputed', if(do.both.sexes) paste(lowerize(get.sex.label(meta)), 'e0') else 'e0'))
 			cols <- c(cols, this.col[2])
 			lty <- c(lty, 1)
-			pch <- c(pch, 2)
+			pchs <- c(pchs, pch[2])
 			lwds <- c(lwds, lwd[2])
 		}
 		lty.all <- c(lty.all, lty)
 		legend.all <- c(legend.all, legend)
 		cols.all <- c(cols.all, cols)
-		pch.all <- c(pch.all, pch)
+		pch.all <- c(pch.all, pchs)
 		lwd.all <- c(lwd.all, lwds)
 		if(do.average) break
 	}
