@@ -26,6 +26,12 @@ e0.gap.plot <- function(e0.pred, country, e0.pred2=NULL, pi=c(80, 95), nr.traj=0
 	x1 <- as.integer(rownames(e0.mtx))
 	x2 <- as.numeric(dimnames(e0.pred$quantiles)[[3]])
 	y1 <- e0.mtx[1:T,country$index]	- e0.mtx2[1:T,country$index]
+	# remove NA's at the beginning
+	startx <- which(cumsum(!is.na(y1)) == 1)
+	if(startx > 1){
+	    x1 <- x1[startx:length(x1)]
+	    y1 <- y1[startx:length(y1)]
+	}
 	# get all trajectories for computing the quantiles
 	trajobj <- bayesTFR:::get.trajectories(e0.pred, country$code)
 	trajobj2 <- bayesTFR:::get.trajectories(e0.pred2, country$code)
