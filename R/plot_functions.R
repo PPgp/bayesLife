@@ -312,10 +312,9 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
     		ylim.loc <- c(min(ylim.loc[1], plot.data[[ipred]]$rec.y), max(ylim.loc[2], plot.data[[ipred]]$rec.y))
     	}
 	}
-	#stop('')
 	if(do.average) {
-		plot.data[[1]]$obs.y <- plot.data[[1]]$obs.y - (plot.data[[1]]$obs.y-plot.data[[2]]$obs.y)/2.
-		if(lpart2 > 0) plot.data[[1]]$rec.y - (plot.data[[1]]$rec.y-plot.data[[2]]$rec.y)/2.
+		plot.data[[1]]$obs.y <- (plot.data[[1]]$obs.y + plot.data[[2]]$obs.y)/2.
+		if(lpart2 > 0) plot.data[[1]]$rec.y <- (plot.data[[1]]$rec.y + plot.data[[2]]$rec.y)/2.
 	}
 	for(ipred in 1:length(pred)) {
 		e0pred <- pred[[ipred]]
