@@ -481,7 +481,7 @@ e0.DLcurve.plot.all <- function (mcmc.list = NULL, sim.dir = NULL,
 
 e0.world.dlcurves <- function(x, mcmc.list, burnin=NULL, ...) {
 	# Get the hierarchical DL curves
-	if(class(mcmc.list) == 'bayesLife.prediction') {
+	if(inherits(mcmc.list, 'bayesLife.prediction')) {
 		if(!is.null(burnin) && burnin != mcmc.list$burnin)
 			warning('Prediction was generated with different burnin. Burnin set to ', mcmc.list$burnin)
 		burnin <- 0 # because burnin was already cut of the traces
@@ -495,7 +495,7 @@ e0.world.dlcurves <- function(x, mcmc.list, burnin=NULL, ...) {
 e0.country.dlcurves <- function(x, mcmc.list, country, burnin=NULL, ...) {
 	# Get country-specific DL curves.
 	# It's a wrapper around e0.get.dlcurves for easier usage.
-	if(class(mcmc.list) == 'bayesLife.prediction') {
+	if(inherits(mcmc.list, 'bayesLife.prediction')) {
 		if(!is.null(burnin) && burnin != mcmc.list$burnin)
 			warning('Prediction was generated with different burnin. Burnin set to ', mcmc.list$burnin)
 		burnin <- 0 # because burnin was already cut of the traces
@@ -563,7 +563,7 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
     main = NULL, show.legend=TRUE, col=c('black', 'red', "#00000020"), ...
     ) 
 {	
-	if(class(mcmc.list) == 'bayesLife.prediction') {
+	if(inherits(mcmc.list, 'bayesLife.prediction')) {
 		if(!is.null(burnin) && burnin != mcmc.list$burnin)
 			warning('Prediction was generated with different burnin. Burnin set to ', mcmc.list$burnin)
 		burnin <- 0 # because burnin was already cut of the traces
@@ -630,7 +630,7 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
 }
 
 e0.parDL.plot <- function(mcmc.set, country=NULL, burnin = NULL, lty=2, ann=TRUE, ...) {
-	if(class(mcmc.set) == 'bayesLife.prediction') {
+	if(inherits(mcmc.set, 'bayesLife.prediction')) {
 		if(!is.null(burnin) && burnin != mcmc.set$burnin)
 			warning('Prediction was generated with different burnin. Burnin set to ', mcmc.set$burnin)
 		burnin <- 0 # because burnin was already cut of the traces

@@ -24,7 +24,7 @@ e0.predict <- function(mcmc.set = NULL, end.year = 2100,
                        output.dir = NULL, low.memory = TRUE, ignore.last.observed = FALSE,
                        seed = NULL, verbose = TRUE, ...){
 	if(!is.null(mcmc.set)) {
-		if (class(mcmc.set) != 'bayesLife.mcmc.set') {
+		if (!inherits(mcmc.set, 'bayesLife.mcmc.set')) {
 			stop('Wrong type of mcmc.set. Must be of type bayesLife.mcmc.set.')
 		}
 	} else {                

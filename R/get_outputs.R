@@ -538,7 +538,7 @@ get.e0.trajectories <- function(e0.pred, country) {
 
 get.e0.trajectories.object <- function(e0.pred, country, nr.traj=NULL, typical.trajectory=FALSE, pi=NULL, ...) {
 	# here country must be a code; returns also indices
-	if(is.list(e0.pred) && class(e0.pred[[1]]) == 'bayesLife.prediction' && class(e0.pred[[2]]) == 'bayesLife.prediction'){
+	if(is.list(e0.pred) && inherits(e0.pred[[1]], 'bayesLife.prediction') && inherits(e0.pred[[2]], 'bayesLife.prediction')){
 		traj1 <- bayesTFR:::get.trajectories(e0.pred[[1]], country, nr.traj=NULL, ...) # we want all trajectories
 		traj2 <- bayesTFR:::get.trajectories(e0.pred[[2]], country, nr.traj=NULL, ...)
 		traj.res <- traj1$trajectories - (traj1$trajectories - traj2$trajectories)/2.
