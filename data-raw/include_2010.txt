@@ -1,0 +1,282 @@
+"name"	"country_code"	"include_code"
+"WORLD"	900	0
+"More developed regions"	901	0
+"Less developed regions"	902	0
+"Least developed countries"	941	0
+"Other less developed countries"	934	0
+"Less developed regions, excluding China"	948	0
+"Sub-Saharan Africa"	947	0
+"AFRICA"	903	0
+"Eastern Africa"	910	0
+"Burundi"	108	3
+"Comoros"	174	2
+"Djibouti"	262	3
+"Eritrea"	232	3
+"Ethiopia"	231	3
+"Kenya"	404	3
+"Madagascar"	450	2
+"Malawi"	454	3
+"Mauritius"	480	2
+"Mayotte"	175	2
+"Mozambique"	508	3
+"Reunion"	638	2
+"Rwanda"	646	3
+"Seychelles"	690	2
+"Somalia"	706	2
+"Uganda"	800	3
+"United Republic of Tanzania"	834	3
+"Zambia"	894	3
+"Zimbabwe"	716	3
+"Middle Africa"	911	0
+"Angola"	24	3
+"Cameroon"	120	3
+"Central African Republic"	140	3
+"Chad"	148	3
+"Congo"	178	3
+"Democratic Republic of the Congo"	180	3
+"Equatorial Guinea"	226	3
+"Gabon"	266	3
+"Sao Tome and Principe"	678	2
+"Northern Africa"	912	0
+"Algeria"	12	2
+"Egypt"	818	2
+"Libyan Arab Jamahiriya"	434	2
+"Morocco"	504	2
+"Sudan"	736	2
+"Tunisia"	788	2
+"Western Sahara"	732	2
+"Southern Africa"	913	0
+"Botswana"	72	3
+"Lesotho"	426	3
+"Namibia"	516	3
+"South Africa"	710	3
+"Swaziland"	748	3
+"Western Africa"	914	0
+"Benin"	204	3
+"Burkina Faso"	854	3
+"Cape Verde"	132	2
+"Cote d'Ivoire"	384	3
+"Gambia"	270	3
+"Ghana"	288	3
+"Guinea"	324	3
+"Guinea-Bissau"	624	3
+"Liberia"	430	3
+"Mali"	466	3
+"Mauritania"	478	2
+"Niger"	562	2
+"Nigeria"	566	3
+"Saint Helena"	654	2
+"Senegal"	686	2
+"Sierra Leone"	694	3
+"Togo"	768	3
+"ASIA"	935	0
+"Eastern Asia"	906	0
+"China"	156	2
+"China, Hong Kong SAR"	344	2
+"China, Macao SAR"	446	2
+"Dem. People's Republic of Korea"	408	2
+"Japan"	392	2
+"Mongolia"	496	2
+"Republic of Korea"	410	2
+"Taiwan, Province of China"	158	2
+"South-Central Asia"	921	0
+"Central Asia"	5500	0
+"Kazakhstan"	398	2
+"Kyrgyzstan"	417	2
+"Tajikistan"	762	2
+"Turkmenistan"	795	2
+"Uzbekistan"	860	2
+"Southern Asia"	5501	0
+"Afghanistan"	4	2
+"Bangladesh"	50	2
+"Bhutan"	64	2
+"India"	356	2
+"Iran (Islamic Republic of)"	364	2
+"Maldives"	462	2
+"Nepal"	524	2
+"Pakistan"	586	2
+"Sri Lanka"	144	2
+"South-Eastern Asia"	920	0
+"Brunei Darussalam"	96	2
+"Cambodia"	116	2
+"Indonesia"	360	2
+"Lao People's Democratic Republic"	418	2
+"Malaysia"	458	2
+"Myanmar"	104	2
+"Philippines"	608	2
+"Singapore"	702	2
+"Thailand"	764	2
+"Timor-Leste"	626	2
+"Viet Nam"	704	2
+"Western Asia"	922	0
+"Armenia"	51	2
+"Azerbaijan"	31	2
+"Bahrain"	48	2
+"Cyprus"	196	2
+"Georgia"	268	2
+"Iraq"	368	2
+"Israel"	376	2
+"Jordan"	400	2
+"Kuwait"	414	2
+"Lebanon"	422	2
+"Occupied Palestinian Territory"	275	2
+"Oman"	512	2
+"Qatar"	634	2
+"Saudi Arabia"	682	2
+"Syrian Arab Republic"	760	2
+"Turkey"	792	2
+"United Arab Emirates"	784	2
+"Yemen"	887	2
+"EUROPE"	908	0
+"Eastern Europe"	923	0
+"Belarus"	112	2
+"Bulgaria"	100	2
+"Czech Republic"	203	2
+"Hungary"	348	2
+"Poland"	616	2
+"Republic of Moldova"	498	2
+"Romania"	642	2
+"Russian Federation"	643	2
+"Slovakia"	703	2
+"Ukraine"	804	2
+"Northern Europe"	924	0
+"Channel Islands"	830	2
+"Denmark"	208	2
+"Estonia"	233	2
+"Faeroe Islands"	234	2
+"Finland"	246	2
+"Iceland"	352	2
+"Ireland"	372	2
+"Isle of Man"	833	2
+"Latvia"	428	2
+"Lithuania"	440	2
+"Norway"	578	2
+"Sweden"	752	2
+"United Kingdom"	826	2
+"Southern Europe"	925	0
+"Albania"	8	2
+"Andorra"	20	2
+"Bosnia and Herzegovina"	70	2
+"Croatia"	191	2
+"Gibraltar"	292	2
+"Greece"	300	2
+"Holy See"	336	2
+"Italy"	380	2
+"Malta"	470	2
+"Montenegro"	499	2
+"Portugal"	620	2
+"San Marino"	674	2
+"Serbia"	688	2
+"Slovenia"	705	2
+"Spain"	724	2
+"TFYR Macedonia"	807	2
+"Western Europe"	926	0
+"Austria"	40	2
+"Belgium"	56	2
+"France"	250	2
+"Germany"	276	2
+"Liechtenstein"	438	2
+"Luxembourg"	442	2
+"Monaco"	492	2
+"Netherlands"	528	2
+"Switzerland"	756	2
+"LATIN AMERICA AND THE CARIBBEAN"	904	0
+"Caribbean"	915	0
+"Anguilla"	660	2
+"Antigua and Barbuda"	28	2
+"Aruba"	533	2
+"Bahamas"	44	3
+"Barbados"	52	2
+"British Virgin Islands"	92	2
+"Cayman Islands"	136	2
+"Cuba"	192	2
+"Dominica"	212	2
+"Dominican Republic"	214	2
+"Grenada"	308	2
+"Guadeloupe"	312	2
+"Haiti"	332	2
+"Jamaica"	388	2
+"Martinique"	474	2
+"Montserrat"	500	2
+"Netherlands Antilles"	530	2
+"Puerto Rico"	630	2
+"Saint Kitts and Nevis"	659	2
+"Saint Lucia"	662	2
+"Saint Vincent and the Grenadines"	670	2
+"Trinidad and Tobago"	780	2
+"Turks and Caicos Islands"	796	2
+"United States Virgin Islands"	850	2
+"Central America"	916	0
+"Belize"	84	2
+"Costa Rica"	188	2
+"El Salvador"	222	2
+"Guatemala"	320	2
+"Honduras"	340	2
+"Mexico"	484	2
+"Nicaragua"	558	2
+"Panama"	591	2
+"South America"	931	0
+"Argentina"	32	2
+"Bolivia (Plurinational State of)"	68	2
+"Brazil"	76	2
+"Chile"	152	2
+"Colombia"	170	2
+"Ecuador"	218	2
+"Falkland Islands (Malvinas)"	238	2
+"French Guiana"	254	2
+"Guyana"	328	2
+"Paraguay"	600	2
+"Peru"	604	2
+"Suriname"	740	2
+"Uruguay"	858	2
+"Venezuela (Bolivarian Republic of)"	862	2
+"NORTHERN AMERICA"	905	0
+"Bermuda"	60	2
+"Canada"	124	2
+"Greenland"	304	2
+"Saint Pierre and Miquelon"	666	2
+"United States of America"	840	2
+"OCEANIA"	909	0
+"Australia/New Zealand"	927	0
+"Australia"	36	2
+"New Zealand"	554	2
+"Melanesia"	928	0
+"Fiji"	242	2
+"New Caledonia"	540	2
+"Papua New Guinea"	598	2
+"Solomon Islands"	90	2
+"Vanuatu"	548	2
+"Micronesia"	954	0
+"Guam"	316	2
+"Kiribati"	296	2
+"Marshall Islands"	584	2
+"Micronesia (Fed. States of)"	583	2
+"Nauru"	520	2
+"Northern Mariana Islands"	580	2
+"Palau"	585	2
+"Polynesia"	957	0
+"American Samoa"	16	2
+"Cook Islands"	184	2
+"French Polynesia"	258	2
+"Niue"	570	2
+"Pitcairn"	612	2
+"Samoa"	882	2
+"Tokelau"	772	2
+"Tonga"	776	2
+"Tuvalu"	798	2
+"Wallis and Futuna Islands"	876	2
+"AIDS: All countries"	981	0
+"AIDS: More developed regions"	978	0
+"AIDS: Less developed regions"	979	0
+"AIDS: Least developed countries"	980	0
+"AIDS: Less than 1 per cent"	974	0
+"AIDS: Between 1 and 5 per cent"	973	0
+"AIDS: Between 5 and 10 per cent"	972	0
+"AIDS: Between 10 and 20 per cent"	971	0
+"AIDS: More than or equal to 20 per cent"	970	0
+"AIDS: African countries"	975	0
+"AIDS: Asian countries"	976	0
+"AIDS: European countries"	982	0
+"AIDS: Latin American and Caribbean countries"	977	0
+"AIDS: North American countries"	983	0
+"AIDS: Oceanian countries"	984	0
