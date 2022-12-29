@@ -45,7 +45,7 @@ get.wpp.e0.data <- function(sex = 'M', start.year = 1950, present.year = 2015,
 							data_incl, loc_data, 
 							start.year=start.year, 
 							present.year=present.year, annual = annual, 
-							interpolate = annual && is.null(my.e0.file))
+							interpolate = wpp.year < 2022 && annual && is.null(my.e0.file))
 	if(include.hiv)
     	LEXmatrix.regions$regions$hiv.pred <- hiv.aids
 	
@@ -98,7 +98,7 @@ set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, my.locations
 	extra.wpp <- bayesTFR:::.extra.matrix.regions(data=data, countries=countries, meta=meta, 
 							package="bayesLife", my.locations.file=my.locations.file, 
 							annual = annual,
-							interpolate = is.null(my.e0.file) && annual,
+							interpolate = meta$wpp.year < 2022 && is.null(my.e0.file) && annual,
 							verbose=verbose)
 	if(!is.null(extra.wpp)) {
 		extra.wpp <- list(e0.matrix=extra.wpp$tfr_matrix, 
