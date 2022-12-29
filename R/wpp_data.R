@@ -143,7 +143,7 @@ get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, my.loc
 							data_incl, loc_data, 
 							start.year=meta$start.year, 
 							present.year=meta$present.year, annual = meta$annual, 
-							interpolate = meta$annual && is.null(my.e0.file),)
+							interpolate = meta$wpp.year < 2022 && meta$annual && is.null(my.e0.file),)
 	if (verbose) 
 		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')
 	if(is.null(meta$annual.simulation) || !meta$annual.simulation) {
