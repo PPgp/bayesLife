@@ -759,6 +759,10 @@ e0.map.all <- function(pred, output.dir, output.type='png', e0.range=NULL, nr.ca
 						nr.cats=nr.cats, same.scale=same.scale, quantile=quantile, file.prefix=file.prefix, ...)
 }
 
+e0.ggmap <- function(pred, ...) {
+    return(bayesTFR::tfr.ggmap(pred, ...))
+}
+
 e0.map.gvis <- function(pred, ...)
 	bdem.map.gvis(pred, ...)
 						

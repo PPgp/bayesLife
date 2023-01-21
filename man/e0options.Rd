@@ -14,13 +14,13 @@ Setting and retrieving global options.
 \usage{
 using.bayesLife()
 e0options()
-e0mcmc.options(...)
+e0mcmc.options(..., annual = FALSE)
 e0pred.options(...)
 }
 
 \arguments{
-  \item{...}{Arguments in \code{tag = value} form, or names of options to retrieve.
-}
+  \item{...}{Arguments in \code{tag = value} form, or names of options to retrieve.}
+  \item{annual}{Logical indicating if the options are for an annual simulation (\code{TRUE}) or a 5-year simulation(\code{FALSE}).}
 }
 \details{
 Function \code{using.bayesLife} sets all global options to their default values. Function \code{e0options} is used to get all options as a named list. 
@@ -32,7 +32,7 @@ Many options are in form of a list and it is possible to overwrite only single e
 
 \value{
 \code{e0options} returns a list of all global options.\cr
-\code{e0mcmc.options}, when called with no argument, it returns a list of options related to the MCMC estimation.\cr
+\code{e0mcmc.options}, when called with no argument other than \code{annual}, it returns a list of options related to the MCMC estimation. The \code{annual} argument determines if the values correspond to an annual or 5-year simulation.\cr
 \code{e0pred.options}, when called with no argument, it returns a list of options related to the prediction. \cr
 For both, \code{e0mcmc.options} and \code{e0pred.options}, when a specific option is queried, it returns the value of that option. When an option is set, a list of the previous values of all MCMC/prediction options is returned invisibly. 
 }

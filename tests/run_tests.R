@@ -2,8 +2,8 @@ library(bayesLife)
 source('test_functions.R')
 
 cran <- TRUE
-for(wpp.year in c(2010, 2012, 2015, 2017, 2019))
-    test.get.wpp.data(wpp.year)
+wpp <- 2019
+test.get.wpp.data(wpp)
 test.existing.simulation()
 test.e0trajectories()
 test.get.parameter.traces()
@@ -13,8 +13,7 @@ test.get.parameter.traces()
 if(!cran) {
 	test.DLcurve()
 	test.plot.density()
-	#test.plot.map()
-	test.estimate.mcmc()
+	test.plot.map()
 	test.estimate.mcmc(compression='xz')
 	test.estimate.mcmc.with.suppl.data()
 	test.estimate.mcmc.with.suppl.data(compression='bz')
@@ -24,8 +23,13 @@ if(!cran) {
 	test.run.mcmc.simulation.auto(compression='gz')
 	test.run.mcmc.simulation.auto.parallel()
 	test.imputation()
-	test.run.annual.simulation()
 	test.subnational.predictions()
 	test.my.locations.extra()
 	test.reproduce.simulation()
+	for (wpp in c(2019, 2022)){
+	    test.estimate.mcmc(wpp.year = wpp)
+	    test.run.annual.simulation(wpp.year = wpp)
+	}
+	for(wpp.year in c(2010, 2012, 2015, 2017, 2022))
+	    test.get.wpp.data(wpp.year)
 }

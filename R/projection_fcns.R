@@ -421,8 +421,22 @@ get.e0.reconstructed <- function(data, meta) {
 	return(if(is.null(data)) meta$e0.matrix.all else data)
 }
 
-e0.median.reset <- function(sim.dir, countries, joint.male=FALSE) {
-	for(country in countries) pred <- e0.median.shift(sim.dir, country, reset=TRUE, joint.male=joint.male)
+.e0.store.adjustment <- function(new.pred, sim.dir, joint.male){
+    if(joint.male) {
+        predF <- get.e0.prediction(sim.dir)
+        predF$joint.male <- new.pred
+        store.bayesLife.prediction(predF)
+    } else store.bayesLife.prediction(new.pred)
+}
+
+e0.median.reset <- function(sim.dir, countries = NULL, joint.male=FALSE) {
+    if(is.null(countries)) {
+        pred <- get.e0.prediction(sim.dir, joint.male = joint.male)
+        pred$median.shift <- NULL
+        .e0.store.adjustment(pred, sim.dir, joint.male)
+        cat('\nMedians for all countries reset.\n')
+    } else
+	    for(country in countries) pred <- e0.median.shift(sim.dir, country, reset=TRUE, joint.male=joint.male)
 	invisible(pred)
 }
 
@@ -432,11 +446,7 @@ e0.median.shift <- function(sim.dir, country, reset=FALSE, shift=0, from=NULL, t
 	pred <- get.e0.prediction(sim.dir, joint.male=joint.male)
 	new.pred <- bayesTFR:::.bdem.median.shift(pred, type='e0', country=country, reset=reset, 
 				shift=shift, from=from, to=to)
-	if(joint.male) {
-		predF <- get.e0.prediction(sim.dir)
-		predF$joint.male <- new.pred
-		store.bayesLife.prediction(predF)
-	} else store.bayesLife.prediction(new.pred)
+	.e0.store.adjustment(new.pred, sim.dir, joint.male)
 	invisible(new.pred)
 }
 
@@ -444,11 +454,7 @@ e0.median.set <- function(sim.dir, country, values, years=NULL, joint.male=FALSE
 	pred <- get.e0.prediction(sim.dir, joint.male=joint.male)
 	new.pred <- bayesTFR:::.bdem.median.set(pred, type='e0', country=country, 
 								values=values, years=years)
-	if(joint.male) {
-		predF <- get.e0.prediction(sim.dir)
-		predF$joint.male <- new.pred
-		store.bayesLife.prediction(predF)
-	} else store.bayesLife.prediction(new.pred)
+	.e0.store.adjustment(new.pred, sim.dir, joint.male)
 	invisible(new.pred)
 }
 
@@ -481,6 +487,15 @@ e0.median.adjust.jmale <- function(sim.dir, countries, factors = c(1.2, 1.1)) {
     # reload adjusted prediction
     invisible(get.e0.prediction(sim.dir, joint.male = TRUE))
 }
+
+e0.shift.prediction.to.wpp <- function(sim.dir, joint.male = FALSE, ...){
+    pred <- get.e0.prediction(sim.dir, joint.male = joint.male)
+    new.pred <- bayesTFR:::.do.shift.prediction.to.wpp(pred, 
+                                                       wpp.dataset = if(joint.male) "e0Mproj" else "e0Fproj", ...)
+    .e0.store.adjustment(new.pred, sim.dir, joint.male)
+    invisible(new.pred)
+}
+
 
 e0.jmale.estimate <- function(mcmc.set, countries.index=NULL, 
 								estDof.eq1 = TRUE, start.eq1 = list(dof = 2), 

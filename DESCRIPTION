@@ -1,16 +1,16 @@
 Package: bayesLife
 Type: Package
 Title: Bayesian Projection of Life Expectancy
-Version: 5.1-0.9002
+Version: 5.1-0.9003
 Date: 2022-12-29
 Author: Hana Sevcikova, Adrian Raftery, Jennifer Chunn 
 Maintainer: Hana Sevcikova <hanas@uw.edu>
 Description: Making probabilistic projections of life expectancy for all countries of the world, using a Bayesian hierarchical model <doi:10.1007/s13524-012-0193-x>. Subnational projections are also supported.
 Depends: 
-    bayesTFR (>= 7.0-5),
-    R (>= 2.10)
+    bayesTFR (>= 7.2-2),
+    R (>= 3.5.0)
 Imports: wpp2019, hett, car, coda, data.table
 Suggests: wpp2017, wpp2015, wpp2012, wpp2010
 License: GPL-3 | file LICENSE
 URL: https://bayespop.csss.washington.edu
-LazyData: true
+LazyData: false

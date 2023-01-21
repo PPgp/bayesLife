@@ -53,7 +53,7 @@ get.e0.mcmc <- function(sim.dir = file.path(getwd(), 'bayesLife.output'),
 .convert.meta.from.legacy.form <- function(meta) {
     # Put meta created with older version of bayesLife into the new format.
     # It means creating mcmc.options and removing relevant info from meta
-    opts <- e0mcmc.options()
+    opts <- e0mcmc.options(annual = meta$annual.simulation)
     for(par in c("a", "delta", "tau", "outliers", "country.overwrites", "nu", 
                  "dl.p1", "dl.p2", "sumTriangle.lim")) {
         opts[[par]] <- meta[[par]]
