@@ -85,6 +85,8 @@ export(
 	e0options,
 	e0mcmc.options,
 	e0pred.options,
+	e0mcmc.dlpriors.options,
+	get.DLpriors,
 	compute.loess,
 	compute.residuals,
 	using.bayesLife
