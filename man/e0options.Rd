@@ -3,6 +3,7 @@
 \alias{e0mcmc.options}
 \alias{e0pred.options}
 \alias{using.bayesLife}
+\alias{DLpriors}
 
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
@@ -16,6 +17,8 @@ using.bayesLife()
 e0options()
 e0mcmc.options(..., annual = FALSE)
 e0pred.options(...)
+
+data(DLpriors)
 }
 
 \arguments{

@@ -55,11 +55,45 @@ e0.options.default <- function() {
     ))
 }
 
-e0.mcmc.options.default <- function() {
-    default.prior.option <- "B"
+get.DLpriors <- function(prior.choice = NULL){
     e <- new.env()
     data("DLpriors", envir = e)
-    prior.pars <- e$DLpriors[e$DLpriors$option == default.prior.option,, drop = FALSE]
+    if(is.null(prior.choice)) return(e$DLpriors)
+    e$DLpriors[e$DLpriors$option == prior.choice,, drop = FALSE]
+}
+
+update.DLpriors <- function(prior.choice = "B", annual = FALSE, 
+                            un.constraints = FALSE){
+    pars <- e0.mcmc.options(annual = annual)
+    if(!is.null(prior.choice)) {
+        prior.pars <- get.DLpriors(prior.choice)
+        estpars <- prior.pars[, 1:6]
+        rownames(estpars) <- prior.pars[, "parname"]
+        z.up <- prior.pars[1, "Uz"]
+        denom <- if(annual) 5 else 1
+        denom.arr <- c(1, 1, 1, 1, denom, denom)
+        pars <- within(pars, {
+            a <- as.numeric(estpars["a",])/denom.arr
+            delta <- as.numeric(estpars["delta",])/denom.arr
+            tau <- as.numeric(estpars["tau",])/denom.arr
+            z$ini.up <- z.up /denom
+            z$prior.up <- z.up /denom
+            z.c$prior.up <- z.up /denom
+            z.c$ini.norm["mean"] <- round(z$ini.low + (z$ini.up - z$ini.low)/2, 2)
+            sumTriangle.lim[2] <- prior.pars[1, "Sa"]
+        }
+    }
+    if(un.constraints){
+        pars <- within(pars, {
+            Triangle$prior.low = c(5.9, 36, 10.1, 15.5)
+            Triangle.c$prior.low = c(0.5, 30.9, 9.1, 14.7)
+        }
+    }
+    pars
+}
+
+e0.mcmc.options.default <- function() {
+    prior.pars <- get.DLpriors("B")
     estpars <- prior.pars[, 1:6]
     rownames(estpars) <- prior.pars[, "parname"]
     z.up <- prior.pars[1, "Uz"]
