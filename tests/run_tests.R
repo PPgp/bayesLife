@@ -1,7 +1,7 @@
 library(bayesLife)
 source('test_functions.R')
 
-cran <- FALSE
+cran <- TRUE
 wpp <- 2019
 test.get.wpp.data(wpp)
 test.existing.simulation()
