@@ -137,7 +137,7 @@ store.sample.to.disk <- function(iter, niter, mcenv, verbose = FALSE) {
     # write samples simu/thin to disk
     mcenv$finished.iter <- mcenv$finished.iter + 1
     mcenv$rng.state <- .Random.seed         
-    if (iter %% mcenv$thin == 0) {
+    if (iter %% mcenv$thin == 0 || iter == niter) {
         mcenv$length <- mcenv$length + 1
         flush.buffer <- FALSE
         if (iter + 1 > niter) flush.buffer <- TRUE                
