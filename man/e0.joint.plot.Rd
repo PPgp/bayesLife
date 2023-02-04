@@ -21,7 +21,7 @@ e0.joint.plot.all(e0.pred, output.dir = file.path(getwd(), "e0joint"),
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{e0.pred}{Object of class \code{\link{bayesLife.prediction}} containing female projections.}
-  \item{country}{Name or numerical code of a country.}
+  \item{country}{Name or numerical code of a country. It can also be given as ISO-2 or ISO-3 characters.}
   \item{pi}{Probability interval. It can be a single number or an array.}
   \item{years}{Array of future years for which to plot the distribution.}
   \item{nr.points}{Number of points shown in the plot for each year.}

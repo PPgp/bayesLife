@@ -13,7 +13,7 @@ get.e0.trajectories(e0.pred, country)
 
 \arguments{
   \item{e0.pred}{Object of class \code{\link{bayesLife.prediction}}.}
-  \item{country}{Name or numerical code of a country.}
+  \item{country}{Name or numerical code of a country. It can also be given as ISO-2 or ISO-3 characters.}
 }
 \details{
 The function loads trajectories of life expectancy for the given country from disk

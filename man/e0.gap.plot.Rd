@@ -20,7 +20,7 @@ e0.gap.plot.all(e0.pred, output.dir = file.path(getwd(), "e0gaps"),
 
 \arguments{
   \item{e0.pred}{Object of class \code{\link{bayesLife.prediction}} containing female projections. If \code{e0.pred2} is not given, then this object must contain the \sQuote{joint.male} component, generated using the \code{\link{e0.jmale.predict}} function.}
-  \item{country}{Name or numerical code of a country.}
+  \item{country}{Name or numerical code of a country. It can also be given as ISO-2 or ISO-3 characters.}
   \item{e0.pred2}{Object of class \code{\link{bayesLife.prediction}} containing male projections. By default the male projections is taken from the joint female-male projections in \code{e0.pred}, see above.}
   \item{pi}{Probability interval. It can be a single number or an array.}
   \item{nr.traj}{Number of trajectories to be plotted.}

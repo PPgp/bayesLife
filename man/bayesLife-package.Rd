@@ -31,7 +31,9 @@ A number of functions analyzing results are included in the package:
 }
 For MCMC diagnostics, function \link{e0.coda.list.mcmc} creates an object of type \dQuote{mcmc.list} that can be used with the \pkg{coda} package.  Furthermore, function \link{e0.diagnose} analyzes the MCMCs using the Raftery diagnostics implemented in the \pkg{coda} package and gives information about parameters that did not converge. Function \link{e0.dl.coverage} computes a goodness of fit of the double logistic function.
 
-Existing simulation results can be accessed using the \link{get.e0.mcmc} function.  An existing prediction can be accessed via \link{get.e0.prediction}. Existing predictions on a subnational level can be accessed via \link{get.rege0.prediction}
+Existing simulation results can be accessed using the \link{get.e0.mcmc} function.  An existing prediction can be accessed via \link{get.e0.prediction}. Existing predictions on a subnational level can be accessed via \link{get.rege0.prediction}.
+
+For a table with countries included in the mcmc or prediction object, the function \link[bayesTFR]{get.countries.table} can be used in the same way as in \pkg{bayesTFR}.
 
 Historical data are taken from one of the packages \pkg{wpp2019} (default), \pkg{wpp2017}, \pkg{wpp2015}, \pkg{wpp2012} or \pkg{wpp2010}, depending on users settings.
 

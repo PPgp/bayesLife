@@ -28,7 +28,7 @@ e0.trajectories.table(e0.pred, country, pi = c(80, 95),
 
 \arguments{
   \item{e0.pred}{Object of class \code{\link{bayesLife.prediction}}.}
-  \item{country}{Name or numerical code of a country.}
+  \item{country}{Name or numerical code of a country. It can also be given as ISO-2 or ISO-3 characters.}
   \item{pi}{Probability interval. It can be a single number or an array. If \code{both.sexes} is \code{TRUE} the default is 95.}
   \item{both.sexes}{Logical or the character \dQuote{A}. If \code{TRUE} the distribution of both sexes is plotted into one graphics (or tabulated), provided the \code{e0.pred} is a female prediction and contains a joint male prediction as a result of running the function \code{\link{e0.jmale.predict}}. For \dQuote{A} it plots/tabulates the distribution of the average life expectancy over both sexes.}
   \item{nr.traj}{Number of trajectories to be plotted. If \code{NULL}, all trajectories are plotted, otherwise they are thinned evenly. If \code{both.sexes} is \code{TRUE} the default is zero.}
@@ -69,9 +69,9 @@ e0.trajectories.table(pred, country = "Japan", pi = c(80, 95))
 e0.trajectories.plot(pred, country = "Japan", pi = c(80, 95))
 
 # plot multiple countries into one plot
-e0.trajectories.plot(pred, "Japan", col = rep("green", 5), nr.traj = 0,
+e0.trajectories.plot(pred, "JP", col = rep("green", 5), nr.traj = 0,
          pi = c(80), show.legend = FALSE, main = "")
-e0.trajectories.plot(pred, "United States of America", col = rep("blue", 5),  
+e0.trajectories.plot(pred, "USA", col = rep("blue", 5),  
         add = TRUE, nr.traj = 0, pi = c(80), show.legend = FALSE)
 legend("topleft", legend = c("Japan", "USA"), col = c("green", "blue"), 
         lty = 1, bty = "n")

@@ -20,7 +20,7 @@ e0.partraces.cs.plot(country, mcmc.list = NULL,
     nr.points = NULL, dev.ncol = 3, low.memory = TRUE, \dots)
 }
 \arguments{
-  \item{country}{Name or numerical code of a country.}
+  \item{country}{Name or numerical code of a country. It can also be given as ISO-2 or ISO-3 characters.}
   \item{mcmc.list}{List of \code{bayesLife.mcmc} objects, or an object of class \code{bayesLife.mcmc.set} or of class \code{bayesLife.prediction}. If it is \code{NULL}, the traces are loaded from \code{sim.dir}.}
   \item{sim.dir}{Directory with the MCMC simulation results. It is only used if \code{mcmc.list} is \code{NULL}.}
   \item{chain.ids}{List of MCMC identifiers to be plotted. If it is \code{NULL}, all chains found in \code{mcmc.list} or \code{sim.dir} are plotted.}
@@ -44,7 +44,7 @@ Hana Sevcikova
 \examples{
 sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 e0.partraces.plot(sim.dir = sim.dir)
-e0.partraces.cs.plot(country = "Ireland", sim.dir = sim.dir)
+e0.partraces.cs.plot(country = "IRL", sim.dir = sim.dir)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
