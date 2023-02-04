@@ -80,10 +80,10 @@ Hana Sevcikova, using code from Jennifer Chunn
 \dontrun{
 m <- run.e0.mcmc(nr.chains = 1, iter = 50, thin = 1, verbose = TRUE)
 pred <- e0.predict(m, burnin = 25, verbose = TRUE)
-summary(pred, country = "Portugal")}
+summary(pred, country = "Portugal")
 
 # names and codes of countries included
-head(get.countries.table(pred, iso = TRUE))
+head(get.countries.table(pred, iso = TRUE))}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
