@@ -45,16 +45,16 @@ get.wpp.e0.data <- function(sex = 'M', start.year = 1950, present.year = 2015,
 							data_incl, loc_data, 
 							start.year=start.year, 
 							present.year=present.year, annual = annual, 
-							interpolate = annual && is.null(my.e0.file))
+							interpolate = wpp.year < 2022 && annual && is.null(my.e0.file))
 	if(include.hiv)
     	LEXmatrix.regions$regions$hiv.pred <- hiv.aids
 	
 	if (verbose) 
 		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')
 
-	if(!annual) {
+	if(!annual || wpp.year >= 2022) {
 	    LEXmatrixsuppl.regions <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, LEXmatrix.regions, loc_data, 
-									start.year, present.year)
+									start.year, present.year, annual = annual)
 	    if(!is.null(un.object$suppl.data.object) && verbose) 
 		    cat('Dimension of the supplemental e0 matrix:', dim(LEXmatrixsuppl.regions$obs_matrix), '\n')
 	} else LEXmatrixsuppl.regions <- NULL
@@ -80,11 +80,11 @@ create.regionsDT <- function(reglist) {
     return(dt)
 }
     
-read.UNe0 <- function(sex, wpp.year, my.e0.file=NULL, ...) {
-	un.dataset <- paste('e0', sex, sep='')
-	un.suppl.dataset <- paste('e0', sex, '_supplemental', sep='')
-	data <- bayesTFR:::do.read.un.file(un.dataset, wpp.year, my.file=my.e0.file, ...)
-	suppl.data <- bayesTFR:::do.read.un.file(un.suppl.dataset, wpp.year, my.file=my.e0.file, ...)
+read.UNe0 <- function(sex, wpp.year, my.e0.file=NULL, annual = FALSE, ...) {
+	un.dataset <- paste0('e0', sex)
+	un.suppl.dataset <- paste0('e0', sex, '_supplemental')
+	data <- bayesTFR:::do.read.un.file(un.dataset, wpp.year, my.file=my.e0.file, annual = annual, ...)
+	suppl.data <- bayesTFR:::do.read.un.file(un.suppl.dataset, wpp.year, my.file=my.e0.file, annual = annual, ...)
 	if(is.null(suppl.data$data)) suppl.data <- NULL
 	return(list(data.object=data, suppl.data.object=suppl.data))
 }
@@ -98,7 +98,7 @@ set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, my.locations
 	extra.wpp <- bayesTFR:::.extra.matrix.regions(data=data, countries=countries, meta=meta, 
 							package="bayesLife", my.locations.file=my.locations.file, 
 							annual = annual,
-							interpolate = is.null(my.e0.file) && annual,
+							interpolate = meta$wpp.year < 2022 && is.null(my.e0.file) && annual,
 							verbose=verbose)
 	if(!is.null(extra.wpp)) {
 		extra.wpp <- list(e0.matrix=extra.wpp$tfr_matrix, 
@@ -106,11 +106,13 @@ set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, my.locations
 						  regions=extra.wpp$regions, 
 						  nr.countries.estimation=extra.wpp$nr_countries_estimation,
 						  is_processed = extra.wpp$is_processed)
-		locations <- bayesTFR:::read.UNlocations(data$data, wpp.year=meta$wpp.year, 
+		if(!annual || meta$wpp.year >= 2022) {
+		    locations <- bayesTFR:::read.UNlocations(data$data, wpp.year=meta$wpp.year, 
 									my.locations.file=my.locations.file, package='bayesLife', verbose=verbose)
-		suppl.wpp <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, extra.wpp, locations$loc_data, 
+		    suppl.wpp <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, extra.wpp, locations$loc_data, 
 									meta$start.year, meta$present.year)
-		extra.wpp$suppl.data <- bayesTFR:::.get.suppl.data.list(suppl.wpp, matrix.name='e0.matrix')
+		    extra.wpp$suppl.data <- bayesTFR:::.get.suppl.data.list(suppl.wpp, matrix.name='e0.matrix')
+		} else extra.wpp$suppl.data <- bayesTFR:::.get.suppl.data.list(NULL)
 	}
 	return(extra.wpp)
 }
@@ -141,12 +143,12 @@ get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, my.loc
 							data_incl, loc_data, 
 							start.year=meta$start.year, 
 							present.year=meta$present.year, annual = meta$annual, 
-							interpolate = meta$annual && is.null(my.e0.file),)
+							interpolate = meta$wpp.year < 2022 && meta$annual && is.null(my.e0.file))
 	if (verbose) 
 		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')
-	if(is.null(meta$annual.simulation) || !meta$annual.simulation) {
+	if(!meta$annual.simulation || meta$wpp.year >= 2022) {
 	    LEXmatrixsuppl.regions <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, LEXmatrix.regions, loc_data, 
-									meta$start.year, meta$present.year)
+									meta$start.year, meta$present.year, annual = meta$annual.simulation)
 	} else LEXmatrixsuppl.regions <- NULL
 	if(!is.null(un.object$suppl.data.object) && verbose) 
 		cat('Dimension of the supplemental e0 matrix:', dim(LEXmatrixsuppl.regions$obs_matrix), '\n')

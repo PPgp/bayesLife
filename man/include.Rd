@@ -5,6 +5,7 @@
 \alias{include_2015}
 \alias{include_2010}
 \alias{include_2012}
+\alias{include_2022}
 
 \docType{data}
 \title{
@@ -14,6 +15,7 @@ Inclusion Codes
 Datasets containing codes that determine which countries are to be included into a simulation or/and projections. 
 }
 \usage{
+data(include_2022)
 data(include_2019)
 data(include_2017)
 data(include_2015)

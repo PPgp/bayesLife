@@ -1,11 +1,11 @@
 library(bayesLife)
 
-start.test <- function(name) cat('\n<=== Starting test of', name,'====\n')
+start.test <- function(name, wpp.year = NULL) cat('\n<=== Starting test of', name, if(!is.null(wpp.year)) paste0('(WPP ', wpp.year, ')') else '', '====\n')
 test.ok <- function(name) cat('\n==== Test of', name, 'OK.===>\n')
 
 test.get.wpp.data <- function(wpp.year=2010) {
 	test.name <- 'getting WPP data'
-	start.test(test.name)
+	start.test(test.name, wpp.year)
 	ncountries <- list('2008'=158, '2010'=159, '2012'=162, '2015'=178)
 	data <- bayesLife:::get.wpp.e0.data(wpp.year=wpp.year, present.year=if(wpp.year>2012) 2015 else 2010)
 	stopifnot(length(dim(data$e0.matrix))==2)
@@ -14,24 +14,25 @@ test.get.wpp.data <- function(wpp.year=2010) {
 	test.ok(test.name)
 }
 
-test.estimate.mcmc <- function(compression='None') {
+test.estimate.mcmc <- function(compression='None', wpp.year = 2019) {
 	sim.dir <- tempfile()
     # run MCMC
     test.name <- 'estimating MCMC'
-	start.test(test.name)
+	start.test(test.name, wpp.year)
     m <- run.e0.mcmc(nr.chains = 1, iter = 10, thin = 1, output.dir = sim.dir, 
-                     compression.type = compression, 
+                     compression.type = compression, wpp.year = wpp.year,
                      mcmc.options = list(buffer.size = 5))
     stopifnot(m$mcmc.list[[1]]$finished.iter == 10)
 	stopifnot(get.total.iterations(m$mcmc.list, 0) == 10)
 	stopifnot(m$meta$mcmc.options$buffer.size == 5)
 	ncountries <- nrow(get.countries.table(m))
-	stopifnot(ncountries == 180) # in include_2019 there are 180 default countries for e0 
+	if(wpp.year == 2019)
+	    stopifnot(ncountries == 180) # in include_2019 there are 180 default countries for e0 
 	test.ok(test.name)
 	
 	# continue MCMC
 	test.name <- 'continuing MCMC'
-	start.test(test.name)
+	start.test(test.name, wpp.year)
 	m <- continue.e0.mcmc(iter=10, output.dir=sim.dir)
 	stopifnot(m$mcmc.list[[1]]$finished.iter == 20)
 	stopifnot(get.total.iterations(m$mcmc.list, 0) == 20)
@@ -40,7 +41,7 @@ test.estimate.mcmc <- function(compression='None') {
 	
 	# run MCMC for an aggregation
 	test.name <- 'estimating MCMC for extra areas'
-	start.test(test.name)
+	start.test(test.name, wpp.year)
 	data.dir <- file.path(find.package("bayesLife"), 'extdata')
 	m <- run.e0.mcmc.extra(sim.dir=sim.dir, 
 					my.e0.file=file.path(data.dir, 'my_e0_template.txt'), burnin=0)
@@ -49,7 +50,7 @@ test.estimate.mcmc <- function(compression='None') {
 	
 	# run prediction
 	test.name <- 'running projections'
-	start.test(test.name)
+	start.test(test.name, wpp.year)
 	pred <- e0.predict(m, burnin=0, verbose=FALSE)
 	spred <- summary(pred)
 	stopifnot(spred$nr.traj == 20)
@@ -65,7 +66,7 @@ test.estimate.mcmc <- function(compression='None') {
 	
 	# run MCMC for another aggregation
 	test.name <- 'running projections on extra areas'
-	start.test(test.name)
+	start.test(test.name, wpp.year)
 	m <- run.e0.mcmc.extra(sim.dir=sim.dir, countries=903, burnin=0)
 	# run prediction only for the area 903
 	pred <- e0.predict.extra(sim.dir=sim.dir, verbose=FALSE)
@@ -77,7 +78,7 @@ test.estimate.mcmc <- function(compression='None') {
 	test.ok(test.name)
     
 	test.name <- 'shifting the median'
-	start.test(test.name)
+	start.test(test.name, wpp.year)
     country <- 'Netherlands'
     country.idx <- get.country.object(country, m$meta)$index
     projs <- summary(pred, country=country)$projections
@@ -90,14 +91,14 @@ test.estimate.mcmc <- function(compression='None') {
 	test.ok(test.name)
 	
 	test.name <- 'resetting the median'
-	start.test(test.name)
+	start.test(test.name, wpp.year)
 	shifted.pred <- e0.median.shift(sim.dir, country=country, reset = TRUE)
 	shifted.projs <- summary(shifted.pred, country=country)$projections
 	stopifnot(all(projs[,c(1,3:dim(projs)[2])] == shifted.projs[,c(1,3:dim(projs)[2])]))
 	test.ok(test.name)
 	
 	test.name <- 'setting the median'
-	start.test(test.name)
+	start.test(test.name, wpp.year)
 	expert.values <- c(90.5, 91, 93.8)
     shift <- expert.values - pred$quantiles[country.idx, '0.5',2:4] # Netherlands has index 106
 	mod.pred <- e0.median.set(sim.dir, country=country, values=expert.values, years=2024)
@@ -107,9 +108,47 @@ test.estimate.mcmc <- function(compression='None') {
 	test.ok(test.name)
 	
 	test.name <- 'converting trajectories'
-	start.test(test.name)
+	start.test(test.name, wpp.year)
 	convert.e0.trajectories(sim.dir, n=10)
 	test.ok(test.name)
+	
+	test.name <- 'shifting medians to WPP'
+	e0.shift.prediction.to.wpp(sim.dir)
+	e0.shift.prediction.to.wpp(sim.dir, joint.male = TRUE)
+	shifted.predF <- get.e0.prediction(sim.dir)
+	shifted.predM <- get.e0.prediction(sim.dir, joint.male = TRUE)
+	cntry <- 'Angola'
+	shifted.projsF <- summary(shifted.predF, country = cntry)$projections
+	shifted.projsM <- summary(shifted.predM, country = cntry)$projections
+	shifted.projsF <- data.table::data.table(shifted.projsF)[, year := as.integer(rownames(shifted.projsF))]
+	shifted.projsM <- data.table::data.table(shifted.projsM)[, year := as.integer(rownames(shifted.projsM))]
+	e <- new.env()
+	data("e0Fproj", "e0Mproj", package = paste0("wpp", wpp.year), envir = e)
+	wppl <- merge(data.table::melt(data.table::data.table(e$e0Fproj), id.vars = c("country_code", "name"), 
+	                            variable.name = "period", value.name = "e0F"),
+	              data.table::melt(data.table::data.table(e$e0Mproj), id.vars = c("country_code", "name"), 
+	                               variable.name = "period", value.name = "e0M"),
+	              by = c("country_code", "name", "period"))
+	wppl <- wppl[, year := as.integer(substr(period, 1,4)) + 3][name == cntry]
+	datF <- merge(wppl, shifted.projsF[, c("year", "50%"), with = FALSE], by = "year")
+	datM <- merge(wppl, shifted.projsM[, c("year", "50%"), with = FALSE], by = "year")
+	stopifnot(all.equal(datF$e0F, datF[, `50%`]))
+	stopifnot(all.equal(datM$e0M, datM[, `50%`]))
+	stopifnot(!is.null(shifted.predF$median.shift) && !is.null(shifted.predM$median.shift))
+	stopifnot(length(shifted.predF$median.shift) == nrow(get.countries.table(shifted.predF)) && 
+	              length(shifted.predM$median.shift) == nrow(get.countries.table(shifted.predM)) )
+	test.ok(test.name)
+	
+	test.name <- 'resetting all countries'
+	e0.median.reset(sim.dir)
+	new.predF <- get.e0.prediction(sim.dir)
+	new.predM <- get.e0.prediction(sim.dir, joint.male = TRUE)
+	stopifnot(is.null(new.predF$median.shift) && !is.null(new.predM$median.shift))
+	e0.median.reset(sim.dir, joint.male = TRUE)
+	new.predM2 <- get.e0.prediction(sim.dir, joint.male = TRUE)
+	stopifnot(is.null(new.predM2$median.shift))
+	test.ok(test.name)
+	
 	unlink(sim.dir, recursive=TRUE)
 }
 
@@ -270,7 +309,7 @@ test.plot.density <- function() {
 }
 
 test.plot.map <- function() {
-	test.name <- 'creating e0 maps'
+	test.name <- 'creating e0 maps via rworldmap'
 	start.test(test.name)
 	sim.dir <- file.path(find.package("bayesLife"), "ex-data", 'bayesLife.output')
 	pred <- get.e0.prediction(sim.dir=sim.dir)
@@ -301,6 +340,22 @@ test.plot.map <- function() {
 	filename <- tempfile()
 	e0.map(pred, par.name='z.c', device='png', device.args=list(filename=filename))
 	dev.off()
+	size <- file.info(filename)['size']
+	unlink(filename)
+	stopifnot(size > 0)
+	test.ok(test.name)
+	
+	test.name <- 'creating e0 maps using ggplot2'
+	filename <- paste0(tempfile(), ".png")
+	e0.ggmap(pred, file.name = filename)
+	size <- file.info(filename)['size']
+	unlink(filename)
+	stopifnot(size > 0)
+	e0.ggmap(pred, same.scale = TRUE, file.name = filename)
+	size <- file.info(filename)['size']
+	unlink(filename)
+	stopifnot(size > 0)
+	e0.ggmap(pred, same.scale = TRUE, year = 2100, file.name = filename)
 	size <- file.info(filename)['size']
 	unlink(filename)
 	stopifnot(size > 0)
@@ -669,36 +724,42 @@ test.subnational.predictions <- function() {
     unlink(sim.dir, recursive=TRUE)
 }
 
-test.run.annual.simulation <- function() {
+test.run.annual.simulation <- function(wpp.year = 2019) {
     sim.dir <- tempfile()
     
     test.name <- 'running MCMC with annual data'
-    start.test(test.name)
+    start.test(test.name, wpp.year)
     m <- run.e0.mcmc(iter = 5, nr.chains = 2, thin = 1, output.dir = sim.dir, 
-                     annual = TRUE, present.year = 2018)
+                     annual = TRUE, present.year = 2018, wpp.year = wpp.year)
     stopifnot(get.total.iterations(m$mcmc.list, 0) == 10)
     stopifnot(all(1953:2018 %in% rownames(m$meta$e0.matrix)))
     test.ok(test.name)
     
     test.name <- 'running annual MCMC for extra country'
-    start.test(test.name)
+    start.test(test.name, wpp.year)
     countries <- c(900, 908)
     m <- run.e0.mcmc.extra(sim.dir = sim.dir, countries = countries, burnin = 0)
     stopifnot(countries %in% m$meta$regions$country_code)
     test.ok(test.name)
     
     test.name <- 'running annual projections'
-    start.test(test.name)
+    start.test(test.name, wpp.year)
     pred <- e0.predict(m, burnin=1, verbose = FALSE)
     spred <- summary(pred)
+    tbl <- e0.trajectories.table(pred, "Japan")
     stopifnot(spred$nr.traj == 8)
     stopifnot(all(2019:2100 %in% spred$projection.years))
     stopifnot(all(c(908, 900) %in% get.countries.table(pred)$code))
+    if(wpp.year > 2019)
+        stopifnot('1900' %in% rownames(tbl)) # checks that supplemental data is used
     
     mpred <- get.e0.jmale.prediction(pred)
     smpred <- summary(mpred)
+    mtbl <- e0.trajectories.table(mpred, "Japan")
     stopifnot(all(2019:2100 %in% smpred$projection.years))
     stopifnot(all(c(908, 900) %in% get.countries.table(mpred)$code))
+    if(wpp.year > 2019)
+        stopifnot('1900' %in% rownames(mtbl))
     
     test.ok(test.name)
     

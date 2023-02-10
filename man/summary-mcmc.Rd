@@ -21,7 +21,7 @@ Summary of an object \code{\link{bayesLife.mcmc.set}} or \code{\link{bayesLife.m
 
 \arguments{
   \item{object}{Object of class \code{\link{bayesLife.mcmc.set}} or \code{\link{bayesLife.mcmc}}.}
-  \item{country}{Country name or code if a country-specific summary is desired.}
+  \item{country}{Country name or code if a country-specific summary is desired. It can also be given as ISO-2 or ISO-3 characters.}
   \item{chain.id}{Identifiers of MCMC chains. By default, all chains are considered.}
   \item{par.names}{Country independent parameters to be included in the summary. Run \code{\link{e0.parameter.names}()} for defaults.}
   \item{par.names.cs}{Country-specific parameters to be included in the summary. Run \code{\link{e0.parameter.names.cs}()} for defaults.}
@@ -43,6 +43,11 @@ Hana Sevcikova
 sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 m <- get.e0.mcmc(sim.dir)
 summary(m, country="Czechia", burnin=20)
+
+# names and codes of countries included
+head(get.countries.table(m, iso = TRUE))
+# using an ISO code
+summary(m, country="MG", burnin=20)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

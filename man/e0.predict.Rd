@@ -13,7 +13,8 @@ e0.predict(mcmc.set = NULL, end.year = 2100,
     sim.dir = file.path(getwd(), "bayesLife.output"), replace.output = FALSE, 
     predict.jmale = TRUE, nr.traj = NULL, thin = NULL, burnin = 10000, 
     use.diagnostics = FALSE, save.as.ascii = 0, start.year = NULL,  
-    output.dir = NULL, low.memory = TRUE, seed = NULL, verbose = TRUE, \dots)
+    output.dir = NULL, low.memory = TRUE, ignore.last.observed = FALSE,
+    seed = NULL, verbose = TRUE, \dots)
 }
 
 \arguments{
@@ -31,6 +32,7 @@ e0.predict(mcmc.set = NULL, end.year = 2100,
   \item{start.year}{This argument should be only used if the start year of the prediction is before or at the present year of the MCMC run (see Details below). By default the prediction starts in the next time period after the present year (passed to \code{\link{run.e0.mcmc}}).}
   \item{output.dir}{Directory into which the resulting prediction object and the trajectories are stored. If it is \code{NULL}, it is set to either \code{sim.dir}, or to \code{output.dir} of \code{mcmc.set$meta} if \code{mcmc.set} is given.}
   \item{low.memory}{Logical indicating if the prediction should run in a low-memory mode. If it is \code{FALSE}, the whole traces of all parameters, including the burnin, are loaded into memory. Otherwise, burnins are discarded and parameters are loaded as they are needed and are not kept in the memory.}
+  \item{ignore.last.observed}{Logical. By default, the prediction (or imputation) for each country starts one time period after the last observed data point for that country defined by the \dQuote{last.observed} column in the data. If this argument is set to \code{TRUE}, the prediction ignores that \dQuote{last.observed} value and starts at the last data point found in the data. This allows to exclude some time periods from the estimation, but include them in the prediction.}
   \item{seed}{Seed of the random number generator. If \code{NULL} no seed is set. It can be used to generate reproducible projections.}
   \item{verbose}{Logical switching log messages on and off.}
   \item{\dots}{Additional arguments passed to the \code{\link{e0.jmale.predict}} function.}
@@ -78,7 +80,10 @@ Hana Sevcikova, using code from Jennifer Chunn
 \dontrun{
 m <- run.e0.mcmc(nr.chains = 1, iter = 50, thin = 1, verbose = TRUE)
 pred <- e0.predict(m, burnin = 25, verbose = TRUE)
-summary(pred, country = "Portugal")}
+summary(pred, country = "Portugal")
+
+# names and codes of countries included
+head(get.countries.table(pred, iso = TRUE))}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

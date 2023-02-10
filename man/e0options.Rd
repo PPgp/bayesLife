@@ -3,38 +3,54 @@
 \alias{e0mcmc.options}
 \alias{e0pred.options}
 \alias{using.bayesLife}
+\alias{e0mcmc.dlpriors.options}
+\alias{get.DLpriors}
+\alias{DLpriors}
 
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Global options
 }
 \description{
-Setting and retrieving global options.
+Setting, retrieving and updating global options.
 }
 \usage{
 using.bayesLife()
 e0options()
-e0mcmc.options(...)
+e0mcmc.options(..., annual = FALSE)
 e0pred.options(...)
+
+e0mcmc.dlpriors.options(prior.choice = "B", annual = FALSE, 
+    un.constraints = FALSE)
+    
+get.DLpriors(prior.choice = NULL, annual = FALSE)
+
+data(DLpriors)
 }
 
 \arguments{
-  \item{...}{Arguments in \code{tag = value} form, or names of options to retrieve.
-}
+  \item{...}{Arguments in \code{tag = value} form, or names of options to retrieve.}
+  \item{annual}{Logical indicating if the options are for an annual simulation (\code{TRUE}) or a 5-year simulation(\code{FALSE}).}
+  \item{prior.choice}{A character indicating for which combination of the upper bound on the \eqn{z} parameter and the upper bound of \code{sumTriangle.lim} priors for \code{a}, \code{delta} and \code{tau} should be used. Choices are \dQuote{A} (0.653, 83), \dQuote{B} (0.653, 86; default), \dQuote{C} (1.150, 83), \dQuote{D} (1.150, 86). See Details for more information. Use \code{get.DLpriors()} to view the priors. If this argument is \code{NULL} no update/choice is taken.}
+  \item{un.constraints}{Logical indicating if constraints on the lower bounds of the \code{Triangle} parameter posed by the UN in WPP 2022 should be used.}
 }
 \details{
 Function \code{using.bayesLife} sets all global options to their default values. Function \code{e0options} is used to get all options as a named list. 
 
-The global options are divided into two main categories, namely options used for MCMC estimations and options used for predictions. To set or retrieve options of the first category, use \code{e0mcmc.options} (see section MCMC Options below), while the second category is controlled by \code{e0pred.options} (see section Prediction Options below). 
+The global options are divided into three main categories, namely options used for MCMC estimations in a 5-year simulation, in a 1-year simulation, and options used for predictions. To set or retrieve options of the first two categories, use \code{e0mcmc.options} and use the argument \code{annual} to distinguish between them (see section MCMC Options below), while the third category is controlled by \code{e0pred.options} (see section Prediction Options below). 
 
-Many options are in form of a list and it is possible to overwrite only single elements of the list. However, if an option is a vector, all elements of the vector have to be defined when updating (see Example).
+Many options are in the form of a list and it is possible to overwrite only single elements of the list. However, if an option is a vector, all elements of the vector have to be defined when updating (see Example).
+
+The dataset \code{DLpriors} contains four sets of parameters \code{a}, \code{delta} and \code{tau} (see section MCMC Options below) estimated for different combinations of the upper limit on the \code{z} parameter (i.e. maximum 5-year increase of e0; column \dQuote{Uz}) and the upper bound of the sum of \eqn{\Delta_i}{Triangle_i} (column \dQuote{Sa}; set in the \code{sumTriangle.lim} option which is interpreted as the value of e0 for which the transition is completed; see below for more detail). A \code{get.DLpriors()} call retrieves all available combinations. Function \code{e0mcmc.dlpriors.options} can be used to change the default option B (i.e. the upper limit on \code{z} being 0.653 and the transition being completed at e0 of 86). Use the column \dQuote{option} from \code{DLpriors} to select the desired combination. In addition, setting the argument \code{un.constraints} to \code{TRUE} will set the lower limit on the \eqn{\Delta_i}{Triangle_i} parameters (\code{Triangle}, \code{Triangle.c}) to the same values as the UN used for WPP 2022. Note that the \code{DLpriors} dataset corresponds to parameter values designed for a 5-year simulation. Use \code{get.DLprior(annual = TRUE)} to see the equivalents for an annual simulation where various values are divided by five.
 }
 
 \value{
-\code{e0options} returns a list of all global options.\cr
-\code{e0mcmc.options}, when called with no argument, it returns a list of options related to the MCMC estimation.\cr
-\code{e0pred.options}, when called with no argument, it returns a list of options related to the prediction. \cr
-For both, \code{e0mcmc.options} and \code{e0pred.options}, when a specific option is queried, it returns the value of that option. When an option is set, a list of the previous values of all MCMC/prediction options is returned invisibly. 
+\code{e0options} returns a list of all global options.\cr\cr
+\code{e0mcmc.options}, when called with no argument other than \code{annual}, it returns a list of options related to the MCMC estimation. The \code{annual} argument determines if the values correspond to an annual or 5-year simulation.\cr\cr
+\code{e0pred.options}, when called with no argument, it returns a list of options related to the prediction. \cr\cr
+For both, \code{e0mcmc.options} and \code{e0pred.options}, when a specific option is queried, it returns the value of that option. When an option is set, a list of the previous values of all MCMC/prediction options is returned invisibly. \cr\cr
+\code{get.DLpriors} returns the content of the \code{DLpriors} dataset. \cr\cr
+\code{e0mcmc.dlpriors.options} overwrites various values and like \code{e0mcmc.options}, it returns a list of the previous values of all MCMC options invisibly. 
 }
 
 \section{MCMC Options}{
@@ -97,7 +113,7 @@ For both, \code{e0mcmc.options} and \code{e0pred.options}, when a specific optio
     }}
     \item{nu}{the shape parameter of the Gamma distributions of all \eqn{\lambda}{lambda} parameters is \code{nu/2}.}
     \item{dl.p1, dl.p2}{values of the parameters \eqn{p_1} and \eqn{p_2} of the double logistic function.}
-    \item{sumTriangle.lim}{lower and upper limits for the sum of the \eqn{\Delta_i}{Triangle_i} parameters. MCMC proposals that are outside of this limit are rejected. It is applied to both, the world parameters as well as the country specific parameters.}
+    \item{sumTriangle.lim}{lower and upper limits for the sum of the \eqn{\Delta_i}{Triangle_i} parameters. MCMC proposals that are outside of this limit are rejected. It is applied to both, the world parameters as well as the country specific parameters. The sum of \eqn{\Delta_i}{Triangle_i} can be interpreted as the level of e0 at which the transition is completed and is followed by an e0 increase with a constant rate \code{z}.}
     \item{world.parameters}{named vector where names are the world parameters and values are the number of sub-parameters. For example, \eqn{\Delta}{Triangle} has 4 sub-parameters, while \eqn{k} and \eqn{z} are both just one parameter.}
     \item{country.parameters}{named vector where names are the country-specific parameters and values are the number of sub-parameters.}
     \item{outliers}{ranges for determining outliers in the historical data. If \code{outliers=c(x, y)} then any increase in life expectancy smaller than \code{x} or larger than \code{y} is considered as an outlier and removed from the estimation.}
@@ -160,6 +176,18 @@ e0mcmc.options("z", "Triangle")
 # revert to defaults
 using.bayesLife()
 e0mcmc.options("z", "Triangle")
+
+# options for an annual simulation
+e0mcmc.options("z", "sumTriangle.lim", annual = TRUE)
+
+# modify using a different set from DLpriors
+get.DLpriors(annual = TRUE) # view the DLpriors dataset
+e0mcmc.dlpriors.options("C", annual = TRUE) # use C option
+# upper bounds for z correspond to values from DLpriors divided by 5
+e0mcmc.options("z", "sumTriangle.lim", annual = TRUE)
+# set the UN's Triangle lower bound constraints 
+e0mcmc.dlpriors.options(NULL, annual = TRUE, un.constraints = TRUE)
+e0mcmc.options("Triangle", "Triangle.c", annual = TRUE) # prior.low is modified
 
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

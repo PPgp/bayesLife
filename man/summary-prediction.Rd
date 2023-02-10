@@ -31,6 +31,12 @@ Hana Sevcikova
 sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 pred <- get.e0.prediction(sim.dir=sim.dir)                                                    
 summary(pred, country="Iceland")
+
+# names and codes of countries included
+tail(get.countries.table(pred, iso = TRUE), 20)
+
+# using an ISO code
+summary(pred, country="CHE")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

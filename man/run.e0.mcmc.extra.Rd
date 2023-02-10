@@ -44,7 +44,7 @@ Relevant only if \code{parallel} is \code{TRUE}. It gives the number of nodes fo
 Logical switching log messages on and off.
 }
 \item{verbose.iter}{Integer determining how often (in number of iterations) log messages are outputted during the estimation.}
-\item{\dots}{Additional parameters to be passed to the function \code{\link[snowFT]{performParallel}}, if \code{parallel} is \code{TRUE}.}
+\item{\dots}{Additional parameters to be passed to the function \code{snowFT::performParallel}, if \code{parallel} is \code{TRUE}.}
 }
 \details{
 The function can be used to make predictions for countries, areas or regions (further denoted as \sQuote{countries}) that were not included in the MCMC estimation (invoked by \code{\link{run.e0.mcmc}}). It creates MCMC traces for country-specific parameters. The purpose of this function is to have country-specific parameters available in order to be able to generate projections for additional countries or their aggregations, without having to re-run the often time-expensive MCMC simulation.

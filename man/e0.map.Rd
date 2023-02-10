@@ -3,15 +3,18 @@
 \alias{e0.map.all}
 \alias{get.e0.map.parameters}
 \alias{e0.map.gvis}
+\alias{e0.ggmap}
 \title{
 World Map of the Life Expectancy 
 }
 \description{
-Generates a world map of the life expectancy for given quantile and projection or estimation period.
+Generates a world map of the life expectancy for given quantile and projection or estimation period, using different techniques: \code{e0.map} and \code{e0.map.all} use \pkg{rworldmap}, \code{e0.ggmap} uses \pkg{ggplot2}, and \code{e0.map.gvis} creates an interactive map via \pkg{GoogleVis}.
 }
 \usage{
 e0.map(pred, \dots)
 	
+e0.ggmap(pred, \dots)
+
 e0.map.all(pred, output.dir, output.type = "png", 
     e0.range = NULL, nr.cats = 50, same.scale = TRUE, 
     quantile = 0.5, file.prefix = "e0wrldmap_", \dots)
@@ -32,8 +35,8 @@ e0.map.gvis(pred, \dots)
   \item{same.scale}{Logical controlling if maps for all years of this prediction object should be on the same color scale.}
    \item{quantile}{Quantile for which the map should be generated. It must be equal to one of the values in \code{dimnames(pred$quantiles[[2]])}, i.e. 0, 0.025, 0.05, 0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9, 0.95, 0.975, 1. Value 0.5 corresponds to the median.}
   \item{file.prefix}{Prefix for file names.}
-  \item{\dots}{In \code{e0.map}, \dots are all arguments that can be passed to \code{\link[bayesTFR]{tfr.map}}, such as \code{quantile}, \code{year}, \code{projection.index}, \code{par.name}, \code{adjusted}, \code{device}, \code{main}, \code{device.args}, and \code{data.args}. In \code{e0.map.gvis}, \dots are all arguments that can be passed to \code{\link[bayesTFR]{tfr.map.gvis}}. In addition, the first three functions accept
-arguments passed to the \code{\link[rworldmap]{mapCountryData}} function of the \pkg{rworldmap} package.
+  \item{\dots}{In \code{e0.map}, \dots are all arguments that can be passed to \code{\link[bayesTFR]{tfr.map}}, such as \code{quantile}, \code{year}, \code{projection.index}, \code{par.name}, \code{adjusted}, \code{device}, \code{main}, \code{device.args}, and \code{data.args}. In \code{e0.map.gvis}, \dots are all arguments that can be passed to \code{\link[bayesTFR]{tfr.map.gvis}}. In \code{e0.ggmap}, \dots are arguments that can be passed to \code{\link[bayesTFR]{tfr.ggmap}}. In addition, functions that use the \pkg{rworldmap} package accept
+arguments passed to the \code{rworldmap::mapCountryData} function.
 }
 }
 \details{
@@ -41,9 +44,11 @@ arguments passed to the \code{\link[rworldmap]{mapCountryData}} function of the 
 
 Function \code{get.e0.map.parameters} can be used in combination with \code{e0.map}. (Note that \code{get.e0.map.parameters} is called from inside of \code{e0.map.all}.) It sets breakpoints for the color scheme using quantiles of a fitted gamma distribution.
 
+Function \code{e0.ggmap} is similar to \code{e0.map}, but used the \pkg{ggplot2} package in combination with the \code{geom_sf} function.
+
 Function \code{e0.map.gvis} creates an interactive map using the \pkg{googleVis} package and opens it in an internet browser. It also generates a table of the mapped values that can be sorted by columns interactively in the browser. 
 
-By default, both \code{e0.map} and \code{e0.map.gvis} produce maps of life expectancy. Alternatively, the functions can be used to plot country-specific MCMC parameters into a world map. They are given by the argument \code{par.name}. One can pass any value from \code{\link{e0.parameter.names.cs.extended}()}.
+By default, both \code{e0.map}, \code{e0.ggmap} and \code{e0.map.gvis} produce maps of life expectancy. Alternatively, the functions can be used to plot country-specific MCMC parameters into a world map. They are given by the argument \code{par.name}. One can pass any value from \code{\link{e0.parameter.names.cs.extended}()}.
 }
 \value{
 \code{get.e0.map.parameters} returns a list with elements:
@@ -65,6 +70,12 @@ Hana Sevcikova, Adrian Raftery
 \dontrun{
 sim.dir <- file.path(find.package("bayesLife"), "ex-data", "bayesLife.output")
 pred <- get.e0.prediction(sim.dir = sim.dir)
+
+# Using ggplot2
+e0.ggmap(pred, same.scale = TRUE)
+e0.ggmap(pred, year = 2100, same.scale = TRUE)
+
+# Using rworldmap
 # Uses heat colors and seven categories by default
 e0.map(pred)
 # Uses more colors with more suitable categorization

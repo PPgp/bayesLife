@@ -1,14 +1,14 @@
 if(getRversion() >= "2.15.1") utils::globalVariables(c("loess_sd"))
 data(loess_sd, envir = environment())
 
-update.ini.values <- function(nr.chains) {
+update.ini.values <- function(nr.chains, annual = FALSE) {
     # set starting values
     #=====================
     get.init.values.between.low.and.up <- function(low, up)
         ifelse(rep(nr.chains==1, nr.chains), (low + up)/2, #seq(low, to=up, length=nr.chains)
                runif(nr.chains, low, up)
         )
-    current <- e0mcmc.options()
+    current <- e0mcmc.options(annual = annual)
 
     wp <- current$world.parameters
     for(par in names(wp)) {
@@ -28,12 +28,12 @@ update.ini.values <- function(nr.chains) {
             }
         }
     }
-    invisible(e0mcmc.options(current))
+    invisible(e0mcmc.options(current, annual = annual))
 }
 
-match.ini.to.chains <- function(nr.chains) {
+match.ini.to.chains <- function(nr.chains, annual = FALSE) {
     # propagate initial values for all chains if needed
-    current <- e0mcmc.options()
+    current <- e0mcmc.options(annual = annual)
     starting.values <- list()
     wp <- current$world.parameters
     for(par in names(wp)) {
@@ -95,10 +95,11 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
 	}
     if(!is.null(seed)) set.seed(seed)
     dir.create(output.dir)
-    old.opts <- e0mcmc.options()
+    old.opts <- e0mcmc.options(annual = annual)
     if(!is.null(mcmc.options))
-        e0mcmc.options(mcmc.options)
-    mcoptions <- update.ini.values(nr.chains)
+        e0mcmc.options(mcmc.options, annual = annual)
+    
+    mcoptions <- update.ini.values(nr.chains, annual)
 	auto.run <- FALSE
 	auto.conf <- mcoptions$auto.conf
 	if(iter == 'auto') { # defaults for auto-run (includes convergence diagnostics)
@@ -121,7 +122,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
                                         constant.variance = constant.variance, 
                                         compression.type = compression.type, verbose = verbose)
     store.bayesLife.meta.object(bayesLife.mcmc.meta, output.dir)
-    starting.values <- match.ini.to.chains(nr.chains)
+    starting.values <- match.ini.to.chains(nr.chains, annual = annual)
     iter <- .match.length.to.nr.chains(iter, nr.chains, "iter")
 
 	if (parallel) { # run chains in parallel
@@ -160,7 +161,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
 			}
 		}
     }
-    e0mcmc.options(old.opts)
+    e0mcmc.options(old.opts, annual = annual)
     if (verbose) 
 		cat('\nSimulation successfully finished!!!\n')
     invisible(mcmc.set)
@@ -272,7 +273,9 @@ continue.e0.chain <- function(chain.id, mcmc.list, iter, verbose=FALSE, verbose.
         mcmc$iter <- mcmc$finished.iter + iter
         if (verbose) 
                 cat('Continue sampling -', iter, 'additional iterations,', mcmc$iter, 'iterations in total.\n')
-        mcmc <- e0.mcmc.sampling(mcmc, thin=mcmc$thin, start.iter=mcmc$finished.iter+1, verbose=verbose, verbose.iter=verbose.iter)
+        mcmc <- do.call(mcmc$meta$mcmc.options$estimation.function, 
+                        list(mcmc, thin = mcmc$thin, start.iter=mcmc$finished.iter+1, 
+                             verbose = verbose, verbose.iter = verbose.iter))
         return(mcmc)
 }
 
@@ -543,6 +546,7 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL
 	update.regions <- function(reg, ereg, id.replace, is.new, is.old) {
 		nreg <- list()
 		for(name in names(reg)) {
+		    #if(!name %in% names(ereg)) next
 		    if(is.character(reg[[name]]) || is.factor(reg[[name]])) {
 		        reg[[name]][id.replace] <- as.character(ereg[[name]])[is.old]
 		        nreg[[name]] <- c(as.character(reg[[name]]), 
@@ -613,6 +617,12 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL
 	for (name in c('e0.matrix', 'e0.matrix.all', 'd.ct', 'loessSD')) {
 		meta[[name]][,id.replace] <- Emeta[[name]][,is.old]
 		new.meta[[name]] <- cbind(meta[[name]], Emeta[[name]][,is.new])
+	}
+	if(meta$mcmc.options$include.hiv.countries){
+	    for(name in c("hiv.pred", "hiv.est")){
+	        if(!is.null(meta$regions[[name]]) && is.null(Emeta$regions[[name]]))
+	            Emeta$regions[[name]] <- rep(FALSE, length(Emeta$regions$country_code))
+	    }
 	}
 	new.meta[['Tc.index']] <- update.Tc.index(meta$Tc.index, Emeta$Tc.index, id.replace, is.old)
 	new.meta[['regions']] <- update.regions(meta$regions, Emeta$regions, id.replace, is.new, is.old)

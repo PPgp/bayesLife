@@ -21,9 +21,10 @@ e0.predict <- function(mcmc.set = NULL, end.year = 2100,
                        replace.output = FALSE, predict.jmale = TRUE, 
                        nr.traj = NULL, thin = NULL, burnin = 10000, 
                        use.diagnostics = FALSE, save.as.ascii = 0, start.year = NULL,
-                       output.dir = NULL, low.memory = TRUE, seed = NULL, verbose = TRUE, ...){
+                       output.dir = NULL, low.memory = TRUE, ignore.last.observed = FALSE,
+                       seed = NULL, verbose = TRUE, ...){
 	if(!is.null(mcmc.set)) {
-		if (class(mcmc.set) != 'bayesLife.mcmc.set') {
+		if (!inherits(mcmc.set, 'bayesLife.mcmc.set')) {
 			stop('Wrong type of mcmc.set. Must be of type bayesLife.mcmc.set.')
 		}
 	} else {                
@@ -40,7 +41,8 @@ e0.predict <- function(mcmc.set = NULL, end.year = 2100,
 					replace.output = replace.output,  
 					nr.traj = nr.traj, thin = thin, burnin = burnin, 
 					save.as.ascii = save.as.ascii, start.year = start.year,
-					output.dir = output.dir, verbose = verbose)
+					output.dir = output.dir, ignore.last.observed = ignore.last.observed,
+					verbose = verbose)
 	if(predict.jmale && mcmc.set$meta$sex == 'F')
 		pred <- e0.jmale.predict(pred, ..., save.as.ascii = save.as.ascii, verbose = verbose)
 	invisible(pred)
@@ -76,7 +78,8 @@ e0.predict.extra <- function(sim.dir = file.path(getwd(), 'bayesLife.output'),
 									nr.traj=pred$nr.traj, burnin=pred$burnin,
 									countries=countries.idx, save.as.ascii=0, output.dir=prediction.dir,
 									force.creating.thinned.mcmc=TRUE,
-									write.summary.files=FALSE, verbose=verbose)
+									write.summary.files=FALSE, ignore.last.observed = pred$ignore.last.observed,
+									verbose=verbose)
 									
 	# merge the two predictions
 	code.other.countries <- setdiff(pred$mcmc.set$meta$regions$country_code, 
@@ -177,7 +180,9 @@ e0.prediction.setup <- function(...) {
     
         prediction.countries <- if(is.null(get0("countries"))) 1:meta$nr.countries else countries
         nr_countries <- meta$nr.countries
-        e0.matrix.reconstructed <- get.e0.reconstructed(meta$e0.matrix, meta)
+        if (!exists("ignore.last.observed") || is.null(ignore.last.observed)) ignore.last.observed <- FALSE
+        data.mtx.name <- if(ignore.last.observed) "e0.matrix.all" else "e0.matrix"
+        e0.matrix.reconstructed <- get.e0.reconstructed(meta[[data.mtx.name]], meta)
         present.year.index <- bayesTFR:::get.estimation.year.index(meta, present.year)
         le0.matrix <- present.year.index
     
@@ -199,6 +204,7 @@ run.e0.projection.for.all.countries <- function(setup, traj.fun = "generate.e0.t
     with(setup, {
         country.counter <- 0
         status.for.gui <- paste('out of', length(prediction.countries), 'countries.')
+        
         gui.options <- list()
         #########################################
         for (country in prediction.countries){
@@ -229,10 +235,23 @@ run.e0.projection.for.all.countries <- function(setup, traj.fun = "generate.e0.t
                     selected.simu$index <- sample(selected.simu$index, nr_simu, replace=TRUE)
                 cs.par.values <- cs.par.values[selected.simu$index,]
             }
-            all.e0 <- meta$e0.matrix[, country]
+            all.e0 <- meta[[data.mtx.name]][, country]
             lall.e0 <- length(all.e0)
             this.Tc_end <-  meta$Tc.index[[country]][length(meta$Tc.index[[country]])]
             this.T_end <- min(this.Tc_end, le0.matrix)
+            if (ignore.last.observed && this.T_end < le0.matrix) {
+                while(this.T_end < le0.matrix) { # shift the end as long as there are no NAs
+                    this.T_end <- this.T_end + 1
+                    this.Tc_end <-  this.Tc_end + 1
+                    if(is.na(all.e0[this.T_end])){
+                        this.T_end <- this.T_end - 1
+                        this.Tc_end <-  this.Tc_end - 1
+                        break
+                    }
+                }
+                if(this.T_end < lall.e0)
+                    e0.matrix.reconstructed[(this.T_end+1):lall.e0,country] <- NA
+            } 
             nmissing <- le0.matrix - this.T_end
             missing <- (this.T_end+1):le0.matrix
         
@@ -285,6 +304,7 @@ run.e0.projection.for.all.countries <- function(setup, traj.fun = "generate.e0.t
             burnin = burnin,
             end.year = end.year,
             start.year = get0("start.year"),
+            ignore.last.observed = ignore.last.observed,
             present.year.index = present.year.index,
             present.year.index.all = present.year.index + (
                 if(!is.null(meta$suppl.data$regions)) nrow(meta$suppl.data$e0.matrix) else 0)
@@ -401,8 +421,22 @@ get.e0.reconstructed <- function(data, meta) {
 	return(if(is.null(data)) meta$e0.matrix.all else data)
 }
 
-e0.median.reset <- function(sim.dir, countries, joint.male=FALSE) {
-	for(country in countries) pred <- e0.median.shift(sim.dir, country, reset=TRUE, joint.male=joint.male)
+.e0.store.adjustment <- function(new.pred, sim.dir, joint.male){
+    if(joint.male) {
+        predF <- get.e0.prediction(sim.dir)
+        predF$joint.male <- new.pred
+        store.bayesLife.prediction(predF)
+    } else store.bayesLife.prediction(new.pred)
+}
+
+e0.median.reset <- function(sim.dir, countries = NULL, joint.male=FALSE) {
+    if(is.null(countries)) {
+        pred <- get.e0.prediction(sim.dir, joint.male = joint.male)
+        pred$median.shift <- NULL
+        .e0.store.adjustment(pred, sim.dir, joint.male)
+        cat('\nMedians for all countries reset.\n')
+    } else
+	    for(country in countries) pred <- e0.median.shift(sim.dir, country, reset=TRUE, joint.male=joint.male)
 	invisible(pred)
 }
 
@@ -412,11 +446,7 @@ e0.median.shift <- function(sim.dir, country, reset=FALSE, shift=0, from=NULL, t
 	pred <- get.e0.prediction(sim.dir, joint.male=joint.male)
 	new.pred <- bayesTFR:::.bdem.median.shift(pred, type='e0', country=country, reset=reset, 
 				shift=shift, from=from, to=to)
-	if(joint.male) {
-		predF <- get.e0.prediction(sim.dir)
-		predF$joint.male <- new.pred
-		store.bayesLife.prediction(predF)
-	} else store.bayesLife.prediction(new.pred)
+	.e0.store.adjustment(new.pred, sim.dir, joint.male)
 	invisible(new.pred)
 }
 
@@ -424,11 +454,7 @@ e0.median.set <- function(sim.dir, country, values, years=NULL, joint.male=FALSE
 	pred <- get.e0.prediction(sim.dir, joint.male=joint.male)
 	new.pred <- bayesTFR:::.bdem.median.set(pred, type='e0', country=country, 
 								values=values, years=years)
-	if(joint.male) {
-		predF <- get.e0.prediction(sim.dir)
-		predF$joint.male <- new.pred
-		store.bayesLife.prediction(predF)
-	} else store.bayesLife.prediction(new.pred)
+	.e0.store.adjustment(new.pred, sim.dir, joint.male)
 	invisible(new.pred)
 }
 
@@ -461,6 +487,15 @@ e0.median.adjust.jmale <- function(sim.dir, countries, factors = c(1.2, 1.1)) {
     # reload adjusted prediction
     invisible(get.e0.prediction(sim.dir, joint.male = TRUE))
 }
+
+e0.shift.prediction.to.wpp <- function(sim.dir, joint.male = FALSE, ...){
+    pred <- get.e0.prediction(sim.dir, joint.male = joint.male)
+    new.pred <- bayesTFR:::.do.shift.prediction.to.wpp(pred, 
+                                                       wpp.dataset = if(joint.male) "e0Mproj" else "e0Fproj", ...)
+    .e0.store.adjustment(new.pred, sim.dir, joint.male)
+    invisible(new.pred)
+}
+
 
 e0.jmale.estimate <- function(mcmc.set, countries.index=NULL, 
 								estDof.eq1 = TRUE, start.eq1 = list(dof = 2), 
@@ -511,10 +546,8 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 	data.eq1 <- data[non.missing & e0F <= max.e0.eq1, ]
 	fit.eq1 <- tlm(G ~ ., data = data.eq1, estDof = estDof.eq1, start = start.eq1)
 	if(verbose) {
-	    if(verbose) {
-	        cat('\n\nUsing', nrow(data.eq1), 'data points for equation 1.\n\n')
-		    print(summary(fit.eq1))
-	    }
+	    cat('\n\nUsing', nrow(data.eq1), 'data points for equation 1.\n\n')
+	    print(summary(fit.eq1))
 	}
 	errscale.eq1<-as.numeric(exp(fit.eq1$scale.fit$coefficients[1]))
 	errsd.eq1<-sqrt(errscale.eq1)
@@ -543,7 +576,7 @@ e0.jmale.estimate <- function(mcmc.set, countries.index=NULL,
 
 e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim.eq2=c(3,9),	
 								max.e0.eq1.pred=86, my.e0.file=NULL, my.locations.file=NULL, 
-								save.as.ascii=1000, verbose=TRUE, ...) {
+								save.as.ascii=1000, resample.outrange = TRUE, verbose=TRUE, ...) {
 	# Predicting male e0 from female predictions. estimates is the result of 
 	# the e0.jmale.estimate function. If it is NULL, the estimation is performed 
 	# using the ... arguments
@@ -576,7 +609,8 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	dir.create(joint.male$output.directory, recursive=TRUE)
 	bayesLife.prediction <- .do.jmale.predict(e0.pred, joint.male, 1:get.nr.countries(meta),  
 								gap.lim=gap.lim, #gap.lim.eq2=gap.lim.eq2, 
-								eq2.age.start=max.e0.eq1.pred, verbose=verbose)
+								eq2.age.start=max.e0.eq1.pred, verbose=verbose,
+								resample.outrange = resample.outrange)
 	save(bayesLife.prediction, file=prediction.file)
 	cat('\nPrediction stored into', joint.male$output.directory, '\n')
 	bayesTFR:::do.convert.trajectories(pred=get.e0.jmale.prediction(bayesLife.prediction), n=save.as.ascii, 
@@ -594,7 +628,8 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 	meta <- e0.pred$mcmc.set$meta # from female sim
 	male.meta <- joint.male$meta.changes
 	meta$sex <- "M"
-	e0mwpp <- set.e0.wpp.extra(meta, meta$regions$country_code[countries.idx], my.e0.file=my.e0.file, my.locations.file=my.locations.file)
+	e0mwpp <- set.e0.wpp.extra(meta, meta$regions$country_code[countries.idx], my.e0.file=my.e0.file, 
+	                           my.locations.file=my.locations.file, annual = meta$annual.simulation)
 	# merge e0 matrices
 	for(mat in c("e0.matrix", "e0.matrix.all")) {
 		tmp <- meta[[mat]] # the right size
@@ -645,7 +680,7 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 
 .do.jmale.predict <- function(e0.pred, joint.male, countries, gap.lim, #gap.lim.eq2, 
 								eq2.age.start=NULL, adj.factors = NULL,
-								verbose=FALSE, supress.warnings = FALSE) {
+								verbose=FALSE, supress.warnings = FALSE, resample.outrange = TRUE) {
 	predict.one.trajectory <- function(Gprev, ftraj, determ = FALSE) {
 		mtraj <- rep(NA, length(ftraj))
 		for(time in 1:length(ftraj)) {
@@ -667,10 +702,16 @@ e0.jmale.predict <- function(e0.pred, estimates=NULL, gap.lim=c(0,18),  #gap.lim
 				else {
 				    error <- if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
 			    			else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
-				    Gt <- Gtdeterm + error					
-				    while(Gt < min(Gprev, gap.lim[1]) || Gt > gap.lim[2]) {
-					    Gt <- Gtdeterm + if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
-							else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
+				    Gt <- Gtdeterm + error
+				    if(resample.outrange){
+				        while(Gt < min(Gprev, gap.lim[1]) || Gt > gap.lim[2]) {
+					        Gt <- Gtdeterm + if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
+					    		else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
+				        }
+				    } else {
+				        Gt <- Gtdeterm + if(is.null(estimates$eq2$dof)) rnorm(1, sd=estimates$eq2$sigma) 
+				                            else estimates$eq2$sigma*rt(1,estimates$eq2$dof)
+				        Gt <- max(min(Gt, gap.lim[2]), gap.lim[1])
 				    }
 				}
 			}

@@ -5,7 +5,11 @@ e0.raftery.diag <- function(mcmc = NULL,
 							 country.sampling.prop = 1,
 							 verbose = TRUE, ...) {
     mcmc.set <- if (is.null(mcmc)) get.e0.mcmc(sim.dir = sim.dir, low.memory = TRUE) else mcmc
+<<<<<<< HEAD
     if(bayesTFR:::is.missing(par.names))
+=======
+    if(bayesTFR:::is.missing(par.names)) 
+>>>>>>> master
         par.names <- e0.parameter.names(mcmc.set$meta$mcmc.options)
     if(bayesTFR:::is.missing(par.names.cs)) 
         par.names.cs <- e0.parameter.names.cs(mcmc.set$meta$mcmc.options)

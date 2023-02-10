@@ -8,7 +8,7 @@ importFrom("graphics", "abline", "grid", "legend", "lines", "plot", "points", "t
 importFrom("grDevices", "rainbow")
 importFrom("stats", "dgamma", "dnorm", "dunif", "median", "pnorm", "quantile", "rexp", "rgamma", 
            "rnorm", "rt", "runif", "sd", "C", "approxfun", "lowess", "na.omit")
-importFrom("utils", "modifyList")
+importFrom("utils", "modifyList", "data")
            
 #exportPattern("^[[:alpha:]]+")
 useDynLib(bayesLife, .registration = TRUE)
@@ -24,6 +24,7 @@ export(
 	e0.median.set,
 	e0.median.reset,
 	e0.median.adjust.jmale,
+	e0.shift.prediction.to.wpp,
 	get.e0.shift,
 	convert.e0.trajectories,
 	write.e0.projection.summary,
@@ -66,6 +67,7 @@ export(
 	get.e0.map.parameters,
 	e0.map.all,
 	e0.map,
+	e0.ggmap,
 	e0.map.gvis,
 	e0.raftery.diag,
 	e0.diagnose,
@@ -83,6 +85,8 @@ export(
 	e0options,
 	e0mcmc.options,
 	e0pred.options,
+	e0mcmc.dlpriors.options,
+	get.DLpriors,
 	compute.loess,
 	compute.residuals,
 	using.bayesLife

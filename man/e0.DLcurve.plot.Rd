@@ -31,7 +31,7 @@ e0.country.dlcurves(x, mcmc.list, country, burnin = NULL, \dots)
 \arguments{
   \item{mcmc.list}{List of \code{\link{bayesLife.mcmc}} objects, an object of class \code{\link{bayesLife.mcmc.set}} or of class \code{\link{bayesLife.prediction}}. In case of \code{e0.DLcurve.plot.all} if it si \code{NULL}, it is loaded from \code{sim.dir}.}
   \item{mcmc.set}{Object of class \code{\link{bayesLife.mcmc.set}} or \code{\link{bayesLife.prediction}}.}
-  \item{country}{Name or numerical code of a country.}
+  \item{country}{Name or numerical code of a country. It can also be given as ISO-2 or ISO-3 characters.}
   \item{burnin}{Number of iterations to be discarded from the beginning of parameter traces.}
   \item{pi}{Probability interval. It can be a single number or an array.}
   \item{e0.lim}{It can be a tuple of the minimum and maximum life expectancy to be shown in the plot. If \code{NULL}, it takes the minimum of observed data and 40, and the maximum of observed data and 90.}

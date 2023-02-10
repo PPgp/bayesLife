@@ -26,6 +26,12 @@ e0.gap.plot <- function(e0.pred, country, e0.pred2=NULL, pi=c(80, 95), nr.traj=0
 	x1 <- as.integer(rownames(e0.mtx))
 	x2 <- as.numeric(dimnames(e0.pred$quantiles)[[3]])
 	y1 <- e0.mtx[1:T,country$index]	- e0.mtx2[1:T,country$index]
+	# remove NA's at the beginning
+	startx <- which(cumsum(!is.na(y1)) == 1)
+	if(startx > 1){
+	    x1 <- x1[startx:length(x1)]
+	    y1 <- y1[startx:length(y1)]
+	}
 	# get all trajectories for computing the quantiles
 	trajobj <- bayesTFR:::get.trajectories(e0.pred, country$code)
 	trajobj2 <- bayesTFR:::get.trajectories(e0.pred2, country$code)
@@ -192,8 +198,8 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 								  xlim=NULL, ylim=NULL, type='b', 
 								  xlab='Year', ylab='Life expectancy at birth', main=NULL, 
 								  lwd=c(2,2,2,2,1), col=c('black', 'green', 'red', 'red', '#00000020'),
-								  col2=c('gray39', 'greenyellow', 'hotpink', 'hotpink', '#00000020'),
-								  show.legend=TRUE, add=FALSE, ...
+								  col2=c('gray39', 'greenyellow', 'hotpink', 'hotpink', '#00000020'), 
+								  pch = c(1, 2), show.legend=TRUE, add=FALSE, ...
 								  ) {
 	# lwd/col is a vector of 5 line widths/colors for: 
 	#	1. observed data, 2. imputed missing data, 3. median, 4. quantiles, 5. trajectories
@@ -225,6 +231,11 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 		col <- rep(col, 5)
 		col[(lcol+1):5] <- c('black', 'green', 'red', 'red', '#00000020')[(lcol+1):5]
 	}
+	if(length(pch) < 2) {
+	    if(length(pch) == 0) pch <- 1
+	    pch <- rep(pch, 2)
+	}
+	if(!type %in% c("b", "p", "o")) pch <- rep(-1, 2)
 	country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
 	if(is.null(country.obj$code)) stop("Country ", country, " not found.")
 	country <- country.obj
@@ -286,7 +297,7 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 		y1.part2 <- NULL
 		lpart2 <- min(dim(e0.mtx)[1], e0pred$present.year.index) - T_end_c + suppl.T
 		if (lpart2 > 0) { # imputed values
-			p2idx <- (T_end_c+1-suppl.T):nrow(e0.matrix.reconstructed)
+			p2idx <- (T_end_c+1-suppl.T):min(nrow(e0.matrix.reconstructed), e0pred$present.year.index)
 			y1.part2 <- e0.matrix.reconstructed[p2idx,country$index]
 			names(y1.part2) <- rownames(e0.matrix.reconstructed)[p2idx]
 		}
@@ -301,10 +312,9 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
     		ylim.loc <- c(min(ylim.loc[1], plot.data[[ipred]]$rec.y), max(ylim.loc[2], plot.data[[ipred]]$rec.y))
     	}
 	}
-	#stop('')
 	if(do.average) {
-		plot.data[[1]]$obs.y <- plot.data[[1]]$obs.y - (plot.data[[1]]$obs.y-plot.data[[2]]$obs.y)/2.
-		if(lpart2 > 0) plot.data[[1]]$rec.y - (plot.data[[1]]$rec.y-plot.data[[2]]$rec.y)/2.
+		plot.data[[1]]$obs.y <- (plot.data[[1]]$obs.y + plot.data[[2]]$obs.y)/2.
+		if(lpart2 > 0) plot.data[[1]]$rec.y <- (plot.data[[1]]$rec.y + plot.data[[2]]$rec.y)/2.
 	}
 	for(ipred in 1:length(pred)) {
 		e0pred <- pred[[ipred]]
@@ -351,14 +361,14 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 				}
 			}
 		    # plot historical data: observed
-			plot(plot.data[[ipred]]$obs.x, plot.data[[ipred]]$obs.y, type=type, xlim=xlim, ylim=ylim, ylab=ylab, xlab=xlab, main=main, 
+			plot(plot.data[[ipred]]$obs.x, plot.data[[ipred]]$obs.y, type=type, pch = pch[1], xlim=xlim, ylim=ylim, ylab=ylab, xlab=xlab, main=main, 
 				panel.first = grid(), lwd=lwd[1], col=this.col[1], ...
 					)
 		} else # add to an existing plot
-			points(plot.data[[ipred]]$obs.x, plot.data[[ipred]]$obs.y, type=type, lwd=lwd[1], col=this.col[1], ...
+			points(plot.data[[ipred]]$obs.x, plot.data[[ipred]]$obs.y, type=type, pch = pch[1], lwd=lwd[1], col=this.col[1], ...
 					)
 		if(!is.null(plot.data[[ipred]]$rec.x)) { # plot reconstructed missing data
-			lines(plot.data[[ipred]]$rec.x, plot.data[[ipred]]$rec.y, pch=2, type='b', col=this.col[2], lwd=lwd[2])
+			lines(plot.data[[ipred]]$rec.x, plot.data[[ipred]]$rec.y, pch=pch[2], type=type, col=this.col[2], lwd=lwd[2])
 			lines(c(plot.data[[ipred]]$obs.x[length(plot.data[[ipred]]$obs.x)], plot.data[[ipred]]$rec.x[1]), 
 				c(plot.data[[ipred]]$obs.y[length(plot.data[[ipred]]$obs.y)], plot.data[[ipred]]$rec.y[1]), 
 				col=this.col[2], lwd=lwd[2]) # connection between the two parts
@@ -390,7 +400,7 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 		}
 		legend <- c(legend, paste('observed', if(do.both.sexes) paste(lowerize(get.sex.label(meta)), 'e0') else 'e0'))
 		lty <- c(lty, 1)
-		pch <- c(rep(-1, length(legend)-1), 1)
+		pchs <- c(rep(-1, length(legend)-1), pch[1])
 		lwds <- c(lwd[3], rep(lwd[4], length(pi)), lwd[1])
 		cols <- c(this.col[3], rep(this.col[4], length(pi)), this.col[1])
 		if(!adjusted.only) { # plot unadjusted median
@@ -407,13 +417,13 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 			legend <- c(legend, paste('imputed', if(do.both.sexes) paste(lowerize(get.sex.label(meta)), 'e0') else 'e0'))
 			cols <- c(cols, this.col[2])
 			lty <- c(lty, 1)
-			pch <- c(pch, 2)
+			pchs <- c(pchs, pch[2])
 			lwds <- c(lwds, lwd[2])
 		}
 		lty.all <- c(lty.all, lty)
 		legend.all <- c(legend.all, legend)
 		cols.all <- c(cols.all, cols)
-		pch.all <- c(pch.all, pch)
+		pch.all <- c(pch.all, pchs)
 		lwd.all <- c(lwd.all, lwds)
 		if(do.average) break
 	}
@@ -471,7 +481,7 @@ e0.DLcurve.plot.all <- function (mcmc.list = NULL, sim.dir = NULL,
 
 e0.world.dlcurves <- function(x, mcmc.list, burnin=NULL, ...) {
 	# Get the hierarchical DL curves
-	if(class(mcmc.list) == 'bayesLife.prediction') {
+	if(inherits(mcmc.list, 'bayesLife.prediction')) {
 		if(!is.null(burnin) && burnin != mcmc.list$burnin)
 			warning('Prediction was generated with different burnin. Burnin set to ', mcmc.list$burnin)
 		burnin <- 0 # because burnin was already cut of the traces
@@ -485,7 +495,7 @@ e0.world.dlcurves <- function(x, mcmc.list, burnin=NULL, ...) {
 e0.country.dlcurves <- function(x, mcmc.list, country, burnin=NULL, ...) {
 	# Get country-specific DL curves.
 	# It's a wrapper around e0.get.dlcurves for easier usage.
-	if(class(mcmc.list) == 'bayesLife.prediction') {
+	if(inherits(mcmc.list, 'bayesLife.prediction')) {
 		if(!is.null(burnin) && burnin != mcmc.list$burnin)
 			warning('Prediction was generated with different burnin. Burnin set to ', mcmc.list$burnin)
 		burnin <- 0 # because burnin was already cut of the traces
@@ -553,7 +563,7 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
     main = NULL, show.legend=TRUE, col=c('black', 'red', "#00000020"), ...
     ) 
 {	
-	if(class(mcmc.list) == 'bayesLife.prediction') {
+	if(inherits(mcmc.list, 'bayesLife.prediction')) {
 		if(!is.null(burnin) && burnin != mcmc.list$burnin)
 			warning('Prediction was generated with different burnin. Burnin set to ', mcmc.list$burnin)
 		burnin <- 0 # because burnin was already cut of the traces
@@ -620,7 +630,7 @@ e0.DLcurve.plot <- function (mcmc.list, country, burnin = NULL, pi = 80, e0.lim 
 }
 
 e0.parDL.plot <- function(mcmc.set, country=NULL, burnin = NULL, lty=2, ann=TRUE, ...) {
-	if(class(mcmc.set) == 'bayesLife.prediction') {
+	if(inherits(mcmc.set, 'bayesLife.prediction')) {
 		if(!is.null(burnin) && burnin != mcmc.set$burnin)
 			warning('Prediction was generated with different burnin. Burnin set to ', mcmc.set$burnin)
 		burnin <- 0 # because burnin was already cut of the traces
@@ -747,6 +757,10 @@ e0.map.all <- function(pred, output.dir, output.type='png', e0.range=NULL, nr.ca
 						quantile=0.5, file.prefix='e0wrldmap_', ...) {
 	bayesTFR:::bdem.map.all(pred=pred, output.dir=output.dir, type='e0', output.type=output.type, range=e0.range,
 						nr.cats=nr.cats, same.scale=same.scale, quantile=quantile, file.prefix=file.prefix, ...)
+}
+
+e0.ggmap <- function(pred, ...) {
+    return(bayesTFR::tfr.ggmap(pred, ...))
 }
 
 e0.map.gvis <- function(pred, ...)

@@ -1,3 +1,24 @@
+5.1-1 (02/04/2023)
+-----
+Allow use of annual supplemental data.
+
+New mapping function e0.ggmap.
+
+Added/updated priors used by the UN in WPP 2022.
+
+Function for projection adjustments to WPPs.
+
+
+5.1-0 (11/09/2022)
+-----
+Changes related to using wpp2022.
+
+5.0-3 (09/28/2021)
+-----
+Fix bug in e0.diagnose (thanks to Asmida Binti Mustafa).
+
+Depends now on bayesTFR >= 7.0-5.
+
 5.0-1 (04/04/2021)
 -----
 Support for annual simulations added.
