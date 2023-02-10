@@ -39,14 +39,14 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{my.locations.file}{File name containing user-specified locations. See Details below.}
   \item{constant.variance}{Logical indicating if the model should be estimated using constant variance. It should only be used if the standard deviation lowess is to be analysed, see \code{\link{compute.loess}}.}
   \item{seed}{Seed of the random number generator. If \code{NULL} no seed is set. It can be used to generate reproducible results.}
-  \item{parallel}{Logical determining if the simulation should run multiple chains in parallel. If it is \code{TRUE}, the package \pkg{\link[snowFT]{snowFT}} is required.}
+  \item{parallel}{Logical determining if the simulation should run multiple chains in parallel. If it is \code{TRUE}, the package \pkg{snowFT} is required.}
   \item{nr.nodes}{Relevant only if \code{parallel} is \code{TRUE}. It gives the number of nodes for running the simulation in parallel. By default it equals to the number of chains.}
   \item{compression.type}{One of \sQuote{None}, \sQuote{gz}, \sQuote{xz}, \sQuote{bz}, determining type of a compression of the MCMC files.}
   \item{verbose}{Logical switching log messages on and off.}
   \item{verbose.iter}{Integer determining how often (in number of iterations) log messages are outputted during the estimation.}
   \item{mcmc.options}{List of options that overwrites global MCMC options as defined in \code{\link{e0mcmc.options}}. Type \code{e0mcmc.options()} to view default values.}
   \item{auto.conf}{In \code{continue.e0.mcmc}, one can overwrite the global \code{auto.conf} option, see \code{\link{e0mcmc.options}} for its definition. This argument is only used if the function argument \code{iter} is set to \sQuote{auto}.}
-  \item{\dots}{Additional parameters to be passed to the function \code{\link[snowFT]{performParallel}}, if \code{parallel} is \code{TRUE}.}
+  \item{\dots}{Additional parameters to be passed to the function \code{snowFT::performParallel}, if \code{parallel} is \code{TRUE}.}
   \item{chain.ids}{Array of chain identifiers that should be resumed. If it is \code{NULL}, all existing chains in \code{output.dir} are resumed.}
 }
 \details{

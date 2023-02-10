@@ -36,7 +36,7 @@ e0.map.gvis(pred, \dots)
    \item{quantile}{Quantile for which the map should be generated. It must be equal to one of the values in \code{dimnames(pred$quantiles[[2]])}, i.e. 0, 0.025, 0.05, 0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9, 0.95, 0.975, 1. Value 0.5 corresponds to the median.}
   \item{file.prefix}{Prefix for file names.}
   \item{\dots}{In \code{e0.map}, \dots are all arguments that can be passed to \code{\link[bayesTFR]{tfr.map}}, such as \code{quantile}, \code{year}, \code{projection.index}, \code{par.name}, \code{adjusted}, \code{device}, \code{main}, \code{device.args}, and \code{data.args}. In \code{e0.map.gvis}, \dots are all arguments that can be passed to \code{\link[bayesTFR]{tfr.map.gvis}}. In \code{e0.ggmap}, \dots are arguments that can be passed to \code{\link[bayesTFR]{tfr.ggmap}}. In addition, functions that use the \pkg{rworldmap} package accept
-arguments passed to the \code{\link[rworldmap]{mapCountryData}} function.
+arguments passed to the \code{rworldmap::mapCountryData} function.
 }
 }
 \details{
