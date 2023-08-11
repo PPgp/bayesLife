@@ -203,7 +203,7 @@ get.wpp.e0.subnat.joint <- function(country, meta, my.e0.file) {
     
     LEXmatrix.regions <- bayesTFR:::get.observed.time.matrix.and.regions(
         data_countries, loc_data, start.year = meta$start.year, 
-        present.year = meta$present.year, annual = meta$annual, 
+        present.year = meta$present.year, annual = meta$annual.simulation, 
         datacolnames=c(country.code='reg_code', country.name='name', reg.name='reg_name',
                        reg.code='NA', area.name='country', area.code='country_code'))
     

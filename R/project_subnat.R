@@ -1,7 +1,7 @@
 e0.predict.subnat <- function(countries, my.e0.file, sim.dir=file.path(getwd(), 'bayesLife.output'),
                               method = c("ar1", "shift", "scale"), predict.jmale = FALSE, my.e0M.file = NULL,
-                               end.year=2100, start.year=NULL, output.dir = NULL, nr.traj=NULL, seed = NULL, 
-                               ar.pars = c(rho = 0.95, U = 82.5, a = 0.0482, b = -0.0154), 
+                               end.year=2100, start.year=NULL, output.dir = NULL, annual = NULL,
+                              nr.traj=NULL, seed = NULL, ar.pars = NULL, 
                                save.as.ascii = 0, verbose = TRUE, jmale.estimates = NULL, ...) {
     # Run subnational projections, using the Scale AR(1) model applied to a national bayesLife simulation 
     # sim.dir is the world-national simulation. Set output.dir to store results somewhere else.
@@ -29,20 +29,39 @@ e0.predict.subnat <- function(countries, my.e0.file, sim.dir=file.path(getwd(), 
     compute.alpha.shift <- function(...)
         return(compute.alpha.ar1(...))
     
-    joint.male.est <- subnat.gap.estimates()
-    
     method <- match.arg(method)
     wpred <- get.e0.prediction(sim.dir) # contains national projections
     wdata <- wpred$e0.matrix.reconstructed
     wmeta <- wpred$mcmc.set$meta
-    year.step <- if(wmeta$annual.simulation) 1 else 5
     if(!is.null(seed)) set.seed(seed)
     if (is.null(output.dir)) output.dir <- wmeta$output.dir
     quantiles.to.keep <- as.numeric(dimnames(wpred$quantiles)[[2]])
-    e <- new.env()
+    
+    wannual <- wmeta$annual.simulation
+    if(is.null(annual)) annual <- wannual
+    year.step <- if(annual) 1 else 5
+    wyear.step <- if(wannual) 1 else 5
+    
+    joint.male.est <- subnat.gap.estimates(annual)
+    
+    ar.pars.default <- c(rho = 0.95, U = 82.5, a = 0.0482, b = -0.0154)
+    if(annual) { # Raftery's conversion from 5-year AR(1) parameters to 1-year parameters
+        ar.pars.default["a"] <- ar.pars.default["a"] * (1-ar.pars.default["rho"]^(2/5))/(1-ar.pars.default["rho"]^2)
+        ar.pars.default["b"] <- ar.pars.default["b"] * (1-ar.pars.default["rho"]^(2/5))/(1-ar.pars.default["rho"]^2)
+        ar.pars.default["rho"] <- ar.pars.default["rho"]^(1/5)
+    }
+    # Make sure all AR(1) parameters are available. If not, take the default values.
+    if(is.null(ar.pars)) ar.pars <- ar.pars.default
+    for(par in names(ar.pars.default)) if(! par %in% names(ar.pars)) ar.pars[par] <- ar.pars.default[par]
+    
     result <- list()
     orig.nr.traj <- nr.traj
     sex <- list(F = 'female', M = 'male')
+    
+    # set start year and present year of the national simulation
+    wstarty.global <- if(is.null(start.year)) as.integer(dimnames(wdata)[[1]][wpred$present.year.index]) + wyear.step else start.year
+    wpresenty.global <- wstarty.global - wyear.step
+    
     for (country in countries) {
         country.obj <- get.country.object(country, wmeta)
         if(is.null(country.obj$code)) {
@@ -50,40 +69,71 @@ e0.predict.subnat <- function(countries, my.e0.file, sim.dir=file.path(getwd(), 
             next
         }
         if(verbose) cat('\n', country.obj$name, ': predicting e0 for', sex[[wmeta$sex]])
-        starty <- if(is.null(start.year)) as.integer(dimnames(wdata)[[1]][wpred$present.year.index]) + year.step else start.year
+
+        we0 <- wdata[, country.obj$index]
+        we0obsy <- as.integer(names(we0))[-length(we0)]
+        
+        wstarty <- wstarty.global
+        wpresenty <- wpresenty.global
+        
+        starty <- wstarty # set subnational start year to the national start year (might get overwritten below)
+        presenty <- starty - year.step # subnational present year (might get overwritten below)
+        
+        if(!wannual){ # national prediction is 5-year
+            # snap start year and present year to be in the middle of the corresponding 5-years interval
+            seqy <- seq(min(we0obsy)-3, wpred$end.year, by=5)
+            wstarty <- seqy[cut(wstarty, seqy, labels=FALSE)] + 3
+            wpresenty <- seqy[cut(wstarty, seqy, labels=FALSE)-1] + 3
+            if(!annual){ # subnational prediction is 5-year
+                starty <- wstarty
+                presenty <- wpresenty
+            }
+        } else { # national prediction is annual
+            if(!annual){ # subnational prediction is 5-year
+                # adjust start year and present year to be in the middle of the corresponding 5-years interval
+                seqy <- seq(1700, wpred$end.year, by=5)
+                starty <- seqy[cut(wstarty, seqy, labels=FALSE)] + 3
+                presenty <- starty - 5
+            }
+        }
+        
+        # get various meta values for the subnational simulation
         meta <- e0.mcmc.meta.ini.subnat(wmeta, country = country.obj$code, my.e0.file = my.e0.file, 
-                                 start.year = 1900, present.year = starty - year.step, verbose = verbose)
-        class(meta) <- "bayesLife.mcmc.meta"
+                                 start.year = 1900, present.year = presenty, annual = annual, verbose = verbose)
+        
+        if(is.null(meta$e0.matrix))
+            stop("No data available. It might be a mismatch between the available observed years and start.year. ",
+                 "The data file should contain year ", if(annual) presenty else paste(presenty - 3, presenty + 2, sep = "-"),
+                 ". Or change the argument start.year.")
+        
         this.output.dir <- file.path(output.dir, 
                                      paste0('subnat_', method), paste0('c', country.obj$code))
         outdir <- file.path(this.output.dir, 'predictions')
         meta$output.dir <- this.output.dir
     
+        # extract national trajectories and thin them if needed
         wtrajs <- get.e0.trajectories(wpred, country.obj$code)
         nr.traj <- orig.nr.traj
         if(is.null(nr.traj)) nr.traj <- ncol(wtrajs)
         thinning.index <- round(seq(1, ncol(wtrajs), length = nr.traj))
         wtrajs <- wtrajs[as.integer(rownames(wtrajs)) <= end.year, thinning.index]
         nr.traj <- ncol(wtrajs)
-        wyears <- as.integer(rownames(wtrajs))
-        wend.year <- max(wyears)
-        we0 <- wdata[, country.obj$index]
-        we0obsy <- as.integer(names(we0))[-length(we0)]
-        if(!wmeta$annual.simulation){
-            seqy <- seq(min(we0obsy) - 3, max(wyears) + 2, by = 5)
-            midy <- seqy + 3
-        } else{
-            seqy <- midy <-(min(we0obsy)-1):max(wyears)
+        
+        # attach observed data to the trajectories, so that imputation can be done using all data 
+        adde0 <- matrix(we0, ncol = nr.traj, nrow = length(we0), 
+                         dimnames = list(names(we0), colnames(wtrajs)))
+        wtrajs.all <- rbind(adde0[! rownames(adde0) %in% rownames(wtrajs),], wtrajs)
+        
+        if(annual && !wannual) { # interpolate national trajectories
+            wtrajs.all <- bayesTFR:::interpolate.trajectories(wtrajs.all)
+        } else {
+            if(!annual && wannual) # average annual national trajectories
+                wtrajs.all <- bayesTFR:::average.trajectories(wtrajs.all)
         }
-        presenty <- midy[cut(starty, seqy, labels=FALSE)-1]
-        if(any(wyears < presenty))  # remove time periods from national trajectories before present year
-            wtrajs <- wtrajs[-which(wyears < presenty),]
-        if(presenty < min(wyears)) { # add observed data to national trajectories if present year is not there
-            adde0 <- we0[-length(we0)][we0obsy >= presenty]
-            adddata <- matrix(adde0, ncol=nr.traj, nrow=length(adde0), 
-                        dimnames=list(names(adde0), colnames(wtrajs)))
-            wtrajs <- rbind(adddata, wtrajs)
-        }
+        # remove everything from the national trajectories before present year
+        yrs <- as.integer(rownames(wtrajs.all))  
+        wtrajs <- wtrajs.all[-which(yrs < presenty),]
+        
         if(!presenty %in% rownames(meta$e0.matrix)) { # add NAs to e0 matrix
             addyears <- sort(seq(presenty, max(as.integer(rownames(meta$e0.matrix)) + year.step), by=-year.step))
             adddata <- matrix(NA, nrow=length(addyears), ncol=ncol(meta$e0.matrix),
@@ -97,6 +147,7 @@ e0.predict.subnat <- function(countries, my.e0.file, sim.dir=file.path(getwd(), 
         bayesLife.mcmc.meta <- meta
         store.bayesLife.meta.object(bayesLife.mcmc.meta, this.output.dir)
     
+        # prepare for subnational simulation
         this.nr.project <- nrow(wtrajs) - 1
         nr.reg <- get.nr.countries(meta)
         PIs_cqp <- array(NA, c(nr.reg, length(quantiles.to.keep), nrow(wtrajs)),
@@ -105,24 +156,26 @@ e0.predict.subnat <- function(countries, my.e0.file, sim.dir=file.path(getwd(), 
         #meta$Tc.index <- .get.Tcindex(meta$e0.matrix, cnames = meta$regions$country_name)
         country.char <- as.character(country.obj$code)
         e0reconstructed <- meta$e0.matrix
+        
+        # iterate over subnational units
         for(region in 1:nr.reg) {
             reg.obj <- get.country.object(region, meta, index=TRUE)
             regcode.char <- as.character(reg.obj$code)			
             rege0 <- get.observed.e0(region, meta, 'e0.matrix')
             rege0.last <- rep(rege0[length(rege0)], nr.traj)
             c.first <- do.call(paste0("compute.alpha.", method), 
-                               list(rege0.last, we0[names(we0) %in% names(rege0.last)])) # set of initial scales
+                               list(rege0.last, wtrajs.all[rownames(wtrajs.all) %in% names(rege0.last)])) # set of initial scales
             #stop("")
             if(is.na(rege0.last[1])) { # impute where NA's at the end
                 for(i in length(rege0):1) if(!is.na(rege0[i])) break
-                widx <- which(names(we0) %in% names(rege0[i]))
-                c.first <- rep(do.call(paste0("compute.alpha.", method), list(rege0[i], we0[widx])), 
+                widx <- which(rownames(wtrajs.all) %in% names(rege0[i]))
+                c.first <- rep(do.call(paste0("compute.alpha.", method), list(rege0[i], wtrajs.all[widx,])), 
                                nr.traj) # set of initial scales
                 meta$Tc.index[region] <- i
                 imptraj <- matrix(NA, nrow = length(rege0) - i, ncol = nr.traj) # trajectory matrix for imputation
                 for(tr in 1:nr.traj) { # iterate over trajectories
                     imp.time <- i:(length(rege0)-1)
-                    natval <- we0[widx + (imp.time - i + 1)]
+                    natval <- wtrajs.all[widx + (imp.time - i + 1), tr]
                     impval <- do.call(paste0("generate.trajectory.", method), 
                                       list(natval, c.first[tr]))
                     imptraj[imp.time - i + 1, tr] <- impval
@@ -135,6 +188,7 @@ e0.predict.subnat <- function(countries, my.e0.file, sim.dir=file.path(getwd(), 
                 rege0.last <- imptraj[nrow(imptraj),]
             } # end of imputation
         
+            # initiate matrix for holding the projections
             e0.pred <- matrix(NA, nrow = this.nr.project + 1, ncol = nr.traj, dimnames = list(rownames(wtrajs), NULL))
             e0.pred[1,] <- rege0.last
             
@@ -143,7 +197,9 @@ e0.predict.subnat <- function(countries, my.e0.file, sim.dir=file.path(getwd(), 
                 e0.pred[-1, s] <- do.call(paste0("generate.trajectory.", method), 
                                                 list(wtrajs[-1,s], c.first[s]))
             }
+            # save resulting trajectories
             trajectories <- e0.pred
+            rownames(trajectories) <- rownames(wtrajs)
             save(trajectories, file = file.path(outdir, paste0('traj_country', reg.obj$code, '.rda')))
       
             # compute quantiles
@@ -161,7 +217,7 @@ e0.predict.subnat <- function(countries, my.e0.file, sim.dir=file.path(getwd(), 
             output.directory = normalizePath(outdir),
             mcmc.set=list(meta=meta, mcmc.list=list()),
             nr.projections=this.nr.project,
-            burnin=NA, end.year=wend.year, start.year=starty,
+            burnin=NA, end.year = max(as.integer(rownames(wtrajs))), start.year=starty,
             method = method, ar.pars = ar.pars,
             present.year.index=present.year.index,
             present.year.index.all=present.year.index,
@@ -229,8 +285,14 @@ e0.jmale.predict.subnat <- function(e0.pred, estimates = NULL, gap.lim = c(0,18)
     invisible(bayesLife.prediction)
 }
 
-subnat.gap.estimates <- function()
+subnat.gap.estimates <- function(annual = FALSE){
+    if(annual)
+        return(list(eq1 = list(coefficients = c(-0.2572068905, e0.1953 = -0.0002524553, Gprev = 0.9914796728, e0 = 0.0049163005, e0d75 = -0.0193942510),
+                              sigma = 0.1723969, dof = 2.311855),
+                   eq2 = list(coefficients = c(Gprev = 1), sigma = 0.3429213, dof = NULL)))
+    # 5-year estimates
     return(list(eq1 = list(coefficients = c(-1.076940553, e0.1953 = 0.002739663, Gprev = 0.942276337, e0 = 0.019435863, e0d75 = -0.099589171),
                                   sigma = 0.3902612, dof = 4.058482),
                        eq2 = list(coefficients = c(Gprev = 1), sigma = 0.4296343, dof = NULL))
             )
+}
