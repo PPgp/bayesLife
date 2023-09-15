@@ -1,3 +1,8 @@
+5.2-0 (09/15/2023)
+-----
+Annual subnational projections are now possible, via the argument "annual"
+in e0.predict.subnat().
+
 5.1-1 (02/04/2023)
 -----
 Allow use of annual supplemental data.

@@ -720,8 +720,44 @@ test.subnational.predictions <- function() {
     trajs <- get.e0.trajectories(preds[["36"]], "Victoria")
     stopifnot(all(dim(trajs) == c(7, 30)))
     
-    test.ok(test.name)
     unlink(sim.dir, recursive=TRUE)
+    
+    # Annual subnational projections
+    my.sub.file.annual.F <- tempfile()
+    my.sub.file.annual.M <- tempfile()
+    # female data
+    datF <- data.table::fread(my.sub.file) # load the data and save only the last time period, pretending this is a single year data point
+    datF <- datF[, .(country_code, country_name, reg_code, name, `2013` = `2010-2015`)]
+    data.table::fwrite(datF, file = my.sub.file.annual.F, sep = "\t") # save it
+    # male data
+    datM <- data.table::copy(datF)[, `2013` := `2013`*0.95]
+    data.table::fwrite(datM, file = my.sub.file.annual.M, sep = "\t")
+    
+    sim.dir <- tempfile()
+    preds <- e0.predict.subnat(c(36, 124, 360), my.e0.file=my.sub.file.annual.F, sim.dir=nat.dir, 
+                                output.dir=sim.dir, start.year = 2016, # will impute 2 years
+                               end.year=2030, annual = TRUE, 
+                               predict.jmale = TRUE, my.e0M.file = my.sub.file.annual.M)
+    # Retrieve trajectories
+    trajs <- get.e0.trajectories(preds[["124"]], "Alberta")
+    stopifnot(all(dim(trajs) == c(16, 30))) # from 2015 to 2030
+    stopifnot(all(c(2015, 2030) %in% as.integer(rownames(trajs))))
+    
+    pred <- get.rege0.prediction(sim.dir, 360)
+    spred <- summary(pred, "Papua")
+    stopifnot(max(spred$projection.years) == 2030)
+    
+    predM <- get.e0.jmale.prediction(pred)
+    t <- tfr.trajectories.table(predM, "Bali")
+    stopifnot(max(as.integer(rownames(t))) == 2030)
+    stopifnot(all(c(2015, 2024, 2029) %in% as.integer(rownames(t))))
+    
+    unlink(sim.dir, recursive=TRUE)
+    unlink(my.sub.file.annual.F)
+    unlink(my.sub.file.annual.M)
+    
+    test.ok(test.name)
+    
 }
 
 test.run.annual.simulation <- function(wpp.year = 2019) {
