@@ -171,7 +171,8 @@ get.wpp.e0.subnat <- function(country, start.year=1950, present.year=2010, my.e0
     
     data_countries <- data[include | locations$prediction.only,]
     nr_countries_estimation <- sum(include)
-    #stop("")
+    if(nrow(data_countries) == 0)
+        stop("No data for country ", country, " available.")
     LEXmatrix.regions <- bayesTFR:::get.observed.time.matrix.and.regions(
                                 data_countries, loc_data, start.year = start.year, 
                                 present.year = present.year, annual = annual, 
