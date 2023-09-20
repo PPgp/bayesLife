@@ -711,11 +711,14 @@ e0.mcmc.ini.extra <- function(mcmc, countries, index.replace = NULL) {
 }
 
 e0.mcmc.meta.ini.subnat <- function(meta, country, start.year = 1950, present.year = 2020, 
-                             my.e0.file = NULL, annual.simulation = FALSE, verbose = FALSE) {
+                             my.e0.file = NULL, annual = NULL, verbose = FALSE) {
     meta$start.year <- start.year
     meta$present.year <- present.year
+    if(is.null(annual)) annual <- meta$annual.simulation
+    meta$annual.simulation <- annual
+    
     data <- get.wpp.e0.subnat(country, start.year = start.year, present.year = present.year, 
-                             my.e0.file = my.e0.file, annual = annual.simulation)
+                             my.e0.file = my.e0.file, annual = annual)
     data$nr.countries <- ncol(data$e0.matrix)
     data$Tc.index <- .get.Tcindex(data$e0.matrix, cnames=data$regions$country_name, stop.if.less.than2 = FALSE)
     data$subnat <- TRUE

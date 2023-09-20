@@ -35,7 +35,7 @@ Existing simulation results can be accessed using the \link{get.e0.mcmc} functio
 
 For a table with countries included in the mcmc or prediction object, the function \link[bayesTFR]{get.countries.table} can be used in the same way as in \pkg{bayesTFR}.
 
-Historical data are taken from one of the packages \pkg{wpp2019} (default), \pkg{wpp2017}, \pkg{wpp2015}, \pkg{wpp2012} or \pkg{wpp2010}, depending on users settings.
+Historical data are taken from one of the packages \pkg{wpp2019} (default), \pkg{wpp2017}, \pkg{wpp2015}, \pkg{wpp2012} or \pkg{wpp2010}, depending on users settings. For more recent data, package \pkg{wpp2022} can be installed from Github (@PPgp).
 
 }
 
@@ -57,7 +57,7 @@ A. E. Raftery,  N. Li, H. Sevcikova, P. Gerland, G. K. Heilig (2012). Bayesian p
 
 A. E. Raftery,  N. Lalic, P. Gerland (2014). Joint Probabilistic Projection of Female and Male Life Expectancy. Demographic Research, 30:795-822.
 
-H. Sevcikova, A. E. Raftery (2021). Probabilistic Projection of Subnational Life Expectancy. Journal of Official Statistics, in press.
+H. Sevcikova, A. E. Raftery (2021). Probabilistic Projection of Subnational Life Expectancy. Journal of Official Statistics, , Vol. 37, no. 3, 591-610.
 
 %Lalic, N. (2011). Master's thesis at the Department of Statistics, University of Washington.
 }

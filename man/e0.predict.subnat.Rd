@@ -15,15 +15,15 @@ e0.predict.subnat(countries, my.e0.file,
     method = c("ar1", "shift", "scale"),
     predict.jmale = FALSE, my.e0M.file = NULL,
     end.year = 2100, start.year = NULL, output.dir = NULL, 
-    nr.traj = NULL, seed = NULL, 
-    ar.pars = c(rho = 0.95, U = 82.5, a = 0.0482, b = -0.0154), 
-    save.as.ascii = 0, verbose = TRUE, jmale.estimates = NULL, \dots)
+    annual = NULL, nr.traj = NULL, seed = NULL, 
+    ar.pars = NULL, save.as.ascii = 0, verbose = TRUE, 
+    jmale.estimates = NULL, \dots)
                 
 e0.jmale.predict.subnat(e0.pred, estimates = NULL, 	
     gap.lim = c(0,18), max.e0.eq1.pred = 86, my.e0.file = NULL, 
     save.as.ascii = 0, verbose = TRUE)
     
-subnat.gap.estimates()
+subnat.gap.estimates(annual = FALSE)
 }
 
 \arguments{
@@ -36,9 +36,15 @@ subnat.gap.estimates()
  \item{end.year}{End year of the projections.}
  \item{start.year}{Start year of the projections. By default, projections start at the same time point as the national projections.} 
    \item{output.dir}{Directory into which the resulting prediction objects and the trajectories are stored. See below for details.}
+   \item{annual}{Logical indicating if the subnational projection should be on an annual scale or a 5-year scale. By default, 
+the scale is matched to the national simulation given by \code{sim.dir}. If given, the scale must match to the scale of the subnational data provided in \code{my.e0.file}. 
+If the subnational and national scales are not the same, 
+the national trajectories are either interpolated (if \code{annual = TRUE} and the national simulation is not annual) or averaged to 5-year values 
+(if \code{annual = FALSE} and the national simulation is annual).}
 \item{nr.traj}{Number of trajectories to be generated. If \code{NULL}, the number of trajectories in the national projections is used.}
 \item{seed}{Seed of the random number generator. If \code{NULL} no seed is set. It can be used to generate reproducible projections.}
-\item{ar.pars}{List containing the parameter estimates for the AR(1) method (i.e. if \code{method = "ar1"}, default). It must have elements called \code{rho}, \code{U}, \code{a} and \code{b}. See the reference paper for details on the estimation.}
+\item{ar.pars}{Named vector containing the parameter estimates for the AR(1) method (i.e. if \code{method = "ar1"}, default). If given, it must have elements called \code{rho}, \code{U}, \code{a} and \code{b}. See the reference paper for details on the estimation. By default for a 5-year simulation, \code{c(rho = 0.95, U = 82.5, a = 0.0482, b = -0.0154)} is used. 
+For an annual simulation these default parameters are scaled to \code{c(rho = 0.9898, U = 82.5, a = 0.01, b = -0.0032)}, see details below.}
 \item{save.as.ascii}{Either a number determining how many trajectories should be converted into an ASCII file, or \dQuote{all} in which case all trajectories are converted. By default no conversion is performed.}
 \item{verbose}{Logical switching log messages on and off.}
 \item{jmale.estimates, estimates}{List with estimates for the female-male gap model. The default values are retrieved using the function \code{subnat.gap.estimates()}.}
@@ -50,11 +56,14 @@ subnat.gap.estimates()
 \details{
 The \code{e0.predict.subnat} function implements the methodology described in Sevcikova and Raftery (2021). Given a set of national bayesLife projections, it applies one of the methods (AR(1), Shift or Scale) to each national trajectory and each subregion of given countries which yields subnational e0 projections. 
 
-The file on subnational data passed into \code{my.e0.file} and \code{my.e0M.file} has to have a column \dQuote{country_code} with numerical values corresponding to countries given in the argument \code{countries}, and column \dQuote{reg_code} giving the numerical identifier of each subregion. Column \dQuote{name} should be used for subregion name, and column \dQuote{country_name} for country name. An optional column \dQuote{include_code} can be used to eliminate entries from processing. Entries with values of 1 or 2 will be included, all others will be ignored. Column \dQuote{last.observed} can be used to define which time period contains the last observed data point (given as integer, e.g. year in the middle of the time period). Remaining columns define the time periods, e.g. \dQuote{2000-2005}, \dQuote{2005-2010}. The package contains an example of such dataset, see Example below.
+The file on subnational data passed into \code{my.e0.file} and \code{my.e0M.file} has to have a column \dQuote{country_code} with numerical values corresponding to countries given in the argument \code{countries}, and column \dQuote{reg_code} giving the numerical identifier of each subregion. Column \dQuote{name} should be used for subregion name, and column \dQuote{country_name} for country name. An optional column \dQuote{include_code} can be used to eliminate entries from processing. Entries with values of 1 or 2 will be included, all others will be ignored. Column \dQuote{last.observed} can be used to define which time period contains the last observed data point (given as integer, e.g. year in the middle of the time period). Remaining columns define the time periods, e.g. \dQuote{2000-2005}, \dQuote{2005-2010} for a 5-year simulation, or \dQuote{2020}, \dQuote{2021} for an annual simulation. The package contains an example of such dataset, see Example below.
+
+The default AR(1) parameters for the \dQuote{ar1} method were designed for a 5-year simulation, see Sevcikova & Raftery (2021) for more detail. These are \eqn{\rho = 0.95, U = 82.5, a = 0.0482, b = -0.0154}. If an annual AR(1) process is desired, we use the following conversion for the autoregressive parameter \eqn{\rho} and the \eqn{a} and \eqn{b} parameters: 
+\eqn{\rho^* = \rho^{(1/5)}, a^* = a * \sqrt{((1 - \rho^{(2/5)})/(1 - \rho^2))}, b^* = b * \sqrt{((1 - \rho^{(2/5)})/(1 - \rho^2))}}. The \eqn{U} parameter stays the same for both processes. Thus, the annual parameters are  \code{c(rho = 0.9898, U = 82.5, a = 0.01, b = -0.0032)}. Note that if the \code{ar.pars} argument is specified by the user, it is assumed that the parameters have been scaled appropriately and thus, no conversion takes place.
 
 Argument \code{output.dir} gives a location on disk where results of the function should be stored. If it is \code{NULL} (default),  results are stored in the same directory as the national projections. In both cases a subdirectory called \dQuote{subnat_\code{method}} is created in which each country has its own subfolder with the country code in its name. Each such subfolder contains the same type of outputs as in the national case generated using \code{\link{e0.predict}}, most importantly a directory \dQuote{predictions} with trajectories for each region.
 
-If the argument \code{predict.jmale} is \code{TRUE}, the \code{e0.predict.subnat} invokes  the \code{e0.jmale.predict.subnat} function for each country. However, one can call the \code{e0.jmale.predict.subnat} function explicitly. It applies the female-male gap model to regions of one country. See \code{\link{e0.jmale.predict}} for more detail on the model. The default  covariates of the model are not estimated on the fly. They were estimated externally using subnational data for about 30 countries and can be viewed using \code{subnat.gap.estimates()}.
+If the argument \code{predict.jmale} is \code{TRUE}, the \code{e0.predict.subnat} invokes  the \code{e0.jmale.predict.subnat} function for each country. However, one can call the \code{e0.jmale.predict.subnat} function explicitly. It applies the female-male gap model to regions of one country. See \code{\link{e0.jmale.predict}} for more detail on the model. The default  covariates of the model are not estimated on the fly. They were estimated externally using subnational data for about 30 countries and can be viewed using \code{subnat.gap.estimates()}, either for estimates derived from 5-year data (default) or annual data (\code{annual = TRUE}).
 }
 
 \value{
@@ -68,7 +77,7 @@ Even though the resulting object contains subnational results, the names  of its
 }
 
 \references{
-H. Sevcikova, A. E. Raftery (2021). Probabilistic Projection of Subnational Life Expectancy. Journal of Official Statistics, in press.
+H. Sevcikova, A. E. Raftery (2021). Probabilistic Projection of Subnational Life Expectancy. Journal of Official Statistics, Vol. 37, no. 3, 591-610.
 }
 
 \author{
