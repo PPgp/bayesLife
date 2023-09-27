@@ -1,3 +1,7 @@
+5.2-0.9xxx (09/27/2023)
+-----
+Default for par.names and par.names.cs in e0.raftery.diag changed to all parameters.
+
 5.2-0 (09/15/2023)
 -----
 Annual subnational projections are now possible, via the argument "annual"

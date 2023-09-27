@@ -8,7 +8,7 @@ Raftery Diagnostics for Parameters of the Life Expectancy
 The function computes the Raftery diagnostics for each parameter in the same way as \code{\link[bayesTFR]{tfr.raftery.diag}} of the \pkg{bayesTFR} package.}
 \usage{
 e0.raftery.diag(mcmc = NULL, sim.dir = file.path(getwd(), "bayesLife.output"), 
-    burnin = 0, country = NULL, par.names = NULL, par.names.cs = NULL,
+    burnin = 0, country = NULL, par.names = NA, par.names.cs = NA,
     country.sampling.prop = 1, verbose = TRUE, \dots)
 }
 
@@ -25,9 +25,9 @@ Burnin.
   \item{country}{Name or code of a country. If it is given, only country-specific parameters parameters of that country are considered.}
   \item{par.names}{
 Names of country-independent parameters for which the Raftery diagnostics should be computed. By default all parameters are used.
-}
+ If it is \code{NULL}, no country-independent parameters are used.}
   \item{par.names.cs}{
-Names of country-specific parameters for which the Raftery diagnostics should be computed. By default all parameters are used.
+Names of country-specific parameters for which the Raftery diagnostics should be computed. By default all parameters are used. If it is \code{NULL}, no country-specific parameters are used.
 }
 \item{country.sampling.prop}{Proportion of countries that are included in the diagnostics. It should be between 0 and 1. If it is smaller than 1, the countries are randomly sampled. It is only relevant if \code{par.names.cs} is not \code{NULL}. }
 \item{verbose}{Logical switching log messages on and off.}
