@@ -106,8 +106,13 @@ e0.joint.plot <- function(e0.pred, country, pi=95, years, nr.points=500,
 	if(!has.e0.jmale.prediction(e0.pred)) 
 		stop('A male prediction does not exist for the given prediction object. Run e0.jmale.predict.')
 	start.year <- as.integer(dimnames(e0.pred$quantiles)[[3]][1])
-	years.obs <- years[years <= start.year+2]
-	years.pred <- years[years > start.year+2]
+	if(e0.pred$mcmc.set$meta$annual.simulation){
+	    years.obs <- years[years <= start.year]
+	    years.pred <- years[years > start.year]
+	} else {
+	    years.obs <- years[years <= start.year+2]
+	    years.pred <- years[years > start.year+2]
+	}
 	years.idx <- unlist(lapply(years.pred, bayesTFR:::get.prediction.year.index, pred=e0.pred))
 	years.idx <- years.idx[years.idx > 1]
 	years.obs.idx <- unlist(lapply(years.obs, bayesTFR:::get.estimation.year.index, meta=e0.pred$mcmc.set$meta))

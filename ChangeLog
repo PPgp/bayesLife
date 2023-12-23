@@ -1,6 +1,8 @@
-5.2-0.9xxx (09/27/2023)
+5.2-0.9xxx (12/22/2023)
 -----
 Default for par.names and par.names.cs in e0.raftery.diag changed to all parameters.
+
+Fixed bug in e0.joint.plot for annual prediction object.
 
 5.2-0 (09/15/2023)
 -----
