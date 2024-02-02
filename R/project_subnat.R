@@ -153,7 +153,7 @@ e0.predict.subnat <- function(countries, my.e0.file, sim.dir=file.path(getwd(), 
         PIs_cqp <- array(NA, c(nr.reg, length(quantiles.to.keep), nrow(wtrajs)),
                      dimnames=list(meta$regions$country_code, dimnames(wpred$quantiles)[[2]], dimnames(wtrajs)[[1]]))
         mean_sd <- array(NA, c(nr.reg, 2, nrow(wtrajs)))
-        #meta$Tc.index <- .get.Tcindex(meta$e0.matrix, cnames = meta$regions$country_name)
+        meta$Tc.index <- .get.Tcindex(meta$e0.matrix, cnames = meta$regions$country_name)
         country.char <- as.character(country.obj$code)
         e0reconstructed <- meta$e0.matrix
         
@@ -171,7 +171,7 @@ e0.predict.subnat <- function(countries, my.e0.file, sim.dir=file.path(getwd(), 
                 widx <- which(rownames(wtrajs.all) %in% names(rege0[i]))
                 c.first <- rep(do.call(paste0("compute.alpha.", method), list(rege0[i], wtrajs.all[widx,])), 
                                nr.traj) # set of initial scales
-                meta$Tc.index[region] <- i
+                meta$Tc.index[[region]] <- meta$Tc.index[[region]][meta$Tc.index[[region]] <= i]
                 imptraj <- matrix(NA, nrow = length(rege0) - i, ncol = nr.traj) # trajectory matrix for imputation
                 for(tr in 1:nr.traj) { # iterate over trajectories
                     imp.time <- i:(length(rege0)-1)

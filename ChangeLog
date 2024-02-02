@@ -4,6 +4,8 @@ Default for par.names and par.names.cs in e0.raftery.diag changed to all paramet
 
 Fixed bug in e0.joint.plot for annual prediction object.
 
+Fixed bug in setting time index when imputation is present in e0.predict.subnat().
+
 5.2-0 (09/15/2023)
 -----
 Annual subnational projections are now possible, via the argument "annual"
