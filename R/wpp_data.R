@@ -110,7 +110,7 @@ set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, my.locations
 		    locations <- bayesTFR:::read.UNlocations(data$data, wpp.year=meta$wpp.year, 
 									my.locations.file=my.locations.file, package='bayesLife', verbose=verbose)
 		    suppl.wpp <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, extra.wpp, locations$loc_data, 
-									meta$start.year, meta$present.year)
+									meta$start.year, meta$present.year, annual = annual)
 		    extra.wpp$suppl.data <- bayesTFR:::.get.suppl.data.list(suppl.wpp, matrix.name='e0.matrix')
 		} else extra.wpp$suppl.data <- bayesTFR:::.get.suppl.data.list(NULL)
 	}
