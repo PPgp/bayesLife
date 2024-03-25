@@ -1,6 +1,7 @@
 get.wpp.e0.data <- function(sex = 'M', start.year = 1950, present.year = 2015, 
                             wpp.year = 2017, my.e0.file = NULL, include.hiv = FALSE,
-							my.locations.file = NULL, annual = FALSE, verbose = FALSE) {
+							my.locations.file = NULL, annual = FALSE, use.wpp.data = TRUE, 
+							verbose = FALSE) {
 	sex <- toupper(sex)
 	if(sex != 'M' && sex != 'F')
 		stop('Allowed values for argument "sex" are "M" and "F".')
@@ -9,7 +10,7 @@ get.wpp.e0.data <- function(sex = 'M', start.year = 1950, present.year = 2015,
 	########################################
 	un.object <- read.UNe0(sex=sex, wpp.year=wpp.year, my.e0.file=my.e0.file, 
 								present.year=present.year, annual = annual,
-								verbose=verbose)
+								use.wpp.data = use.wpp.data, verbose=verbose)
 	data <- un.object$data.object$data
 	# get region and area data
 	locations <- bayesTFR:::read.UNlocations(data, wpp.year=wpp.year, my.locations.file=my.locations.file,
@@ -90,10 +91,11 @@ read.UNe0 <- function(sex, wpp.year, my.e0.file=NULL, annual = FALSE, ...) {
 }
 
 set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, my.locations.file=NULL, 
-                             annual = FALSE, verbose=FALSE) {
+                             annual = FALSE, verbose=FALSE, use.wpp.data = TRUE) {
 	#'countries' is a vector of country or region codes 
 	un.object <- read.UNe0(sex=meta$sex, wpp.year=meta$wpp.year, my.e0.file=my.e0.file, 
-							present.year=meta$present.year, annual = annual, verbose=verbose)
+							present.year=meta$present.year, annual = annual, 
+							use.wpp.data = use.wpp.data, verbose=verbose)
 	data <- un.object$data.object
 	extra.wpp <- bayesTFR:::.extra.matrix.regions(data=data, countries=countries, meta=meta, 
 							package="bayesLife", my.locations.file=my.locations.file, 
@@ -117,7 +119,8 @@ set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, my.locations
 	return(extra.wpp)
 }
 
-get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, my.locations.file=NULL, verbose=FALSE) {
+get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, 
+                                          my.locations.file=NULL, verbose=FALSE) {
 	sex <- toupper(sex)
 	if(sex != 'M' && sex != 'F')
 		stop('Allowed values for argument "sex" are "M" and "F".')
@@ -125,7 +128,8 @@ get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, my.loc
 	# set data and match with areas
 	########################################
 	un.object <- read.UNe0(sex=sex, wpp.year=meta$wpp.year, present.year=meta$present.year, 
-						my.e0.file=my.e0.file, annual = meta$annual.simulation, verbose=verbose)
+						my.e0.file=my.e0.file, annual = meta$annual.simulation, 
+						use.wpp.data = meta$use.wpp.data, verbose=verbose)
 	data <- un.object$data.object$data
 	# get region and area data
 	locations <- bayesTFR:::read.UNlocations(data, wpp.year=meta$wpp.year, 

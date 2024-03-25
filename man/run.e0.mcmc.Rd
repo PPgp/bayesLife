@@ -14,8 +14,9 @@ run.e0.mcmc(sex = c("Female", "Male"), nr.chains = 3, iter = 160000,
     output.dir = file.path(getwd(), "bayesLife.output"), 
     thin = 10, replace.output = FALSE, annual = FALSE,
     start.year = 1873, present.year = 2020, wpp.year = 2019, 
-    my.e0.file = NULL, my.locations.file = NULL, constant.variance = FALSE, 
-    seed = NULL, parallel = FALSE, nr.nodes = nr.chains, compression.type = 'None',
+    my.e0.file = NULL, my.locations.file = NULL, use.wpp.data = TRUE,
+    constant.variance = FALSE, seed = NULL, 
+    parallel = FALSE, nr.nodes = nr.chains, compression.type = 'None',
     verbose = FALSE, verbose.iter = 100, mcmc.options = NULL, \dots)
     
 continue.e0.mcmc(iter, chain.ids = NULL, 
@@ -37,6 +38,7 @@ continue.e0.mcmc(iter, chain.ids = NULL,
   \item{wpp.year}{Year for which WPP data is used. The functions loads a package called \pkg{wpp}\eqn{x} where \eqn{x} is the \code{wpp.year} and uses the \code{\link[wpp2019]{e0}*} datasets.}
   \item{my.e0.file}{File name containing user-specified e0 time series for one or more countries. See Details below.}
   \item{my.locations.file}{File name containing user-specified locations. See Details below.}
+  \item{use.wpp.data}{Logical indicating if default WPP data should be used, i.e. if \code{my.e0.file} will be matched with the WPP data in terms of time periods and locations. If \code{FALSE}, it is assumed that the \code{my.e0.file} contains all locations and time periods to be included in the simulation.}
   \item{constant.variance}{Logical indicating if the model should be estimated using constant variance. It should only be used if the standard deviation lowess is to be analysed, see \code{\link{compute.loess}}.}
   \item{seed}{Seed of the random number generator. If \code{NULL} no seed is set. It can be used to generate reproducible results.}
   \item{parallel}{Logical determining if the simulation should run multiple chains in parallel. If it is \code{TRUE}, the package \pkg{snowFT} is required.}
@@ -56,7 +58,7 @@ The function \code{run.e0.mcmc} creates an object of class \code{\link{bayesLife
 	
 Using the function \code{continue.e0.mcmc} one can continue simulating an existing MCMCs by \code{iter} iterations for either all or selected chains. The global options used for generating the existing MCMCs will be used. Only the \code{auto.conf} option can be overwritten by passing the new value as an argument.
 
-The function loads observed data (further denoted as WPP dataset), depending on the specified sex,  from the \code{\link[wpp2019]{e0F}} (\code{\link[wpp2019]{e0M}}) and \code{\link[wpp2019]{e0F_supplemental}} (\code{\link[wpp2019]{e0M_supplemental}}) datasets in a \pkg{wpp}\eqn{x} package where \eqn{x} is the \code{wpp.year}. It is then merged with the  \code{\link{include}} dataset that corresponds to the same \code{wpp.year}. The argument \code{my.e0.file} can be used to overwrite those default data. Such a file can include a subset of countries contained in the WPP dataset, as well as a set of new countries. In the former case,
+The function loads observed data (further denoted as WPP dataset), depending on the specified sex,  from the \code{\link[wpp2019]{e0F}} (\code{\link[wpp2019]{e0M}}) and \code{\link[wpp2019]{e0F_supplemental}} (\code{\link[wpp2019]{e0M_supplemental}}) datasets in a \pkg{wpp}\eqn{x} package where \eqn{x} is the \code{wpp.year}. It is then merged with the  \code{\link{include}} dataset that corresponds to the same \code{wpp.year}. The argument \code{my.e0.file} can be used to overwrite those default data. If \code{use.wpp.data} is \code{FALSE}, it fully replaces the default dataset. Otherwise (by default), such a file can include a subset of countries contained in the WPP dataset, as well as a set of new countries. In the former case,
   	the function replaces the corresponding country data from the WPP dataset with values in this file. Only columns are replaced that match column names of the WPP dataset, and in addition, columns \sQuote{last.observed} and \sQuote{include_code} are used, if present. Countries are merged with WPP using the column \sQuote{country_code}. In addition, in order the countries to be included in the simulation, in both cases (whether they are included in the WPP dataset or not), they must be contained in the table of locations (\code{\link[wpp2019]{UNlocations}}). In addition, their corresponding \sQuote{include_code} must be set to 2. If the column \sQuote{include_code} is present in \code{my.e0.file}, its value overwrites the default include code, unless is -1. 
   	
 If \code{annual} is \code{TRUE} the default WPP dataset is not used and the \code{my.e0.file} argument must provide the dataset to be used for estimation. Its time-related columns should be single years.
