@@ -150,7 +150,7 @@ get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL,
 							interpolate = meta$wpp.year < 2022 && meta$annual && is.null(my.e0.file))
 	if (verbose) 
 		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')
-	if(!meta$annual.simulation || meta$wpp.year >= 2022) {
+	if((!meta$annual.simulation || meta$wpp.year >= 2022) && meta$use.wpp.data) {
 	    LEXmatrixsuppl.regions <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, LEXmatrix.regions, loc_data, 
 									meta$start.year, meta$present.year, annual = meta$annual.simulation)
 	} else LEXmatrixsuppl.regions <- NULL
