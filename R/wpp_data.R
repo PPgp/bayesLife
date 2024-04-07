@@ -108,7 +108,7 @@ set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, my.locations
 						  regions=extra.wpp$regions, 
 						  nr.countries.estimation=extra.wpp$nr_countries_estimation,
 						  is_processed = extra.wpp$is_processed)
-		if((!annual || meta$wpp.year >= 2022)) && use.wpp.data) {
+		if((!annual || meta$wpp.year >= 2022) && use.wpp.data) {
 		    locations <- bayesTFR:::read.UNlocations(data$data, wpp.year=meta$wpp.year, 
 									my.locations.file=my.locations.file, package='bayesLife', verbose=verbose)
 		    suppl.wpp <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, extra.wpp, locations$loc_data, 
