@@ -53,7 +53,7 @@ get.wpp.e0.data <- function(sex = 'M', start.year = 1950, present.year = 2015,
 	if (verbose) 
 		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')
 
-	if(!annual || wpp.year >= 2022) {
+	if((!annual || wpp.year >= 2022) && use.wpp.data) {
 	    LEXmatrixsuppl.regions <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, LEXmatrix.regions, loc_data, 
 									start.year, present.year, annual = annual)
 	    if(!is.null(un.object$suppl.data.object) && verbose) 
