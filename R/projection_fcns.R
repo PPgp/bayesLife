@@ -353,10 +353,10 @@ get.projection.summary.header.bayesLife.prediction <- function(pred, ...)
 		return (list(revision='RevID', variant='VarID', country='LocID', year='TimeID', indicator='IndicatorID', sex='SexID', tfr='Value'))
 		
 get.UN.variant.names.bayesLife.prediction <- function(pred, ...) 
-		return(c('BHM median', 'BHM80 lower',  'BHM80 upper', 'BHM95 lower',  'BHM95 upper', 'Constant mortality'))
+		return(c('BHM median', 'BHM80 lower',  'BHM80 upper', 'BHM95 lower',  'BHM95 upper', 'BHM mean', 'Constant mortality'))
 	
 get.friendly.variant.names.bayesLife.prediction <- function(pred, ...)
-	return(c('median', 'lower 80', 'upper 80', 'lower 95', 'upper 95', 'constant'))	
+	return(c('median', 'lower 80', 'upper 80', 'lower 95', 'upper 95', 'mean', 'constant'))	
 
 convert.e0.trajectories <- function(dir=file.path(getwd(), 'bayesLife.output'), 
 								 n=1000, output.dir=NULL, 

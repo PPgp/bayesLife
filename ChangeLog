@@ -1,4 +1,4 @@
-5.2-0.9xxx (12/22/2023)
+5.2-0.9xxx (06/05/2024)
 -----
 Default for par.names and par.names.cs in e0.raftery.diag changed to all parameters.
 
@@ -7,6 +7,8 @@ Fixed bug in e0.joint.plot for annual prediction object.
 Fixed bug in setting time index when imputation is present in e0.predict.subnat().
 
 Added argument use.wpp.data to run.e0.mcmc(). 
+
+Added the mean variant into sumary output.
 
 5.2-0 (09/15/2023)
 -----
