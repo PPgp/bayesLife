@@ -10,6 +10,9 @@ Added argument use.wpp.data to run.e0.mcmc().
 
 Added the mean variant into sumary output.
 
+e0.trajectories.plot() got arguments to plot the means (show.mean), 
+as well as selected trajectories (traj.index).
+
 5.2-0 (09/15/2023)
 -----
 Annual subnational projections are now possible, via the argument "annual"

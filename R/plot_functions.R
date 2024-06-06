@@ -200,6 +200,7 @@ e0.trajectories.plot.all <- function(e0.pred,
 
 e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALSE,
 								  nr.traj=NULL, adjusted.only = TRUE, typical.trajectory=FALSE,
+								  traj.index = NULL, show.mean = FALSE,
 								  xlim=NULL, ylim=NULL, type='b', 
 								  xlab='Year', ylab='Life expectancy at birth', main=NULL, 
 								  lwd=c(2,2,2,2,1), col=c('black', 'green', 'red', 'red', '#00000020'),
@@ -325,13 +326,20 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 		e0pred <- pred[[ipred]]
 		this.col <- plotcols[[ipred]]
 		meta <- e0pred$mcmc.set$meta
+		if(!is.null(traj.index)) nr.traj <- length(traj.index)
 		if(do.average) {
 			trajectories <- get.e0.trajectories.object(pred, country$code, nr.traj=nr.traj, typical.trajectory=typical.trajectory, pi=pi)
 			e0.median <- trajectories$median
+			if(show.mean)
+			    e0.mean <- apply(trajectories$trajectories, 1, mean, na.rm=TRUE)
 		} else {
 			trajectories <- get.e0.trajectories.object(e0pred, country$code, nr.traj=nr.traj, typical.trajectory=typical.trajectory)
 			e0.median <- bayesTFR::get.median.from.prediction(e0pred, country$index, country$code)
+			if(show.mean)
+			    e0.mean <- bayesTFR::get.mean.from.prediction(e0pred, country$index, country$code)
 		}
+		if(!is.null(traj.index) && !is.null(trajectories$trajectories)) trajectories$index <- traj.index
+		
 		cqp <- list()
 		if(ipred > 1) add <- TRUE
 		if(!add)
@@ -417,6 +425,16 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 			cols <- c(cols, this.col[3])
 			lwds <- c(lwds, lwd[3])
 			lty <- c(lty, max(lty)+1)
+		}
+		if(show.mean){
+		    # plot mean
+		    lines(plot.data[[ipred]]$pred.x, e0.mean, type='l', col=this.col[3], lwd=1, lty=max(lty)+1)
+		    mean.leg <- 'mean'
+		    if(do.both.sexes) mean.leg <- paste(lowerize(get.sex.label(meta)), mean.leg)
+		    legend <- c(legend, mean.leg)
+		    cols <- c(cols, this.col[3])
+		    lwds <- c(lwds, 1)
+		    lty <- c(lty, max(lty)+1)
 		}
 		if(lpart2 > 0) {
 			legend <- c(legend, paste('imputed', if(do.both.sexes) paste(lowerize(get.sex.label(meta)), 'e0') else 'e0'))
