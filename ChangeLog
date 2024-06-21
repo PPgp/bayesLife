@@ -1,4 +1,4 @@
-5.2-0.9xxx (06/05/2024)
+5.2-0.9xxx (06/20/2024)
 -----
 Default for par.names and par.names.cs in e0.raftery.diag changed to all parameters.
 
@@ -10,7 +10,7 @@ Added argument use.wpp.data to run.e0.mcmc().
 
 Added the mean variant into sumary output.
 
-e0.trajectories.plot() got arguments to plot the means (show.mean), 
+e0.trajectories.plot() got arguments to plot the means (show.mean), the medians (show.median),
 as well as selected trajectories (traj.index).
 
 5.2-0 (09/15/2023)
