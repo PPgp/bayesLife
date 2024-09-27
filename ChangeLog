@@ -1,5 +1,7 @@
-5.2-0.9xxx (06/20/2024)
+5.2-0.9xxx (09/26/2024)
 -----
+Added dataset include_2024.
+
 Default for par.names and par.names.cs in e0.raftery.diag changed to all parameters.
 
 Fixed bug in e0.joint.plot for annual prediction object.
