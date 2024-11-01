@@ -14,8 +14,8 @@ e0.predict.subnat(countries, my.e0.file,
     sim.dir = file.path(getwd(), "bayesLife.output"), 
     method = c("ar1", "shift", "scale"),
     predict.jmale = FALSE, my.e0M.file = NULL,
-    end.year = 2100, start.year = NULL, output.dir = NULL, 
-    annual = NULL, nr.traj = NULL, seed = NULL, 
+    end.year = 2100, start.year = NULL, subdir = "predictions", 
+    output.dir = NULL, annual = NULL, nr.traj = NULL, seed = NULL, 
     ar.pars = NULL, save.as.ascii = 0, verbose = TRUE, 
     jmale.estimates = NULL, \dots)
                 
@@ -35,6 +35,7 @@ subnat.gap.estimates(annual = FALSE)
   \item{my.e0M.file}{Tab-separated ASCII file containing the subnational male e0 data.}
  \item{end.year}{End year of the projections.}
  \item{start.year}{Start year of the projections. By default, projections start at the same time point as the national projections.} 
+ \item{subdir}{Subdirectory of \code{sim.dir} containing the national predictions.}
    \item{output.dir}{Directory into which the resulting prediction objects and the trajectories are stored. See below for details.}
    \item{annual}{Logical indicating if the subnational projection should be on an annual scale or a 5-year scale. By default, 
 the scale is matched to the national simulation given by \code{sim.dir}. If given, the scale must match to the scale of the subnational data provided in \code{my.e0.file}. 

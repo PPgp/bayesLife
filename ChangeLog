@@ -1,4 +1,4 @@
-5.2-0.9xxx (09/26/2024)
+5.2-0.9xxx (10/31/2024)
 -----
 Added dataset include_2024.
 
@@ -10,10 +10,13 @@ Fixed bug in setting time index when imputation is present in e0.predict.subnat(
 
 Added argument use.wpp.data to run.e0.mcmc(). 
 
-Added the mean variant into sumary output.
+Added the mean variant into summary output.
 
 e0.trajectories.plot() got arguments to plot the means (show.mean), the medians (show.median),
 as well as selected trajectories (traj.index).
+
+Added option of keeping multiple predictions directories in one simulation directory
+(argument "subdir" added to various functions).
 
 5.2-0 (09/15/2023)
 -----

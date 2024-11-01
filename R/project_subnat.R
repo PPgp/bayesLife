@@ -1,6 +1,6 @@
 e0.predict.subnat <- function(countries, my.e0.file, sim.dir=file.path(getwd(), 'bayesLife.output'),
                               method = c("ar1", "shift", "scale"), predict.jmale = FALSE, my.e0M.file = NULL,
-                               end.year=2100, start.year=NULL, output.dir = NULL, annual = NULL,
+                               end.year=2100, start.year=NULL, subdir = "predictions", output.dir = NULL, annual = NULL,
                               nr.traj=NULL, seed = NULL, ar.pars = NULL, 
                                save.as.ascii = 0, verbose = TRUE, jmale.estimates = NULL, ...) {
     # Run subnational projections, using the Scale AR(1) model applied to a national bayesLife simulation 
@@ -30,7 +30,7 @@ e0.predict.subnat <- function(countries, my.e0.file, sim.dir=file.path(getwd(), 
         return(compute.alpha.ar1(...))
     
     method <- match.arg(method)
-    wpred <- get.e0.prediction(sim.dir) # contains national projections
+    wpred <- get.e0.prediction(sim.dir, subdir = subdir) # contains national projections
     wdata <- wpred$e0.matrix.reconstructed
     wmeta <- wpred$mcmc.set$meta
     if(!is.null(seed)) set.seed(seed)
@@ -153,7 +153,7 @@ e0.predict.subnat <- function(countries, my.e0.file, sim.dir=file.path(getwd(), 
         PIs_cqp <- array(NA, c(nr.reg, length(quantiles.to.keep), nrow(wtrajs)),
                      dimnames=list(meta$regions$country_code, dimnames(wpred$quantiles)[[2]], dimnames(wtrajs)[[1]]))
         mean_sd <- array(NA, c(nr.reg, 2, nrow(wtrajs)))
-        meta$Tc.index <- .get.Tcindex(meta$e0.matrix, cnames = meta$regions$country_name)
+        meta$Tc.index <- .get.Tcindex(meta$e0.matrix, cnames = meta$regions$country_name, stop.if.less.than2 = FALSE) # allow just one data point
         country.char <- as.character(country.obj$code)
         e0reconstructed <- meta$e0.matrix
         
