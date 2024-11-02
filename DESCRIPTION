@@ -3,8 +3,6 @@ Type: Package
 Title: Bayesian Projection of Life Expectancy
 Version: 5.3-0
 Date: 2024-11-01
-Author: Hana Sevcikova, Adrian Raftery, Jennifer Chunn 
-Maintainer: Hana Sevcikova <hanas@uw.edu>
 Authors@R: c(person(given = "Hana",
                     family = "Sevcikova",
                     role = c("cre", "aut"),
