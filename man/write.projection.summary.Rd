@@ -19,7 +19,7 @@ write.e0.projection.summary(dir = file.path(getwd(), "bayesLife.output"),
 }
 \details{
 The first file that the function creates is called \file{projection_summary_user_friendly.csv}, it is a comma-separated table with the following columns: 
-\itemize{\item{\dQuote{country_name}: }{country name}
+\describe{\item{\dQuote{country_name}: }{country name}
 		 \item{\dQuote{country_code}: }{country code}
 		 \item{\dQuote{variant}: }{name of the variant, such as \dQuote{median}, \dQuote{lower 80}, \dQuote{upper 80}, \dQuote{lower 95}, \dQuote{upper 95}, \dQuote{constant}}
 		\item{period1: }{e.g. \dQuote{2010-2015}: life expectancy for the first time period}
@@ -28,7 +28,7 @@ The first file that the function creates is called \file{projection_summary_user
 	}
 
 The second file, called \file{projection_summary.csv}, also comma-separated table, contains the same information as above in a UN-specific format:
-\itemize{\item{\dQuote{RevID}: }{revision number, passed to the function as an argument;}
+\describe{\item{\dQuote{RevID}: }{revision number, passed to the function as an argument;}
 		  \item{\dQuote{VarID}: }{variant identifier, extracted from the \code{\link[bayesTFR]{UN_variants}} dataset in the \pkg{bayesTFR} package;}
 		  \item{\dQuote{LocID}: }{country code;}
 		  \item{\dQuote{TimeID}: }{time identifier, extracted from the \code{\link[bayesTFR]{UN_time}} dataset in the \pkg{bayesTFR} package;}
