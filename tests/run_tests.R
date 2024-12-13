@@ -26,10 +26,10 @@ if(!cran) {
 	test.subnational.predictions()
 	test.my.locations.extra()
 	test.reproduce.simulation()
-	for (wpp in c(2019, 2022)){
+	for (wpp in c(2019, 2024)){
 	    test.estimate.mcmc(wpp.year = wpp)
 	    test.run.annual.simulation(wpp.year = wpp)
 	}
-	for(wpp.year in c(2010, 2012, 2015, 2017, 2022))
+	for(wpp.year in c(2010, 2012, 2015, 2017, 2022, 2024))
 	    test.get.wpp.data(wpp.year)
 }

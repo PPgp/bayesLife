@@ -8,17 +8,18 @@ The function creates two files containing projection summaries, such as the medi
 }
 \usage{
 write.e0.projection.summary(dir = file.path(getwd(), "bayesLife.output"), 
-    output.dir = NULL, revision = NULL, adjusted = FALSE)
+    subdir = "predictions", output.dir = NULL, revision = NULL, adjusted = FALSE)
 }
 \arguments{
   \item{dir}{Directory containing the prediction object. It should correspond to the \code{output.dir} argument of the \code{\link{e0.predict}} function.}
+  \item{subdir}{Subdirectory of \code{dir} containing the predictions.}
   \item{output.dir}{Directory in which the resulting file will be stored. If \code{NULL} the same directory is used as for the prediction.}
   \item{revision}{UN revision number. If \code{NULL} it is determined from the corresponding WPP year: WPP 2008 corresponds to revision 13, every subsequent WPP increases the revision number by one. Used as a constant in the second file only.}
    \item{adjusted}{Logical. By default the function writes summary using the original BHM projections. If the projection medians are adjusted (using e.g. \code{\link{e0.median.set}}), setting this argument to \code{TRUE} causes writing the adjusted projections.}
 }
 \details{
 The first file that the function creates is called \file{projection_summary_user_friendly.csv}, it is a comma-separated table with the following columns: 
-\itemize{\item{\dQuote{country_name}: }{country name}
+\describe{\item{\dQuote{country_name}: }{country name}
 		 \item{\dQuote{country_code}: }{country code}
 		 \item{\dQuote{variant}: }{name of the variant, such as \dQuote{median}, \dQuote{lower 80}, \dQuote{upper 80}, \dQuote{lower 95}, \dQuote{upper 95}, \dQuote{constant}}
 		\item{period1: }{e.g. \dQuote{2010-2015}: life expectancy for the first time period}
@@ -27,7 +28,7 @@ The first file that the function creates is called \file{projection_summary_user
 	}
 
 The second file, called \file{projection_summary.csv}, also comma-separated table, contains the same information as above in a UN-specific format:
-\itemize{\item{\dQuote{RevID}: }{revision number, passed to the function as an argument;}
+\describe{\item{\dQuote{RevID}: }{revision number, passed to the function as an argument;}
 		  \item{\dQuote{VarID}: }{variant identifier, extracted from the \code{\link[bayesTFR]{UN_variants}} dataset in the \pkg{bayesTFR} package;}
 		  \item{\dQuote{LocID}: }{country code;}
 		  \item{\dQuote{TimeID}: }{time identifier, extracted from the \code{\link[bayesTFR]{UN_time}} dataset in the \pkg{bayesTFR} package;}

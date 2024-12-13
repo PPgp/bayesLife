@@ -12,16 +12,18 @@ Editing the Projection Medians
 These functions are to be used by expert analysts. They allow to change the projection medians either to specific values, including the WPP values, or shift the medians by a given constant or a factor.
 }
 \usage{
-e0.median.set(sim.dir, country, values, years = NULL, joint.male = FALSE)
+e0.median.set(sim.dir, country, values, years = NULL, joint.male = FALSE, \dots)
 
 e0.median.shift(sim.dir, country, reset = FALSE, shift = 0, 
-    from = NULL, to = NULL, joint.male = FALSE)
+    from = NULL, to = NULL, joint.male = FALSE, \dots)
     
-e0.median.adjust.jmale(sim.dir, countries, factors = c(1.2, 1.1))
+e0.median.adjust.jmale(sim.dir, countries, factors = c(1.2, 1.1),
+    subdir = "predictions")
 
-e0.median.reset(sim.dir, countries = NULL, joint.male = FALSE)
+e0.median.reset(sim.dir, countries = NULL, joint.male = FALSE, \dots)
 
-e0.shift.prediction.to.wpp(sim.dir, joint.male = FALSE, ...)
+e0.shift.prediction.to.wpp(sim.dir, joint.male = FALSE,
+    subdir = "predictions", \dots)
 }
 \arguments{
   \item{sim.dir}{Directory containing the prediction object.}
@@ -36,12 +38,13 @@ e0.shift.prediction.to.wpp(sim.dir, joint.male = FALSE, ...)
   \item{from}{Year from which the offset/reset should start. By default, it starts at the first prediction period.}
   \item{to}{Year until which the offset/reset should be done. By default, it is set to the last prediction period.}
   \item{factors}{It should be a vector where each element corresponds to one time period. The adjustment of male medians is done as \code{e0m(t) = e0f(t) - gap(t)*factor(t)}.}
-  \item{\dots}{Additional arguments passed to the underlying adjustment function. It can be \code{verbose} to show/hide the progress of the adjustment and \code{wpp.year} to adjust it to if it differs from the wpp year of the simulation.}
+  \item{subdir}{Subdirectory of \code{sim.dir} containing the predictions.}
+  \item{\dots}{Additional arguments passed to the underlying adjustment function. For \code{e0.shift.prediction.to.wpp} it can be \code{stat} with values \dQuote{median} (default) or \dQuote{mean} to specify which statistics should be adjusted; \code{verbose} to show/hide the progress of the adjustment and \code{wpp.year} to adjust it to if it differs from the wpp year of the simulation. For the other functions it can be \code{subdir} to specify the location of the prediction.}
 }
 \details{
 The function \code{e0.median.set} can be used to set the medians of the given country to specific values. Function \code{e0.median.shift} can be used to offset the medians by a specific constant, or to reset the medians to their original BHM values. Function \code{e0.median.adjust.jmale} adjusts male medians using factors that can expand or shrink the female-male gap. 
 
-Function\code{e0.shift.prediction.to.wpp} shifts the projected medians so that they correspond to the values found in the \code{e0Fproj} (\code{joint.male = FALSE}) or \code{e0Mproj} (\code{joint.male = TRUE}) datasets of the \pkg{wpp} package that either corresponds to the package used for the simulation itself or is given by the \code{wpp.year} argument. If using \pkg{wpp2022}, the dataset name is automatically adjusted depending if it is an annual or a 5-year simulation.
+Function\code{e0.shift.prediction.to.wpp} shifts the projected medians or means (if \code{stat} is \dQuote{mean}) so that they correspond to the values found in the \code{e0Fproj} (\code{joint.male = FALSE}) or \code{e0Mproj} (\code{joint.male = TRUE}) datasets of the \pkg{wpp} package that either corresponds to the package used for the simulation itself or is given by the \code{wpp.year} argument. If using \pkg{wpp2022} or higher, the dataset name is automatically adjusted depending if it is an annual or a 5-year simulation. Note that regardless if it is an adjustment of the median or mean, the corresponding offset is always converted to a shift of the median. 
 
 Function \code{e0.median.reset} resets medians of the given countries to the original values. By default it deletes adjustments for all countries.
 

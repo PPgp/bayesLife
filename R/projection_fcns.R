@@ -21,7 +21,8 @@ e0.predict <- function(mcmc.set = NULL, end.year = 2100,
                        replace.output = FALSE, predict.jmale = TRUE, 
                        nr.traj = NULL, thin = NULL, burnin = 10000, 
                        use.diagnostics = FALSE, save.as.ascii = 0, start.year = NULL,
-                       output.dir = NULL, low.memory = TRUE, ignore.last.observed = FALSE,
+                       output.dir = NULL, subdir = "predictions", low.memory = TRUE, 
+                       ignore.last.observed = FALSE,
                        seed = NULL, verbose = TRUE, ...){
 	if(!is.null(mcmc.set)) {
 		if (!inherits(mcmc.set, 'bayesLife.mcmc.set')) {
@@ -41,7 +42,7 @@ e0.predict <- function(mcmc.set = NULL, end.year = 2100,
 					replace.output = replace.output,  
 					nr.traj = nr.traj, thin = thin, burnin = burnin, 
 					save.as.ascii = save.as.ascii, start.year = start.year,
-					output.dir = output.dir, ignore.last.observed = ignore.last.observed,
+					output.dir = output.dir, subdir = subdir, ignore.last.observed = ignore.last.observed,
 					verbose = verbose)
 	if(predict.jmale && mcmc.set$meta$sex == 'F')
 		pred <- e0.jmale.predict(pred, ..., save.as.ascii = save.as.ascii, verbose = verbose)
@@ -49,7 +50,7 @@ e0.predict <- function(mcmc.set = NULL, end.year = 2100,
 }
 
 e0.predict.extra <- function(sim.dir = file.path(getwd(), 'bayesLife.output'), 
-					prediction.dir = sim.dir, 
+					prediction.dir = sim.dir, subdir = "predictions", 
 					countries = NULL, save.as.ascii = 1000, verbose = TRUE, ...) {
 	# Run prediction for given countries/regions (as codes). If they are not given it will be set to countries 
 	# for which there are MCMC results but no prediction.
@@ -58,9 +59,9 @@ e0.predict.extra <- function(sim.dir = file.path(getwd(), 'bayesLife.output'),
 	mcmc.set <- get.e0.mcmc(sim.dir)
 	if(is.null(mcmc.set))
 		stop('Error in "sim.dir" argument.')
-	pred <- get.e0.prediction(sim.dir=prediction.dir)
+	pred <- get.e0.prediction(sim.dir=prediction.dir, subdir = subdir)
 	if(is.null(pred))
-		stop('Error in "prediction.dir" argument.')
+		stop('Error in "sim.dir", "prediction.dir" or/and "subdir" argument. Use available.e0.predictions() to check on valid predictions directories.')
 	if(length(setdiff(pred$mcmc.set$meta$regions$country_code, mcmc.set$meta$regions$country_code)) > 0)
 		stop('Prediction is inconsistent with the mcmc results. Use e0.predict.')
 	if(is.null(countries)) {
@@ -77,7 +78,7 @@ e0.predict.extra <- function(sim.dir = file.path(getwd(), 'bayesLife.output'),
 	new.pred <- make.e0.prediction(mcmc.set, start.year=pred$start.year, end.year=pred$end.year, replace.output=FALSE,
 									nr.traj=pred$nr.traj, burnin=pred$burnin,
 									countries=countries.idx, save.as.ascii=0, output.dir=prediction.dir,
-									force.creating.thinned.mcmc=TRUE,
+									subdir = subdir, force.creating.thinned.mcmc=TRUE,
 									write.summary.files=FALSE, ignore.last.observed = pred$ignore.last.observed,
 									verbose=verbose)
 									
@@ -121,7 +122,7 @@ e0.predict.extra <- function(sim.dir = file.path(getwd(), 'bayesLife.output'),
 
 e0.prediction.setup <- function(...) {
     setup <- list(...)
-    mcmc.set <- start.year <- end.year <- burnin <- replace.output <- verbose <- countries <- NULL # to avoid R check note "no visible binding ..."
+    mcmc.set <- start.year <- end.year <- burnin <- replace.output <- verbose <- countries <- subdir <- NULL # to avoid R check note "no visible binding ..."
     if(is.null(setup$thin)) setup$thin <- NA # this is because thin is a method in coda and the naming clashes within the setup expression
     setup <- within(setup, {
         meta <- mcmc.set$meta
@@ -151,10 +152,10 @@ e0.prediction.setup <- function(...) {
     
         #setup output directory
         if (!exists("output.dir") || is.null(output.dir)) output.dir <- meta$output.dir
-        outdir <- file.path(output.dir, 'predictions')
+        outdir <- file.path(output.dir, basename(subdir))
     
         if(is.null(get0("countries"))) {
-            if(!replace.output && has.e0.prediction(sim.dir = output.dir))
+            if(!replace.output && has.e0.prediction(sim.dir = output.dir, subdir = subdir))
                 stop('Prediction in ', outdir,
                     ' already exists.\nSet replace.output=TRUE if you want to overwrite existing projections.')
             unlink(outdir, recursive=TRUE)
@@ -353,17 +354,17 @@ get.projection.summary.header.bayesLife.prediction <- function(pred, ...)
 		return (list(revision='RevID', variant='VarID', country='LocID', year='TimeID', indicator='IndicatorID', sex='SexID', tfr='Value'))
 		
 get.UN.variant.names.bayesLife.prediction <- function(pred, ...) 
-		return(c('BHM median', 'BHM80 lower',  'BHM80 upper', 'BHM95 lower',  'BHM95 upper', 'Constant mortality'))
+		return(c('BHM median', 'BHM80 lower',  'BHM80 upper', 'BHM95 lower',  'BHM95 upper', 'BHM mean', 'Constant mortality'))
 	
 get.friendly.variant.names.bayesLife.prediction <- function(pred, ...)
-	return(c('median', 'lower 80', 'upper 80', 'lower 95', 'upper 95', 'constant'))	
+	return(c('median', 'lower 80', 'upper 80', 'lower 95', 'upper 95', 'mean', 'constant'))	
 
 convert.e0.trajectories <- function(dir=file.path(getwd(), 'bayesLife.output'), 
-								 n=1000, output.dir=NULL, 
+								 n=1000, subdir = "predictions", output.dir=NULL, 
 								 verbose=FALSE) {
 	# Converts all trajectory rda files into UN ascii, selecting n trajectories by equal spacing.
 	if(n <= 0) return()
-	pred <- get.e0.prediction(sim.dir=dir)
+	pred <- get.e0.prediction(sim.dir=dir, subdir = subdir)
 	predsex <- pred$mcmc.set$meta$sex
 	preds <- list()
 	preds[[predsex]] <- pred
@@ -376,15 +377,15 @@ convert.e0.trajectories <- function(dir=file.path(getwd(), 'bayesLife.output'),
 			else outdir <- output.dir
 		}
 		if(!file.exists(outdir)) dir.create(outdir, recursive=TRUE)
-		cat('Converting ', list(M='Male', F='Female')[[sex]], ' trajectories from', dir, '\n')
+		cat('Converting ', list(M='Male', F='Female')[[sex]], ' trajectories from', file.path(dir, subdir), '\n')
 		bayesTFR:::do.convert.trajectories(pred=preds[[sex]], n=n, output.dir=outdir, verbose=verbose)
 	}
 }
 
 write.e0.projection.summary <- function(dir=file.path(getwd(), 'bayesLife.output'), 
-									 output.dir=NULL, revision=NULL, adjusted=FALSE) {
+                                        subdir = "predictions", output.dir=NULL, revision=NULL, adjusted=FALSE) {
 # Writes four prediction summary files, one in a user-friendly format, one in a UN-format, one for each sex.
-	pred <- get.e0.prediction(sim.dir=dir)
+	pred <- get.e0.prediction(sim.dir=dir, subdir = subdir)
 	predsex <- pred$mcmc.set$meta$sex
 	preds <- list()
 	preds[[predsex]] <- pred
@@ -429,40 +430,41 @@ get.e0.reconstructed <- function(data, meta) {
     } else store.bayesLife.prediction(new.pred)
 }
 
-e0.median.reset <- function(sim.dir, countries = NULL, joint.male=FALSE) {
+e0.median.reset <- function(sim.dir, countries = NULL, joint.male=FALSE, ...) {
     if(is.null(countries)) {
-        pred <- get.e0.prediction(sim.dir, joint.male = joint.male)
+        pred <- get.e0.prediction(sim.dir, joint.male = joint.male, ...)
         pred$median.shift <- NULL
         .e0.store.adjustment(pred, sim.dir, joint.male)
         cat('\nMedians for all countries reset.\n')
     } else
-	    for(country in countries) pred <- e0.median.shift(sim.dir, country, reset=TRUE, joint.male=joint.male)
+	    for(country in countries) pred <- e0.median.shift(sim.dir, country, reset=TRUE, joint.male=joint.male, ...)
 	invisible(pred)
 }
 
 get.e0.shift <- function(country.code, pred) return(bayesTFR::get.tfr.shift(country.code, pred))
 
-e0.median.shift <- function(sim.dir, country, reset=FALSE, shift=0, from=NULL, to=NULL, joint.male=FALSE) {
-	pred <- get.e0.prediction(sim.dir, joint.male=joint.male)
+e0.median.shift <- function(sim.dir, country, reset=FALSE, shift=0, from=NULL, to=NULL, joint.male=FALSE, ...) {
+	pred <- get.e0.prediction(sim.dir, joint.male=joint.male, ...)
 	new.pred <- bayesTFR:::.bdem.median.shift(pred, type='e0', country=country, reset=reset, 
 				shift=shift, from=from, to=to)
 	.e0.store.adjustment(new.pred, sim.dir, joint.male)
 	invisible(new.pred)
 }
 
-e0.median.set <- function(sim.dir, country, values, years=NULL, joint.male=FALSE) {
-	pred <- get.e0.prediction(sim.dir, joint.male=joint.male)
+e0.median.set <- function(sim.dir, country, values, years=NULL, joint.male=FALSE, ...) {
+	pred <- get.e0.prediction(sim.dir, joint.male=joint.male, ...)
 	new.pred <- bayesTFR:::.bdem.median.set(pred, type='e0', country=country, 
 								values=values, years=years)
 	.e0.store.adjustment(new.pred, sim.dir, joint.male)
 	invisible(new.pred)
 }
 
-e0.median.adjust.jmale <- function(sim.dir, countries, factors = c(1.2, 1.1)) {
-    pred <- get.e0.prediction(sim.dir)
-    if (is.null(pred)) stop('No valid prediction in ', sim.dir)
+e0.median.adjust.jmale <- function(sim.dir, countries, factors = c(1.2, 1.1), subdir = "predictions") {
+    pred <- get.e0.prediction(sim.dir, subdir = subdir)
+    if (is.null(pred)) stop('Prediction not found in ', file.path(sim.dir, subdir), 
+                            '. Check available.e0.predictions() and use the subdir argument to set non-standard prediction subdirectory.')
     joint.male <- get.e0.jmale.prediction(pred)
-    if (is.null(joint.male)) stop('No valid male prediction in ', sim.dir)
+    if (is.null(joint.male)) stop('No valid male prediction in ', file.path(sim.dir, subdir))
     mcmc.set <- pred$mcmc.set
     if(is.null(countries)) {
         cat('\nNo countries given. Nothing to be done.\n')
@@ -485,11 +487,11 @@ e0.median.adjust.jmale <- function(sim.dir, countries, factors = c(1.2, 1.1)) {
                       new.meds[get.country.object(countries[icountry], mcmc.set$meta)$index,], joint.male = TRUE)
     }
     # reload adjusted prediction
-    invisible(get.e0.prediction(sim.dir, joint.male = TRUE))
+    invisible(get.e0.prediction(sim.dir, joint.male = TRUE, subdir = subdir))
 }
 
-e0.shift.prediction.to.wpp <- function(sim.dir, joint.male = FALSE, ...){
-    pred <- get.e0.prediction(sim.dir, joint.male = joint.male)
+e0.shift.prediction.to.wpp <- function(sim.dir, joint.male = FALSE, subdir = "predictions", ...){
+    pred <- get.e0.prediction(sim.dir, joint.male = joint.male, subdir = subdir)
     new.pred <- bayesTFR:::.do.shift.prediction.to.wpp(pred, 
                                                        wpp.dataset = if(joint.male) "e0Mproj" else "e0Fproj", ...)
     .e0.store.adjustment(new.pred, sim.dir, joint.male)

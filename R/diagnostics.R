@@ -1,7 +1,7 @@
 e0.raftery.diag <- function(mcmc = NULL, 
 							 sim.dir = file.path(getwd(), 'bayesLife.output'),
 							 burnin = 0, country = NULL,
-							 par.names = NULL, par.names.cs = NULL,
+							 par.names = NA, par.names.cs = NA,
 							 country.sampling.prop = 1,
 							 verbose = TRUE, ...) {
     mcmc.set <- if (is.null(mcmc)) get.e0.mcmc(sim.dir = sim.dir, low.memory = TRUE) else mcmc

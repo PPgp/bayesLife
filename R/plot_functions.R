@@ -106,8 +106,13 @@ e0.joint.plot <- function(e0.pred, country, pi=95, years, nr.points=500,
 	if(!has.e0.jmale.prediction(e0.pred)) 
 		stop('A male prediction does not exist for the given prediction object. Run e0.jmale.predict.')
 	start.year <- as.integer(dimnames(e0.pred$quantiles)[[3]][1])
-	years.obs <- years[years <= start.year+2]
-	years.pred <- years[years > start.year+2]
+	if(e0.pred$mcmc.set$meta$annual.simulation){
+	    years.obs <- years[years <= start.year]
+	    years.pred <- years[years > start.year]
+	} else {
+	    years.obs <- years[years <= start.year+2]
+	    years.pred <- years[years > start.year+2]
+	}
 	years.idx <- unlist(lapply(years.pred, bayesTFR:::get.prediction.year.index, pred=e0.pred))
 	years.idx <- years.idx[years.idx > 1]
 	years.obs.idx <- unlist(lapply(years.obs, bayesTFR:::get.estimation.year.index, meta=e0.pred$mcmc.set$meta))
@@ -195,6 +200,7 @@ e0.trajectories.plot.all <- function(e0.pred,
 
 e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALSE,
 								  nr.traj=NULL, adjusted.only = TRUE, typical.trajectory=FALSE,
+								  traj.index = NULL, show.mean = FALSE, show.median = TRUE,
 								  xlim=NULL, ylim=NULL, type='b', 
 								  xlab='Year', ylab='Life expectancy at birth', main=NULL, 
 								  lwd=c(2,2,2,2,1), col=c('black', 'green', 'red', 'red', '#00000020'),
@@ -320,12 +326,32 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 		e0pred <- pred[[ipred]]
 		this.col <- plotcols[[ipred]]
 		meta <- e0pred$mcmc.set$meta
+		if(!is.null(traj.index)) nr.traj <- length(traj.index)
+		e0.median <- e0.mean <- e0.main.proj <- NULL
 		if(do.average) {
 			trajectories <- get.e0.trajectories.object(pred, country$code, nr.traj=nr.traj, typical.trajectory=typical.trajectory, pi=pi)
-			e0.median <- trajectories$median
+			if(show.median)
+			    e0.median <- trajectories$median
+			if(show.mean)
+			    e0.mean <- apply(trajectories$trajectories, 1, mean, na.rm=TRUE)
 		} else {
 			trajectories <- get.e0.trajectories.object(e0pred, country$code, nr.traj=nr.traj, typical.trajectory=typical.trajectory)
-			e0.median <- bayesTFR::get.median.from.prediction(e0pred, country$index, country$code)
+			if(show.median)
+			    e0.median <- bayesTFR::get.median.from.prediction(e0pred, country$index, country$code)
+			if(show.mean)
+			    e0.mean <- bayesTFR::get.mean.from.prediction(e0pred, country$index, country$code)
+		}
+		if(!is.null(traj.index) && !is.null(trajectories$trajectories)) trajectories$index <- traj.index
+		# set the main projection (solid line)
+		main.proj.name <- ""
+		if(!is.null(e0.median)){
+		    e0.main.proj <- e0.median
+		    main.proj.name <- "median"
+		} else {
+		    if(!is.null(e0.mean)){
+		        e0.main.proj <- e0.mean
+		        main.proj.name <- "mean"
+		    }
 		}
 		cqp <- list()
 		if(ipred > 1) add <- TRUE
@@ -333,11 +359,11 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 			ylim.loc <- c(min(if (!is.null(trajectories$trajectories))
 							trajectories$trajectories[,trajectories$index]
 					  	else NULL, 
-					  	ylim.loc[1], e0.median, na.rm=TRUE), 
+					  	ylim.loc[1], e0.main.proj, na.rm=TRUE), 
 				  	max(if (!is.null(trajectories$trajectories))
 							trajectories$trajectories[,trajectories$index]
 					  else NULL, 
-					  ylim.loc[2], e0.median, na.rm=TRUE))
+					  ylim.loc[2], e0.main.proj, na.rm=TRUE))
 		if(length(pi) > 0) {
 			for (i in 1:length(pi)) {
 				if(do.average) cqp[[i]] <- trajectories$quantiles[[i]]
@@ -381,11 +407,16 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 					col=this.col[5], lwd=lwd[5])
 			}
 		}
-		# plot median	
-		lines(plot.data[[ipred]]$pred.x, e0.median, type='l', col=this.col[3], lwd=lwd[3])
-		legend <- if(adjusted.only) 'median' else 'adj. median'
-		if(do.both.sexes) legend <- paste(lowerize(get.sex.label(meta)), legend)
-		lty <- 1
+		legend <- lty <- lwds <- cols <- c()
+		# plot main projection
+		if(!is.null(e0.main.proj)){
+		    lines(plot.data[[ipred]]$pred.x, e0.main.proj, type='l', col=this.col[3], lwd=lwd[3])
+		    legend <- if(adjusted.only) main.proj.name else paste('adj.', main.proj.name)
+		    if(do.both.sexes) legend <- paste(lowerize(get.sex.label(meta)), legend)
+		    lty <- 1
+		    lwds <- lwd[3]
+		    cols <- this.col[3]
+		}
 		# plot given CIs
 		if(length(pi) > 0) {
 			tlty <- 2:(length(pi)+1)
@@ -401,17 +432,32 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 		legend <- c(legend, paste('observed', if(do.both.sexes) paste(lowerize(get.sex.label(meta)), 'e0') else 'e0'))
 		lty <- c(lty, 1)
 		pchs <- c(rep(-1, length(legend)-1), pch[1])
-		lwds <- c(lwd[3], rep(lwd[4], length(pi)), lwd[1])
-		cols <- c(this.col[3], rep(this.col[4], length(pi)), this.col[1])
-		if(!adjusted.only) { # plot unadjusted median
-			bhm.median <- bayesTFR::get.median.from.prediction(e0pred, country$index, country$code, adjusted=FALSE)
-			lines(plot.data[[ipred]]$pred.x, bhm.median, type='l', col=this.col[3], lwd=lwd[3], lty=max(lty)+1)
-			bhm.leg <- 'BHM median'
-			if(do.both.sexes) bhm.leg <- paste(lowerize(get.sex.label(meta)), bhm.leg)
-			legend <- c(legend, bhm.leg)
+		lwds <- c(lwds, rep(lwd[4], length(pi)), lwd[1])
+		cols <- c(cols, rep(this.col[4], length(pi)), this.col[1])
+		if(!adjusted.only) { # plot unadjusted median / mean
+		    if(main.proj.name == "mean"){
+		        bhm.main <- bayesTFR::get.mean.from.prediction(e0pred, country$index, country$code, adjusted=FALSE)
+		        bhm.main.name <- 'BHM mean'
+		    } else {
+			    bhm.main <- bayesTFR::get.median.from.prediction(e0pred, country$index, country$code, adjusted=FALSE)
+			    bhm.main.name <- 'BHM median'
+		    }
+			lines(plot.data[[ipred]]$pred.x, bhm.main, type='l', col=this.col[3], lwd=lwd[3], lty=max(lty)+1)
+			if(do.both.sexes) bhm.main.name <- paste(lowerize(get.sex.label(meta)), bhm.main.name)
+			legend <- c(legend, bhm.main.name)
 			cols <- c(cols, this.col[3])
 			lwds <- c(lwds, lwd[3])
 			lty <- c(lty, max(lty)+1)
+		}
+		if(show.median && show.mean){
+		    # plot mean in addition to median
+		    lines(plot.data[[ipred]]$pred.x, e0.mean, type='l', col=this.col[3], lwd=1, lty=max(lty)+1)
+		    mean.leg <- 'mean'
+		    if(do.both.sexes) mean.leg <- paste(lowerize(get.sex.label(meta)), mean.leg)
+		    legend <- c(legend, mean.leg)
+		    cols <- c(cols, this.col[3])
+		    lwds <- c(lwds, 1)
+		    lty <- c(lty, max(lty)+1)
 		}
 		if(lpart2 > 0) {
 			legend <- c(legend, paste('imputed', if(do.both.sexes) paste(lowerize(get.sex.label(meta)), 'e0') else 'e0'))

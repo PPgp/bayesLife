@@ -2,3 +2,6 @@
 ^README\.md$
 ^.github$
 ^data-raw
+^tests/last.dump.rda
+^tests/.clustersize
+^tests/.proc

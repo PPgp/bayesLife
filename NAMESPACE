@@ -36,6 +36,7 @@ export(
 	create.thinned.e0.mcmc,
 	get.e0.prediction,
 	has.e0.prediction,
+	available.e0.predictions,
 	get.e0.jmale.prediction,
 	has.e0.jmale.prediction,
 	get.rege0.prediction,

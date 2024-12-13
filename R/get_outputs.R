@@ -12,6 +12,7 @@ get.e0.mcmc <- function(sim.dir = file.path(getwd(), 'bayesLife.output'),
 	load(file = mcmc.file.path)
 	bayesLife.mcmc.meta$output.dir <- normalizePath(sim.dir)
 	if(is.null(bayesLife.mcmc.meta$annual.simulation)) bayesLife.mcmc.meta$annual.simulation <- FALSE
+	if(is.null(bayesLife.mcmc.meta$use.wpp.data)) bayesLife.mcmc.meta$use.wpp.data <- TRUE
 	if(is.null(bayesLife.mcmc.meta$mcmc.options)) {
 	    bayesLife.mcmc.meta <- .convert.meta.from.legacy.form(bayesLife.mcmc.meta)
 	}
@@ -92,14 +93,19 @@ e0.mcmc <- function(mcmc.set, chain.id=1) return (mcmc.set$mcmc.list[[chain.id]]
 e0.mcmc.list <- function(mcmc.set, chain.ids=NULL) 
 	return(bayesTFR::tfr.mcmc.list(mcmc.set=mcmc.set, chain.ids=chain.ids))
 
-has.e0.prediction <- function(mcmc=NULL, sim.dir=NULL) {
+has.e0.prediction <- function(mcmc=NULL, sim.dir=NULL, subdir = "predictions") {
 	if (!is.null(mcmc)) sim.dir <- if(is.character(mcmc)) mcmc else mcmc$meta$output.dir
 	if (is.null(sim.dir)) stop('Either mcmc or directory must be given.')
-	if(file.exists(file.path(sim.dir, 'predictions', 'prediction.rda'))) return(TRUE)
+	if(file.exists(file.path(sim.dir, subdir, 'prediction.rda'))) return(TRUE)
 	return(FALSE)
 }
 
-get.e0.prediction <- function(mcmc=NULL, sim.dir=NULL, joint.male=FALSE, mcmc.dir=NULL) {
+available.e0.predictions <- function(mcmc=NULL, sim.dir=NULL, full.names = FALSE){
+    return(bayesTFR::available.tfr.predictions(mcmc=mcmc, sim.dir = sim.dir, full.names = full.names))
+}
+
+get.e0.prediction <- function(mcmc=NULL, sim.dir=NULL, joint.male=FALSE, mcmc.dir=NULL, 
+                              subdir = "predictions") {
 	############
 	# Returns an object of class bayesLife.prediction
 	# Set mcmc.dir to NA, if the prediction object should not have a pointer 
@@ -108,11 +114,15 @@ get.e0.prediction <- function(mcmc=NULL, sim.dir=NULL, joint.male=FALSE, mcmc.di
 	if (!is.null(mcmc)) 
 		sim.dir <- if(is.character(mcmc)) mcmc else mcmc$meta$output.dir
 	if (is.null(sim.dir)) stop('Either mcmc or directory must be given.')
-	output.dir <- file.path(sim.dir, 'predictions')
+	output.dir <- file.path(sim.dir, subdir)
 	pred.file <- file.path(output.dir, 'prediction.rda')
 	if(!file.exists(pred.file)) {
 		warning('File ', pred.file, ' does not exist.')
-		return(NULL)
+	    if(length((alt.preds <- available.e0.predictions(sim.dir = sim.dir))) > 0){
+	        output.dir <- file.path(sim.dir, alt.preds[1])
+	        pred.file <- file.path(output.dir, 'prediction.rda')
+	        warning('Extracting predictions from ', alt.preds[1])
+	    } else return(NULL)
 	}
 	load(file=pred.file)
 	bayesLife.prediction$output.directory <- output.dir

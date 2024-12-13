@@ -1,10 +1,20 @@
 Package: bayesLife
 Type: Package
 Title: Bayesian Projection of Life Expectancy
-Version: 5.2-0
-Date: 2023-09-15
-Author: Hana Sevcikova, Adrian Raftery, Jennifer Chunn 
-Maintainer: Hana Sevcikova <hanas@uw.edu>
+Version: 5.3-1
+Date: 2024-12-05
+Authors@R: c(person(given = "Hana",
+                    family = "Sevcikova",
+                    role = c("cre", "aut"),
+                    email = "hanas@uw.edu"),
+             person(given = "Adrian",
+                      family = "Raftery",
+                      role = "aut",
+                      email = "raftery@uw.edu"),
+             person(given = "Jennifer",
+                      family = "Chunn",
+                      role = "aut")
+            )
 Description: Making probabilistic projections of life expectancy for all countries of the world, using a Bayesian hierarchical model <doi:10.1007/s13524-012-0193-x>. Subnational projections are also supported.
 Depends: 
     bayesTFR (>= 7.3-0),

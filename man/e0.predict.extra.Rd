@@ -9,12 +9,13 @@ Using the posterior parameter samples the function generates posterior trajector
 }
 \usage{
 e0.predict.extra(sim.dir = file.path(getwd(), 'bayesLife.output'), 
-    prediction.dir = sim.dir, countries = NULL, 
+    prediction.dir = sim.dir, subdir = "predictions", countries = NULL, 
     save.as.ascii = 1000, verbose = TRUE, \dots)
 	}
 \arguments{
   \item{sim.dir}{Directory with the MCMC simulation results.}
   \item{prediction.dir}{Directory where the prediction object and the trajectories are stored.}
+  \item{subdir}{Subdirectory of \code{prediction.dir} containing the predictions.}
   \item{countries}{Vector of country codes for which the prediction should be made. If it is \code{NULL}, the prediction is run for all countries that are included in the MCMC object but for which no prediction was generated.}
   \item{save.as.ascii}{Either a number determining how many trajectories should be converted into an ascii file, or \dQuote{all} in which case all trajectories are converted. It should be set to 0, if no converions is desired. Note that the convertion is done on all countries.}
   \item{verbose}{Logical switching log messages on and off.}

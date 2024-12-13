@@ -70,7 +70,7 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
 						output.dir = file.path(getwd(), 'bayesLife.output'), 
                         thin = 10, replace.output = FALSE, annual = FALSE,
                         start.year = 1873, present.year = 2020, wpp.year = 2019,
-                        my.e0.file = NULL, my.locations.file = NULL, 
+                        my.e0.file = NULL, my.locations.file = NULL, use.wpp.data = TRUE,
 						constant.variance = FALSE, seed = NULL, parallel = FALSE, 
 						nr.nodes = nr.chains, compression.type = 'None',
 						verbose = FALSE, verbose.iter = 100, mcmc.options = NULL, ...) {
@@ -120,7 +120,9 @@ run.e0.mcmc <- function(sex=c("Female", "Male"), nr.chains = 3, iter = 160000,
                                    		my.e0.file = my.e0.file, my.locations.file = my.locations.file,
                                         output.dir = output.dir, mcmc.options = mcoptions, 
                                         constant.variance = constant.variance, 
-                                        compression.type = compression.type, verbose = verbose)
+                                        compression.type = compression.type, 
+                                   		use.wpp.data = use.wpp.data,
+                                   		verbose = verbose)
     store.bayesLife.meta.object(bayesLife.mcmc.meta, output.dir)
     starting.values <- match.ini.to.chains(nr.chains, annual = annual)
     iter <- .match.length.to.nr.chains(iter, nr.chains, "iter")
@@ -466,19 +468,24 @@ e0.mcmc.run.chain.extra <- function(chain.id, mcmc.list, countries, posterior.sa
 e0.mcmc.meta.ini <- function(sex = "F", nr.chains = 1, start.year = 1950, present.year = 2020, 
 								wpp.year = 2019, my.e0.file = NULL, my.locations.file = NULL,
 								annual.simulation = FALSE, output.dir = file.path(getwd(), 'bayesLife.output'),
-								mcmc.options = NULL, ..., verbose=FALSE) {
+								mcmc.options = NULL, use.wpp.data = TRUE, ..., verbose=FALSE) {
 	mcmc.input <- c(list(sex = sex, nr.chains = nr.chains,
 						start.year = start.year, present.year = present.year, 
 						wpp.year = wpp.year, my.e0.file = my.e0.file, annual.simulation = annual.simulation,
-						output.dir = output.dir, mcmc.options = mcmc.options), list(...))
+						use.wpp.data = use.wpp.data, output.dir = output.dir, 
+						mcmc.options = mcmc.options), list(...))
 
 	if(present.year - 3 > wpp.year) 
-	    warning("present.year is much larger then wpp.year. Make sure WPP data for present.year are available.")					
+	    warning("present.year is much larger then wpp.year. Make sure WPP data for present.year are available.")
+	if(!use.wpp.data && is.null(my.e0.file)) {
+	    warning("If use.wpp.data is set to FALSE, my.e0.file should be given. The simulation will use default WPP data.")
+	    use.wpp.data <- TRUE
+	}
     data <- get.wpp.e0.data (sex, start.year = start.year, present.year = present.year, 
 						wpp.year = wpp.year, my.e0.file = my.e0.file, 
 						include.hiv = mcmc.options$include.hiv.countries,
 						my.locations.file = my.locations.file, 
-						annual = annual.simulation, verbose = verbose)
+						annual = annual.simulation, use.wpp.data = use.wpp.data, verbose = verbose)
 	part.ini <- .do.part.e0.mcmc.meta.ini(data, mcmc.input)
 	new.meta <- c(mcmc.input, part.ini)
 	if(!is.null(mcmc.options$meta.ini.fun))
@@ -587,7 +594,8 @@ e0.mcmc.meta.ini.extra <- function(mcmc.set, countries = NULL, my.e0.file = NULL
 	#create e0 matrix only for the extra countries
 	e0.with.regions <- set.e0.wpp.extra(meta, countries=countries, 
 									  my.e0.file = my.e0.file, my.locations.file = my.locations.file, 
-									  annual = meta$annual.simulation, verbose = verbose)
+									  annual = meta$annual.simulation, use.wpp.data = meta$use.wpp.data, 
+									  verbose = verbose)
 	if(is.null(e0.with.regions)) return(list(meta = meta, index = c()))
 	# join old and new country.overwrites option; remove possible duplicates
 	if(!is.null(country.overwrites)) { 

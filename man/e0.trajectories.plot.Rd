@@ -12,6 +12,7 @@ The functions plot/tabulate the posterior distribution of trajectories of the li
 \usage{
 e0.trajectories.plot(e0.pred, country, pi = c(80, 95), both.sexes = FALSE,
     nr.traj = NULL, adjusted.only = TRUE, typical.trajectory = FALSE, 
+    traj.index = NULL, show.mean = FALSE, show.median = TRUE,
     xlim = NULL, ylim = NULL, type = "b", 
     xlab = "Year", ylab = "Life expectancy at birth", main = NULL, 
     lwd = c(2, 2, 2, 2, 1), col = c('black', 'green', 'red', 'red', '#00000020'),
@@ -34,6 +35,8 @@ e0.trajectories.table(e0.pred, country, pi = c(80, 95),
   \item{nr.traj}{Number of trajectories to be plotted. If \code{NULL}, all trajectories are plotted, otherwise they are thinned evenly. If \code{both.sexes} is \code{TRUE} the default is zero.}
   \item{adjusted.only}{Logical. By default, if the projection median is adjusted using e.g. \code{\link{e0.median.set}}, the function plots the adjusted median. If \code{adjusted.only=FALSE} the original (non-adjusted) median is plotted as well.}
   \item{typical.trajectory}{Logical. If \code{TRUE} one trajectory is shown  for which the median absolute deviation from the median e0 projection is the median among all the trajectories.}
+  \item{traj.index}{Vector of trajectory indices to show. If not given, the trajectories are selected using equidistant spacing.}
+  \item{show.mean, show.median}{Logical indicating if the mean or/and the median of the distribution should be shown.}
   \item{xlim, ylim, type, xlab, ylab, main}{Graphical parameters passed to the \code{plot} function.}
   \item{lwd, col, col2}{Vector of five elements giving the line width and color for: 1. observed data, 2. imputed missing data, 3. median, 4. quantiles, 5. trajectories. \code{col2} is only used if \code{both.sexes} is \code{TRUE}. In such a case, \code{col2} is used for female lines and \code{col} is used for male lines, which in this case defaults to 
   	\code{c('black', 'green', 'darkgreen', 'darkgreen', 'gray')}.}

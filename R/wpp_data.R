@@ -1,6 +1,7 @@
 get.wpp.e0.data <- function(sex = 'M', start.year = 1950, present.year = 2015, 
                             wpp.year = 2017, my.e0.file = NULL, include.hiv = FALSE,
-							my.locations.file = NULL, annual = FALSE, verbose = FALSE) {
+							my.locations.file = NULL, annual = FALSE, use.wpp.data = TRUE, 
+							verbose = FALSE) {
 	sex <- toupper(sex)
 	if(sex != 'M' && sex != 'F')
 		stop('Allowed values for argument "sex" are "M" and "F".')
@@ -9,7 +10,7 @@ get.wpp.e0.data <- function(sex = 'M', start.year = 1950, present.year = 2015,
 	########################################
 	un.object <- read.UNe0(sex=sex, wpp.year=wpp.year, my.e0.file=my.e0.file, 
 								present.year=present.year, annual = annual,
-								verbose=verbose)
+								use.wpp.data = use.wpp.data, verbose=verbose)
 	data <- un.object$data.object$data
 	# get region and area data
 	locations <- bayesTFR:::read.UNlocations(data, wpp.year=wpp.year, my.locations.file=my.locations.file,
@@ -52,7 +53,7 @@ get.wpp.e0.data <- function(sex = 'M', start.year = 1950, present.year = 2015,
 	if (verbose) 
 		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')
 
-	if(!annual || wpp.year >= 2022) {
+	if((!annual || wpp.year >= 2022) && use.wpp.data) {
 	    LEXmatrixsuppl.regions <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, LEXmatrix.regions, loc_data, 
 									start.year, present.year, annual = annual)
 	    if(!is.null(un.object$suppl.data.object) && verbose) 
@@ -90,10 +91,11 @@ read.UNe0 <- function(sex, wpp.year, my.e0.file=NULL, annual = FALSE, ...) {
 }
 
 set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, my.locations.file=NULL, 
-                             annual = FALSE, verbose=FALSE) {
+                             annual = FALSE, verbose=FALSE, use.wpp.data = TRUE) {
 	#'countries' is a vector of country or region codes 
 	un.object <- read.UNe0(sex=meta$sex, wpp.year=meta$wpp.year, my.e0.file=my.e0.file, 
-							present.year=meta$present.year, annual = annual, verbose=verbose)
+							present.year=meta$present.year, annual = annual, 
+							use.wpp.data = use.wpp.data, verbose=verbose)
 	data <- un.object$data.object
 	extra.wpp <- bayesTFR:::.extra.matrix.regions(data=data, countries=countries, meta=meta, 
 							package="bayesLife", my.locations.file=my.locations.file, 
@@ -106,18 +108,19 @@ set.e0.wpp.extra <- function(meta, countries=NULL, my.e0.file=NULL, my.locations
 						  regions=extra.wpp$regions, 
 						  nr.countries.estimation=extra.wpp$nr_countries_estimation,
 						  is_processed = extra.wpp$is_processed)
-		if(!annual || meta$wpp.year >= 2022) {
+		if((!annual || meta$wpp.year >= 2022) && use.wpp.data) {
 		    locations <- bayesTFR:::read.UNlocations(data$data, wpp.year=meta$wpp.year, 
 									my.locations.file=my.locations.file, package='bayesLife', verbose=verbose)
 		    suppl.wpp <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, extra.wpp, locations$loc_data, 
-									meta$start.year, meta$present.year)
+									meta$start.year, meta$present.year, annual = annual)
 		    extra.wpp$suppl.data <- bayesTFR:::.get.suppl.data.list(suppl.wpp, matrix.name='e0.matrix')
 		} else extra.wpp$suppl.data <- bayesTFR:::.get.suppl.data.list(NULL)
 	}
 	return(extra.wpp)
 }
 
-get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, my.locations.file=NULL, verbose=FALSE) {
+get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, 
+                                          my.locations.file=NULL, verbose=FALSE) {
 	sex <- toupper(sex)
 	if(sex != 'M' && sex != 'F')
 		stop('Allowed values for argument "sex" are "M" and "F".')
@@ -125,7 +128,8 @@ get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, my.loc
 	# set data and match with areas
 	########################################
 	un.object <- read.UNe0(sex=sex, wpp.year=meta$wpp.year, present.year=meta$present.year, 
-						my.e0.file=my.e0.file, annual = meta$annual.simulation, verbose=verbose)
+						my.e0.file=my.e0.file, annual = meta$annual.simulation, 
+						use.wpp.data = meta$use.wpp.data, verbose=verbose)
 	data <- un.object$data.object$data
 	# get region and area data
 	locations <- bayesTFR:::read.UNlocations(data, wpp.year=meta$wpp.year, 
@@ -146,7 +150,7 @@ get.wpp.e0.data.for.countries <- function(meta, sex='M', my.e0.file=NULL, my.loc
 							interpolate = meta$wpp.year < 2022 && meta$annual && is.null(my.e0.file))
 	if (verbose) 
 		cat('Dimension of the e0 matrix:', dim(LEXmatrix.regions$obs_matrix), '\n')
-	if(!meta$annual.simulation || meta$wpp.year >= 2022) {
+	if((!meta$annual.simulation || meta$wpp.year >= 2022) && meta$use.wpp.data) {
 	    LEXmatrixsuppl.regions <- bayesTFR:::.get.suppl.matrix.and.regions(un.object, LEXmatrix.regions, loc_data, 
 									meta$start.year, meta$present.year, annual = meta$annual.simulation)
 	} else LEXmatrixsuppl.regions <- NULL

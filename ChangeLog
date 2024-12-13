@@ -1,3 +1,23 @@
+5.3-0/1 (11/05/2024)
+-----
+Added dataset include_2024.
+
+Default for par.names and par.names.cs in e0.raftery.diag changed to all parameters.
+
+Fixed bug in e0.joint.plot for annual prediction object.
+
+Fixed bug in setting time index when imputation is present in e0.predict.subnat().
+
+Added argument use.wpp.data to run.e0.mcmc(). 
+
+Added the mean variant into summary output.
+
+e0.trajectories.plot() got arguments to plot the means (show.mean), the medians (show.median),
+as well as selected trajectories (traj.index).
+
+Added option of keeping multiple predictions directories in one simulation directory
+(argument "subdir" added to various functions).
+
 5.2-0 (09/15/2023)
 -----
 Annual subnational projections are now possible, via the argument "annual"
