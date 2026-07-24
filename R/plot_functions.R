@@ -477,7 +477,23 @@ e0.trajectories.plot <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALS
 		legend('topleft', legend=legend.all, lty=lty.all, bty='n', col=cols.all, pch=pch.all, lwd=lwd.all)
 }
 
-e0.trajectories.table <- function(e0.pred, country, pi=c(80, 95), both.sexes=FALSE, ...) {
+.average.e0.trajectories.table <- function(e0.pred, country, pi = c(80, 95), 
+                                           main.proj = c("median", "mean"), ...){
+    country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
+    if(is.null(country.obj$code)) stop("Country ", country, " not found.")
+    main.proj <- match.arg(main.proj)
+    mpred <- get.e0.jmale.prediction(e0.pred)
+    fdata <- get.data.imputed(e0.pred)
+    mdata <- get.data.imputed(mpred)
+    data.matrix <- fdata - (fdata - mdata)/2.
+    traj.object <- get.e0.trajectories.object(list(e0.pred, mpred), country.obj$code, pi = pi)
+    return(bayesTFR:::.get.trajectories.table(e0.pred, country.obj, data.matrix[,country.obj$index], 
+                                              pi, pred.median = traj.object[[main.proj]], 
+                                              main.proj.name = main.proj,
+                                              cqp = traj.object$quantiles, half.child.variant=FALSE))
+}
+
+e0.trajectories.table <- function(e0.pred, country, pi = c(80, 95), both.sexes = FALSE, ...) {
 	do.both.sexes <- FALSE
 	if(both.sexes==TRUE || both.sexes == 'A') {
 		do.both.sexes <- TRUE
@@ -491,15 +507,7 @@ e0.trajectories.table <- function(e0.pred, country, pi=c(80, 95), both.sexes=FAL
 				do.both.sexes <- FALSE
 			} else {
 				if(both.sexes == 'A') { # average e0
-					mpred <- get.e0.jmale.prediction(e0.pred)
-					fdata <- get.data.imputed(e0.pred)
-					mdata <- get.data.imputed(mpred)
-					data.matrix <- fdata - (fdata - mdata)/2.
-					country.obj <- get.country.object(country, e0.pred$mcmc.set$meta)
-					if(is.null(country.obj$code)) stop("Country ", country, " not found.")
-					traj.object <- get.e0.trajectories.object(list(e0.pred, mpred), country.obj$code, pi=pi)
-					return(bayesTFR:::.get.trajectories.table(e0.pred, country.obj, data.matrix[,country.obj$index], pi, 
-								pred.median=traj.object$median, cqp=traj.object$quantiles, half.child.variant=FALSE))
+				    return(.average.e0.trajectories.table(e0.pred, country, pi = pi, ...))
 				}
 			}
 		}

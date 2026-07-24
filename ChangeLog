@@ -1,3 +1,8 @@
+5.3-2 (07/24/2026)
+-----
+Added argument main.proj to e0.trajectories.table to be able to show mean
+(analogous to bayesTFR change).
+
 5.3-0/1 (11/05/2024)
 -----
 Added dataset include_2024.

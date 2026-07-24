@@ -45,7 +45,7 @@ e0.trajectories.table(e0.pred, country, pi = c(80, 95),
   \item{add}{Logical controlling whether the trajectories should be plotted into a new graphic device (\code{FALSE}) or into an existing device (\code{TRUE}). One can use this argument to plot trajectories from multiple countries into one graphics.}
   \item{\dots}{Additional graphical parameters. In addition, for \code{e0.trajectories.plot.all}, \code{\dots} 
   	contains any of the arguments of  \code{e0.trajectories.plot}, and for \code{e0.trajectories.table}, \code{\dots} contains 
-  	the \code{pi} and \code{country} arguments.}
+  	the \code{pi}, \code{country}, \code{adjusted} and \code{main.proj} arguments with the same meaning as in \code{\link[bayesTFR]{tfr.trajectories.table}}. The latter can be used to tabulate the mean instead of the median.}
   \item{output.dir}{Directory into which resulting graphs are stored.}
   \item{output.type}{Type of the resulting files. It can be \dQuote{png}, \dQuote{pdf}, \dQuote{jpeg}, \dQuote{bmp}, \dQuote{tiff}, or \dQuote{postscript}.}
   \item{verbose}{Logical switching log messages on and off.}

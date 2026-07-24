@@ -269,8 +269,15 @@ test.e0trajectories <- function() {
 	
 	test.name <- 'tabulating e0 trajectories'
 	start.test(test.name)
-	t <- e0.trajectories.table(pred, "Australia", pi=c(90, 80, 70, 52))
-	stopifnot(all(dim(t) == c(30, 9)))
+	t.med <- e0.trajectories.table(pred, "Australia", pi=c(90, 80, 70, 52))
+	t.mean <- e0.trajectories.table(pred, "Australia", pi=c(90, 80, 70, 52), main.proj = "mean")
+	stopifnot(all(dim(t.med) == c(30, 9)))
+	# check name of the first column 
+	stopifnot(colnames(t.med)[1] == "median")
+	stopifnot(colnames(t.mean)[1] == "mean")
+	# check that median is not the same as mean in the last projection year
+	stopifnot(t.med[nrow(t.med),1] != t.mean[nrow(t.mean),1]) 
+	
 	test.ok(test.name)
 }
 
@@ -782,20 +789,39 @@ test.run.annual.simulation <- function(wpp.year = 2019) {
     start.test(test.name, wpp.year)
     pred <- e0.predict(m, burnin=1, verbose = FALSE)
     spred <- summary(pred)
-    tbl <- e0.trajectories.table(pred, "Japan")
     stopifnot(spred$nr.traj == 8)
     stopifnot(all(2019:2100 %in% spred$projection.years))
     stopifnot(all(c(908, 900) %in% get.countries.table(pred)$code))
+    
+    tbl.med <- e0.trajectories.table(pred, "Japan")    
+    tbl.mean <- e0.trajectories.table(pred, "Japan", main.proj = "mean")
+    stopifnot(colnames(tbl.med)[1] == "median")
+    stopifnot(colnames(tbl.mean)[1] == "mean")
+    stopifnot(tbl.med[1,1] == tbl.mean[1,1]) # observed years should be the same
+    stopifnot(tbl.med[nrow(tbl.med),1] != tbl.mean[nrow(tbl.mean),1]) # last projection year - should be different
+
     if(wpp.year > 2019)
-        stopifnot('1900' %in% rownames(tbl)) # checks that supplemental data is used
+        stopifnot('1900' %in% rownames(tbl.med)) # checks that supplemental data is used
     
     mpred <- get.e0.jmale.prediction(pred)
     smpred <- summary(mpred)
-    mtbl <- e0.trajectories.table(mpred, "Japan")
     stopifnot(all(2019:2100 %in% smpred$projection.years))
     stopifnot(all(c(908, 900) %in% get.countries.table(mpred)$code))
+    
+    mtbl.med <- e0.trajectories.table(mpred, "Japan")
+    mtbl.mean <- e0.trajectories.table(mpred, "Japan", main.proj = "mean")
+    stopifnot('1956' %in% rownames(mtbl.med))
+    stopifnot(mtbl.med[nrow(mtbl.med),1] != mtbl.mean[nrow(mtbl.mean),1])
     if(wpp.year > 2019)
-        stopifnot('1900' %in% rownames(mtbl))
+        stopifnot('1900' %in% rownames(mtbl.med))
+    
+    # average
+    tbl.med <- e0.trajectories.table(pred, "Japan", both.sexes = "A")
+    tbl.mean <- e0.trajectories.table(pred, "Japan", both.sexes = "A", main.proj = "mean")
+    stopifnot(colnames(tbl.med)[1] == "median")
+    stopifnot(colnames(tbl.mean)[1] == "mean")
+    stopifnot(tbl.med[1,1] == tbl.mean[1,1]) # observed years should be the same
+    stopifnot(tbl.med[nrow(tbl.med),1] != tbl.mean[nrow(tbl.mean),1]) # projected years should be different
     
     test.ok(test.name)
     

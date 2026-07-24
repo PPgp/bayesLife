@@ -565,7 +565,10 @@ get.e0.trajectories.object <- function(e0.pred, country, nr.traj=NULL, typical.t
 				cqp[[i]] <- apply(traj.res, 1, quantile, c(al, 1-al), na.rm = TRUE)
 			}
 		}
-		return(list(trajectories=traj.res, index=traj.idx, median=apply(traj.res, 1, median, na.rm=TRUE), quantiles=cqp))
+		return(list(trajectories=traj.res, index=traj.idx, 
+		            median=apply(traj.res, 1, median, na.rm=TRUE), 
+		            mean=apply(traj.res, 1, mean, na.rm=TRUE),
+		            quantiles=cqp))
 	}
 	return(bayesTFR:::get.trajectories(e0.pred, country, nr.traj=nr.traj, typical.trajectory=typical.trajectory, ...))
 }
