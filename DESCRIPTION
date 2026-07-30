@@ -17,7 +17,7 @@ Authors@R: c(person(given = "Hana",
             )
 Description: Making probabilistic projections of life expectancy for all countries of the world, using a Bayesian hierarchical model <doi:10.1007/s13524-012-0193-x>. Subnational projections are also supported.
 Depends: 
-    bayesTFR (>= 7.3-0),
+    bayesTFR (>= 7.4-5),
     R (>= 3.5.0)
 Imports: wpp2019, hett, car, coda, data.table
 Suggests: wpp2017, wpp2015, wpp2012, wpp2010
