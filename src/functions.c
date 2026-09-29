@@ -200,3 +200,20 @@ SEXP doTrianglekzcUpdate(SEXP scur, SEXP smean, SEXP ssd, SEXP slow, SEXP sup, S
 	UNPROTECT(1);
 	return(res);
 }
+
+/* Double-logistic function for n parameter sets (rows of the n x 6 matrix sx),
+   each evaluated at its own e0 value (sle, length n). */
+SEXP doDLmulti(SEXP sx, SEXP sle, SEXP sp1, SEXP sp2) {
+	int n = LENGTH(sle), i, j, one = 1;
+	double *x = REAL(sx), *le = REAL(sle), pars[6];
+	SEXP res;
+	
+	if (LENGTH(sx) != 6*n) error("Parameter matrix must have 6 columns and as many rows as there are e0 values.");
+	PROTECT(res = allocVector(REALSXP, n));
+	for (i = 0; i < n; i++) {
+		for (j = 0; j < 6; j++) pars[j] = x[i + j*n];
+		doDL(pars, &le[i], REAL(sp1), REAL(sp2), &one, &REAL(res)[i]);
+	}
+	UNPROTECT(1);
+	return(res);
+}

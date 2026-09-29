@@ -11,6 +11,22 @@ generate.e0.trajectory <- function(x, l.start, kap, n.proj = 11, p1 = 9, p2 = 9,
   return(proj[2:length(proj)])
 }
 
+generate.e0.trajectories <- function(x, l.start, kap, n.proj = 11, p1 = 9, p2 = 9, const.var = FALSE) {
+    # Vectorized version of generate.e0.trajectory: generates one trajectory for each row 
+    # of the parameter matrix x (kap is a vector of the same length).
+    # The random deviates are drawn in the same order as when calling generate.e0.trajectory
+    # for each row in turn, so both give the same results for the same seed.
+    nr.traj <- nrow(x)
+    eps <- matrix(rnorm(n.proj * nr.traj), nrow = n.proj)
+    proj <- matrix(NA, nrow = n.proj + 1, ncol = nr.traj)
+    proj[1, ] <- l.start
+    for(a in 2:(n.proj+1)) {
+        sd <- kap*if(const.var) 1 else loess.lookup(proj[a-1, ])
+        proj[a, ] <- proj[a-1, ] + g.dl6.multi(x, proj[a-1, ], p1 = p1, p2 = p2) + sd * eps[a-1, ]
+    }
+    return(proj[-1, , drop = FALSE])
+}
+
 get.nr.traj.burnin.from.diagnostics <- function(sim.dir, verbose = FALSE) {
     diag.list <- get.e0.convergence.all(sim.dir)
     return(bayesTFR:::.find.burnin.nr.traj.from.diag(diag.list))
@@ -263,17 +279,27 @@ run.e0.projection.for.all.countries <- function(setup, traj.fun = "generate.e0.t
             trajectories <- matrix(NA, this.nr_project+1, nr_simu)
             pred.env$country.obj <- country.obj
             
-            for(j in 1:nr_simu) {
-                trajectories[1,j] <- all.e0[this.T_end]
-                if(nmissing == 0 && this.Tc_end > le0.matrix) { # use observed data on projection spots
-                    trajectories[2:(lall.e0 - le0.matrix+1),j]<- all.e0[(le0.matrix+1):lall.e0]
-                    proj.idx <- (lall.e0 - le0.matrix + 2):(this.nr_project+1)
-                    last.val.idx <- lall.e0
-                } else {
-                    proj.idx <- 2:(this.nr_project+1)
-                    last.val.idx <- this.T_end
-                }
-                trajectories[proj.idx, j] <- do.call(traj.fun, list(x = cs.par.values[j,], 
+            trajectories[1,] <- all.e0[this.T_end]
+            if(nmissing == 0 && this.Tc_end > le0.matrix) { # use observed data on projection spots
+                trajectories[2:(lall.e0 - le0.matrix+1),] <- all.e0[(le0.matrix+1):lall.e0]
+                proj.idx <- (lall.e0 - le0.matrix + 2):(this.nr_project+1)
+                last.val.idx <- lall.e0
+            } else {
+                proj.idx <- 2:(this.nr_project+1)
+                last.val.idx <- this.T_end
+            }
+            if(is.character(traj.fun) && traj.fun == "generate.e0.trajectory") {
+                # default: generate all trajectories at once
+                trajectories[proj.idx, ] <- generate.e0.trajectories(cs.par.values[1:nr_simu, , drop = FALSE], 
+                                                                    l.start = all.e0[last.val.idx], 
+                                                                    kap = var.par.values[1:nr_simu,'omega'],
+                                                                    n.proj = length(proj.idx),
+                                                                    p1 = meta$mcmc.options$dl.p1, 
+                                                                    p2 = meta$mcmc.options$dl.p2, 
+                                                                    const.var = meta$constant.variance)
+            } else {
+                for(j in 1:nr_simu) {
+                    trajectories[proj.idx, j] <- do.call(traj.fun, list(x = cs.par.values[j,], 
                                                                     l.start = all.e0[last.val.idx], 
                                                                     kap = var.par.values[j,'omega'],
                                                                     n.proj = length(proj.idx),
@@ -281,6 +307,7 @@ run.e0.projection.for.all.countries <- function(setup, traj.fun = "generate.e0.t
                                                                     p2 = meta$mcmc.options$dl.p2, 
                                                                     const.var = meta$constant.variance,
                                                                     traj = j, pred.env = pred.env))
+                }
             }
             if (nmissing > 0) {
                 e0.matrix.reconstructed[(this.T_end+1):le0.matrix,country] <- apply(matrix(trajectories[2:(nmissing+1),],

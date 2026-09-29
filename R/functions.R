@@ -7,6 +7,12 @@ g.dl6<-function(x,l, p1, p2){
 	return(res$dl_values)
 }
 
+g.dl6.multi <- function(x, l, p1, p2) {
+    # DL function for each row of the parameter matrix x, evaluated at the corresponding element of l
+    return(.Call("doDLmulti", matrix(as.double(x), ncol = 6), as.double(l), 
+                 as.double(p1), as.double(p2), PACKAGE = "bayesLife"))
+}
+
 loess.lookup<-function(look){
    # call data(loess_sd) before using this function
    idx <- cut(look, loess.sd$x, labels=FALSE, include.lowest = TRUE)

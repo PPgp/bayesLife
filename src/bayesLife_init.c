@@ -18,9 +18,11 @@ static const R_CMethodDef CEntries[] = {
 
 /* .Call calls */
 extern SEXP doTrianglekzcUpdate(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP doDLmulti(SEXP, SEXP, SEXP, SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
     {"doTrianglekzcUpdate", (DL_FUNC) &doTrianglekzcUpdate, 12},
+    {"doDLmulti",           (DL_FUNC) &doDLmulti,            4},
     {NULL, NULL, 0}
 };
 
