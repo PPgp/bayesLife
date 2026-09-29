@@ -319,60 +319,28 @@ slice.sampling <- function(x0, fun, width,  ..., low, up, maxit=50) {
 }
 
 Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
-	# Update Triangle pars using slice sampling
+	# Update Triangle.c, k.c and z.c using slice sampling (implemented in C)
     opts <- mcmc$meta$mcmc.options
-	sigmas <- 1/sqrt(mcmc$lambda)
-	Triangle.c.low <- c(mcmc$meta$country.bounds$Triangle_1.c.prior.low[country], 
-					  mcmc$meta$country.bounds$Triangle_2.c.prior.low[country],
-					  mcmc$meta$country.bounds$Triangle_3.c.prior.low[country],
-					  mcmc$meta$country.bounds$Triangle_4.c.prior.low[country])
-	Triangle.c.up <- c(mcmc$meta$country.bounds$Triangle_1.c.prior.up[country], 
-					  mcmc$meta$country.bounds$Triangle_2.c.prior.up[country],
-					  mcmc$meta$country.bounds$Triangle_3.c.prior.up[country],
-					  mcmc$meta$country.bounds$Triangle_4.c.prior.up[country])
-	Triangle.prop <- rep(0,4)
-	dlx <- c(mcmc$Triangle.c[,country], mcmc$k.c[country], mcmc$z.c[country])
-	ntries <- 1
-	while(ntries <= 50) {
-		for (i in 1:4) {
-			#print(c('Delta', i))
-			Triangle.prop[i] <- slice.sampling(mcmc$Triangle.c[i, country],
-										logdensity.Triangle.k.z.c, 
-										opts$Triangle.c$slice.width[i], 
-										mean = mcmc$Triangle[i], 
-										sd = sigmas[i], dlx = dlx,
-										low = min(max(Triangle.c.low[i], opts$sumTriangle.lim[1]-sum(dlx[1:4][-i])),mcmc$Triangle.c[i, country]), 
-										up = max(min(Triangle.c.up[i], opts$sumTriangle.lim[2]-sum(dlx[1:4][-i])),mcmc$Triangle.c[i, country]),
-										par.idx = i, 
-										p1 = opts$dl.p1, p2 = opts$dl.p2, omega = mcmc$omega,
-										DLdata = DLdata[[country]])
-			dlx[i] <- Triangle.prop[i]
-		}
-		sT <- sum(Triangle.prop)
-		if(sT <= opts$sumTriangle.lim[2] && sT >= opts$sumTriangle.lim[1]) break
-		dlx <- c(mcmc$Triangle.c[,country], mcmc$k.c[country], mcmc$z.c[country])
-		ntries <- ntries + 1
-	}
-	mcmc$Triangle.c[, country] <- Triangle.prop
-	#print('k')
-	mcmc$k.c[country] <- slice.sampling(mcmc$k.c[country],
-										logdensity.Triangle.k.z.c, opts$k.c$slice.width, 
-										mean = mcmc$k, 
-										sd = 1/sqrt(mcmc$lambda.k), dlx = dlx,
-										low = mcmc$meta$country.bounds$k.c.prior.low[country], 
-										up = mcmc$meta$country.bounds$k.c.prior.up[country], 
-										par.idx = 5, p1 = opts$dl.p1, p2 = opts$dl.p2, 
-										omega = mcmc$omega, DLdata = DLdata[[country]])
-	dlx[5] <- mcmc$k.c[country]
-	#print('z')
-	mcmc$z.c[country] <- slice.sampling(mcmc$z.c[country],
-										logdensity.Triangle.k.z.c, opts$z.c$slice.width, 
-										mean = mcmc$z, 
-										sd = 1/sqrt(mcmc$lambda.z), dlx = dlx,
-										low = mcmc$meta$country.bounds$z.c.prior.low[country], 
-										up = mcmc$meta$country.bounds$z.c.prior.up[country], 
-										par.idx = 6, p1 = opts$dl.p1, p2 = opts$dl.p2, 
-										omega = mcmc$omega, DLdata = DLdata[[country]])
+    bounds <- mcmc$meta$country.bounds
+    low <- c(bounds$Triangle_1.c.prior.low[country], bounds$Triangle_2.c.prior.low[country],
+             bounds$Triangle_3.c.prior.low[country], bounds$Triangle_4.c.prior.low[country],
+             bounds$k.c.prior.low[country], bounds$z.c.prior.low[country])
+    up <- c(bounds$Triangle_1.c.prior.up[country], bounds$Triangle_2.c.prior.up[country],
+            bounds$Triangle_3.c.prior.up[country], bounds$Triangle_4.c.prior.up[country],
+            bounds$k.c.prior.up[country], bounds$z.c.prior.up[country])
+    cdata <- DLdata[[country]]
+    res <- .Call("doTrianglekzcUpdate", 
+                 as.double(c(mcmc$Triangle.c[,country], mcmc$k.c[country], mcmc$z.c[country])),
+                 as.double(c(mcmc$Triangle, mcmc$k, mcmc$z)),
+                 as.double(1/sqrt(c(mcmc$lambda, mcmc$lambda.k, mcmc$lambda.z))),
+                 as.double(low), as.double(up),
+                 as.double(c(opts$Triangle.c$slice.width, opts$k.c$slice.width, opts$z.c$slice.width)),
+                 as.double(opts$sumTriangle.lim), as.double(opts$dl.p1), as.double(opts$dl.p2),
+                 as.double(cdata['e0',]), as.double(cdata['dct',]), as.double(mcmc$omega*cdata['loess',]),
+                 PACKAGE = "bayesLife")
+    mcmc$Triangle.c[, country] <- res[1:4]
+    mcmc$k.c[country] <- res[5]
+    mcmc$z.c[country] <- res[6]
 	return()
 }
 

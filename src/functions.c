@@ -1,4 +1,5 @@
 #include <R.h>
+#include <Rinternals.h>
 #include <Rmath.h>
 #include <math.h>
 #include <stdio.h>
@@ -91,4 +92,111 @@ void dologdensityTrianglekz(double *x, double *mu, double *sigma,
 	logdens[0] = s + log(dnt[0]);
 	/*Rprintf("\ns=%f dnt=%f res = %f", s, dnt[0], logdens[0]);*/
 	return;
+}
+
+/* Log-density of one country-specific DL parameter (index idx, 1-based),
+   evaluated at x with all other parameters taken from dlpars (work array). */
+static double logdens_country_par(double x, int idx, double mean, double sd, double low, double up,
+			double *dlpars, double *p1, double *p2, double *le, int n, double *dct, double *sdv) {
+	double logdens;
+	dologdensityTrianglekz(&x, &mean, &sd, &low, &up, &idx, dlpars, p1, p2, le, &n, dct, sdv, &logdens);
+	return(logdens);
+}
+
+/* C version of the R function slice.sampling() applied to logdens_country_par.
+   Draws random numbers in the same order as the R version. */
+static double slice_sample_country_par(double x0, int idx, double width, double low, double up, 
+			double mean, double sd, double *dlpars, double *p1, double *p2, 
+			double *le, int n, double *dct, double *sdv) {
+	int maxit = 50, i;
+	double z, L, R, J, K, x1;
+	
+	z = logdens_country_par(x0, idx, mean, sd, low, up, dlpars, p1, p2, le, n, dct, sdv) - rexp(1.0);
+	L = x0 - runif(0, width);
+	R = L + width;
+	J = floor(runif(0, maxit));
+	K = (maxit-1) - J;
+	while (J > 0 && L > low && 
+			logdens_country_par(L, idx, mean, sd, low, up, dlpars, p1, p2, le, n, dct, sdv) > z) {
+		L = L - width;
+		J = J - 1;
+	}
+	while (K > 0 && R < up && 
+			logdens_country_par(R, idx, mean, sd, low, up, dlpars, p1, p2, le, n, dct, sdv) > z) {
+		R = R + width;
+		K = K - 1;
+	}
+	if (L < low) L = low;
+	if (R > up) R = up;
+	if (L > R) return(x0);
+	for (i = 1; i <= maxit; i++) {
+		x1 = runif(L, R);
+		if (z <= logdens_country_par(x1, idx, mean, sd, low, up, dlpars, p1, p2, le, n, dct, sdv))
+			return(x1);
+		if (x1 < x0) L = x1;
+		else R = x1;
+	}
+	error("Problem in slice sampling");
+	return(x0);
+}
+
+/* sum of dlx[0..3] without element i; long double to match R's sum() */
+static double sum_Triangle_without(double *dlx, int i) {
+	long double s = 0.0;
+	int j;
+	for (j = 0; j < 4; j++) if (j != i) s += dlx[j];
+	return((double) s);
+}
+
+/* Update of Triangle.c (4 pars), k.c and z.c for one country via slice sampling. 
+   All par vectors have length 6 in the order Triangle.c[1:4], k.c, z.c.
+   sdv is omega * loess SD. Returns the updated 6 values. */
+SEXP doTrianglekzcUpdate(SEXP scur, SEXP smean, SEXP ssd, SEXP slow, SEXP sup, SEXP swidth, 
+			SEXP ssumlim, SEXP sp1, SEXP sp2, SEXP sle, SEXP sdct, SEXP ssdv) {
+	double *cur = REAL(scur), *mean = REAL(smean), *sd = REAL(ssd), *low = REAL(slow),
+			*up = REAL(sup), *width = REAL(swidth), *sumlim = REAL(ssumlim),
+			*p1 = REAL(sp1), *p2 = REAL(sp2), *le = REAL(sle), *dct = REAL(sdct), *sdv = REAL(ssdv);
+	int n = LENGTH(sle), i, ntries;
+	double dlx[6], work[6], prop[4], lo, hi, s, sT;
+	long double sTl;
+	SEXP res;
+	
+	if (LENGTH(scur) != 6 || LENGTH(smean) != 6 || LENGTH(ssd) != 6 || LENGTH(slow) != 6 ||
+			LENGTH(sup) != 6 || LENGTH(swidth) != 6 || LENGTH(ssumlim) != 2)
+		error("Wrong length of parameter vectors.");
+	if (LENGTH(sdct) != n || LENGTH(ssdv) != n) error("Inconsistent data lengths.");
+	
+	GetRNGstate();
+	for (i = 0; i < 6; i++) dlx[i] = cur[i];
+	for (i = 0; i < 4; i++) prop[i] = 0;
+	ntries = 1;
+	while (ntries <= 50) {
+		for (i = 0; i < 4; i++) {
+			s = sum_Triangle_without(dlx, i);
+			lo = fmin2(fmax2(low[i], sumlim[0] - s), cur[i]);
+			hi = fmax2(fmin2(up[i], sumlim[1] - s), cur[i]);
+			memcpy(work, dlx, 6*sizeof(double));
+			prop[i] = slice_sample_country_par(cur[i], i+1, width[i], lo, hi, mean[i], sd[i], 
+								work, p1, p2, le, n, dct, sdv);
+			dlx[i] = prop[i];
+		}
+		sTl = 0.0;
+		for (i = 0; i < 4; i++) sTl += prop[i];
+		sT = (double) sTl;
+		if (sT <= sumlim[1] && sT >= sumlim[0]) break;
+		for (i = 0; i < 6; i++) dlx[i] = cur[i];
+		ntries++;
+	}
+	PROTECT(res = allocVector(REALSXP, 6));
+	for (i = 0; i < 4; i++) REAL(res)[i] = prop[i];
+	/* k.c and z.c */
+	for (i = 4; i < 6; i++) {
+		memcpy(work, dlx, 6*sizeof(double));
+		dlx[i] = slice_sample_country_par(cur[i], i+1, width[i], low[i], up[i], mean[i], sd[i],
+								work, p1, p2, le, n, dct, sdv);
+		REAL(res)[i] = dlx[i];
+	}
+	PutRNGstate();
+	UNPROTECT(1);
+	return(res);
 }
