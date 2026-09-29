@@ -5,6 +5,11 @@ Added argument main.proj to e0.trajectories.table to be able to show mean
 
 Speed-up of MCMC estimation: slice sampling of country-specific parameters moved to C.
 
+Adapted to the renaming of median.shift to traj.shift in bayesTFR 7.4-6
+(bayesTFR dependency updated): fixed e0.median.reset() which did not reset 
+medians when no countries were given; get.e0.prediction() converts median.shift 
+in predictions stored by older versions.
+
 5.3-0/1 (11/05/2024)
 -----
 Added dataset include_2024.

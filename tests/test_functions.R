@@ -134,19 +134,19 @@ test.estimate.mcmc <- function(compression='None', wpp.year = 2019) {
 	datM <- merge(wppl, shifted.projsM[, c("year", "50%"), with = FALSE], by = "year")
 	stopifnot(all.equal(datF$e0F, datF[, `50%`]))
 	stopifnot(all.equal(datM$e0M, datM[, `50%`]))
-	stopifnot(!is.null(shifted.predF$median.shift) && !is.null(shifted.predM$median.shift))
-	stopifnot(length(shifted.predF$median.shift) == nrow(get.countries.table(shifted.predF)) && 
-	              length(shifted.predM$median.shift) == nrow(get.countries.table(shifted.predM)) )
+	stopifnot(!is.null(shifted.predF$traj.shift) && !is.null(shifted.predM$traj.shift))
+	stopifnot(length(shifted.predF$traj.shift) == nrow(get.countries.table(shifted.predF)) && 
+	              length(shifted.predM$traj.shift) == nrow(get.countries.table(shifted.predM)) )
 	test.ok(test.name)
 	
 	test.name <- 'resetting all countries'
 	e0.median.reset(sim.dir)
 	new.predF <- get.e0.prediction(sim.dir)
 	new.predM <- get.e0.prediction(sim.dir, joint.male = TRUE)
-	stopifnot(is.null(new.predF$median.shift) && !is.null(new.predM$median.shift))
+	stopifnot(is.null(new.predF$traj.shift) && !is.null(new.predM$traj.shift))
 	e0.median.reset(sim.dir, joint.male = TRUE)
 	new.predM2 <- get.e0.prediction(sim.dir, joint.male = TRUE)
-	stopifnot(is.null(new.predM2$median.shift))
+	stopifnot(is.null(new.predM2$traj.shift))
 	test.ok(test.name)
 	
 	unlink(sim.dir, recursive=TRUE)

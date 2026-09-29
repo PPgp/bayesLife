@@ -433,7 +433,7 @@ get.e0.reconstructed <- function(data, meta) {
 e0.median.reset <- function(sim.dir, countries = NULL, joint.male=FALSE, ...) {
     if(is.null(countries)) {
         pred <- get.e0.prediction(sim.dir, joint.male = joint.male, ...)
-        pred$median.shift <- NULL
+        pred$traj.shift <- NULL
         .e0.store.adjustment(pred, sim.dir, joint.male)
         cat('\nMedians for all countries reset.\n')
     } else

@@ -130,6 +130,15 @@ get.e0.prediction <- function(mcmc=NULL, sim.dir=NULL, joint.male=FALSE, mcmc.di
 		bayesLife.prediction$joint.male$output.directory <- file.path(output.dir, 'joint_male')
 	
 	pred <- bayesLife.prediction
+	# rename median.shift to traj.shift (renamed in bayesTFR 7.4-6)
+	if(!is.null(pred$median.shift)) {
+	    pred$traj.shift <- pred$median.shift
+	    pred$median.shift <- NULL
+	}
+	if(has.e0.jmale.prediction(pred) && !is.null(pred$joint.male$median.shift)) {
+	    pred$joint.male$traj.shift <- pred$joint.male$median.shift
+	    pred$joint.male$median.shift <- NULL
+	}
 	# re-route mcmcs if necessary
 	if(!is.null(mcmc.dir) || !has.e0.mcmc(pred$mcmc.set$meta$output.dir)) {
 		if((!is.null(mcmc.dir) && !is.na(mcmc.dir)) || is.null(mcmc.dir)) {
