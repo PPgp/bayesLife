@@ -38,6 +38,7 @@ create.ctrl.env <- function(mcenv, meta) {
                       dlf <- list()
                       DLdata <- get.DLdata.for.estimation(meta, 1:C)
                       psi.shape <- get.psi.shape(DLdata, C)
+                      cs.data <- get.cs.data.for.update(meta, DLdata, 1:C)
                       recompute.par.integral <- rep(TRUE, 6)
                       wpar.integral.to.mC <- sapply(1:6, 
                                                     compute.par.integral.to.mC, mcenv = mcenv, 
@@ -48,7 +49,7 @@ create.ctrl.env <- function(mcenv, meta) {
 }
 
 update.mcmc.parameters <- function(mcenv, ctrlenv, opts) {
-    delta.sq <- DLdata <- psi.shape <- NULL # to avoid R check note "no visible binding ..."
+    delta.sq <- cs.data <- psi.shape <- NULL # to avoid R check note "no visible binding ..."
     ctrlenv <- within(ctrlenv, {
     # Update Triangle, k, z using Metropolis-Hastings sampler
     ###########################################
@@ -106,11 +107,11 @@ update.mcmc.parameters <- function(mcenv, ctrlenv, opts) {
     # Update Triangle.c, k.c and z.c using slice sampling
     ###########################################
     for(country in 1:C) {
-        Triangle.k.z.c.update(mcenv, country, DLdata = DLdata)
+        Triangle.k.z.c.update(mcenv, country, cs.data[[country]])
         dlf[[country]] <- g.dl6(c(mcenv$Triangle.c[,country], 
                                   mcenv$k.c[country], mcenv$z.c[country]), 
-                                DLdata[[country]]['e0',], opts$dl.p1, opts$dl.p2)
-        sum.term.for.omega <- sum.term.for.omega + sum(((DLdata[[country]]['dct',]-dlf[[country]])^2)/(DLdata[[country]]['loess',])^2)
+                                cs.data[[country]]$e0, opts$dl.p1, opts$dl.p2)
+        sum.term.for.omega <- sum.term.for.omega + sum(((cs.data[[country]]$dct-dlf[[country]])^2)/(cs.data[[country]]$loess)^2)
     }
     # Update omega - Gibbs sampler
     ###########################################
@@ -203,6 +204,7 @@ e0.mcmc.sampling.extra <- function(mcmc, mcmc.list, countries, posterior.sample,
 	for (item in names(mcmc)) mcenv[[item]] <- mcmc[[item]]
 	updated.var.names <- c('Triangle.c', 'k.c', 'z.c')
 	DLdata <- get.DLdata.for.estimation(mcenv$meta, countries)
+	cs.data <- get.cs.data.for.update(mcenv$meta, DLdata, countries)
 	
 	for(iter in 1:niter) {
 		if(verbose.iter > 0 && (iter %% verbose.iter == 0))
@@ -220,7 +222,7 @@ e0.mcmc.sampling.extra <- function(mcmc, mcmc.list, countries, posterior.sample,
 		# Update Triangle.c, k.c and z.c using slice sampling
 		###########################################
 		for(country in countries) {
-			Triangle.k.z.c.update(mcenv, country, DLdata=DLdata)
+			Triangle.k.z.c.update(mcenv, country, cs.data[[country]])
 		}
 
 		################################################################### 
@@ -318,25 +320,37 @@ slice.sampling <- function(x0, fun, width,  ..., low, up, maxit=50) {
 	stop('Problem in slice sampling')
 }
 
-Triangle.k.z.c.update <- function(mcmc, country, DLdata) {
-	# Update Triangle.c, k.c and z.c using slice sampling (implemented in C)
+get.cs.data.for.update <- function(meta, DLdata, countries) {
+    # Pre-compute country-specific inputs of Triangle.k.z.c.update that do not change
+    # during the MCMC: data vectors and prior bounds (in the order Triangle.c[1:4], k.c, z.c)
+    bounds <- meta$country.bounds
+    low.names <- paste0(c(paste0("Triangle_", 1:4, ".c"), "k.c", "z.c"), ".prior.low")
+    up.names <- paste0(c(paste0("Triangle_", 1:4, ".c"), "k.c", "z.c"), ".prior.up")
+    cs.data <- list()
+    for(country in countries) {
+        cs.data[[country]] <- list(
+            e0 = as.double(DLdata[[country]]['e0',]),
+            dct = as.double(DLdata[[country]]['dct',]),
+            loess = as.double(DLdata[[country]]['loess',]),
+            low = as.double(sapply(low.names, function(par) bounds[[par]][country])),
+            up = as.double(sapply(up.names, function(par) bounds[[par]][country]))
+        )
+    }
+    return(cs.data)
+}
+
+Triangle.k.z.c.update <- function(mcmc, country, cdata) {
+	# Update Triangle.c, k.c and z.c using slice sampling (implemented in C).
+    # cdata is the country's element of the output of get.cs.data.for.update().
     opts <- mcmc$meta$mcmc.options
-    bounds <- mcmc$meta$country.bounds
-    low <- c(bounds$Triangle_1.c.prior.low[country], bounds$Triangle_2.c.prior.low[country],
-             bounds$Triangle_3.c.prior.low[country], bounds$Triangle_4.c.prior.low[country],
-             bounds$k.c.prior.low[country], bounds$z.c.prior.low[country])
-    up <- c(bounds$Triangle_1.c.prior.up[country], bounds$Triangle_2.c.prior.up[country],
-            bounds$Triangle_3.c.prior.up[country], bounds$Triangle_4.c.prior.up[country],
-            bounds$k.c.prior.up[country], bounds$z.c.prior.up[country])
-    cdata <- DLdata[[country]]
     res <- .Call("doTrianglekzcUpdate", 
                  as.double(c(mcmc$Triangle.c[,country], mcmc$k.c[country], mcmc$z.c[country])),
                  as.double(c(mcmc$Triangle, mcmc$k, mcmc$z)),
                  as.double(1/sqrt(c(mcmc$lambda, mcmc$lambda.k, mcmc$lambda.z))),
-                 as.double(low), as.double(up),
+                 cdata$low, cdata$up,
                  as.double(c(opts$Triangle.c$slice.width, opts$k.c$slice.width, opts$z.c$slice.width)),
                  as.double(opts$sumTriangle.lim), as.double(opts$dl.p1), as.double(opts$dl.p2),
-                 as.double(cdata['e0',]), as.double(cdata['dct',]), as.double(mcmc$omega*cdata['loess',]),
+                 cdata$e0, cdata$dct, mcmc$omega*cdata$loess,
                  PACKAGE = "bayesLife")
     mcmc$Triangle.c[, country] <- res[1:4]
     mcmc$k.c[country] <- res[5]
