@@ -24,3 +24,4 @@ Suggests: wpp2017, wpp2015, wpp2012, wpp2010
 License: GPL-3 | file LICENSE
 URL: https://bayespop.csss.washington.edu
 LazyData: false
+Remotes: PPgp/bayesTFR
