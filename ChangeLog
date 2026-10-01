@@ -1,3 +1,9 @@
+5.3-2.9002 (10/01/2026)
+-----
+Internal function run.e0.projection.for.all.countries got an argument trajs.fun
+for passing a custom function that generates all trajectories of a country at once
+(used by bayesLifeHIV).
+
 5.3-2.9001 (9/29/2026)
 -----
 Speed-up of MCMC estimation: slice sampling of country-specific parameters moved to C;

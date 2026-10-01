@@ -217,7 +217,10 @@ e0.prediction.setup <- function(...) {
 }
 
 
-run.e0.projection.for.all.countries <- function(setup, traj.fun = "generate.e0.trajectory") {
+run.e0.projection.for.all.countries <- function(setup, traj.fun = "generate.e0.trajectory", trajs.fun = NULL) {
+    # traj.fun generates one trajectory. Alternatively, trajs.fun can be given which generates
+    # all trajectories of a country at once. It takes the same arguments as traj.fun, 
+    # except that x is a matrix (one row per trajectory), and kap and traj are vectors.
     with(setup, {
         country.counter <- 0
         status.for.gui <- paste('out of', length(prediction.countries), 'countries.')
@@ -297,6 +300,15 @@ run.e0.projection.for.all.countries <- function(setup, traj.fun = "generate.e0.t
                                                                     p1 = meta$mcmc.options$dl.p1, 
                                                                     p2 = meta$mcmc.options$dl.p2, 
                                                                     const.var = meta$constant.variance)
+            } else if(!is.null(trajs.fun)) {
+                trajectories[proj.idx, ] <- do.call(trajs.fun, list(x = cs.par.values[1:nr_simu, , drop = FALSE], 
+                                                                    l.start = all.e0[last.val.idx], 
+                                                                    kap = var.par.values[1:nr_simu,'omega'],
+                                                                    n.proj = length(proj.idx),
+                                                                    p1 = meta$mcmc.options$dl.p1, 
+                                                                    p2 = meta$mcmc.options$dl.p2, 
+                                                                    const.var = meta$constant.variance,
+                                                                    traj = 1:nr_simu, pred.env = pred.env))
             } else {
                 for(j in 1:nr_simu) {
                     trajectories[proj.idx, j] <- do.call(traj.fun, list(x = cs.par.values[j,], 
